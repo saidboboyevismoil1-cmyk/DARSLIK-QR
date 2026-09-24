@@ -168,24 +168,50 @@ public class MainActivity extends Activity {
         } catch (Exception e) {}
     }
 
+    private long lastBackPressTime = 0;
+    private int backPressCount = 0;
+
     @Override
     public void onBackPressed() {
-        if (isKioskActive) {
-            Toast.makeText(this, "⚠️ Dars paytida ilovadan chiqish taqiqlangan!", Toast.LENGTH_SHORT).show();
-            return; // Block Back button completely during class!
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastBackPressTime < 2500) {
+            backPressCount++;
+        } else {
+            backPressCount = 1;
         }
+        lastBackPressTime = currentTime;
+
+        // Emergency escape: 3 fast back presses unlocks and exits immediately!
+        if (backPressCount >= 3) {
+            isKioskActive = false;
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    stopLockTask();
+                }
+            } catch (Exception e) {}
+            Toast.makeText(this, "Ilovadan chiqildi", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        if (isKioskActive) {
+            int remaining = 3 - backPressCount;
+            Toast.makeText(this, "⚠️ Dars rejimi faol. Favqulodda chiqish uchun yana " + remaining + " marta bosing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
+        } else {
+            super.onBackPressed();
         }
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (isKioskActive) {
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                Toast.makeText(this, "⚠️ Dars paytida ilovadan chiqish taqiqlangan!", Toast.LENGTH_SHORT).show();
-                return true;
-            }
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            onBackPressed();
+            return true;
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -217,6 +243,22 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void exitApp() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    isKioskActive = false;
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            stopLockTask();
+                        }
+                    } catch (Exception e) {}
+                    finish();
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void startKioskMode() {
             runOnUiThread(new Runnable() {
                 @Override
@@ -244,7 +286,7 @@ public class MainActivity extends Activity {
                             stopLockTask();
                         }
                     } catch (Exception e) {}
-                    Toast.makeText(MainActivity.this, "🔓 Dars tugadi: Qulflash ochildi", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "🔓 Qulflash ochildi", Toast.LENGTH_SHORT).show();
                 }
             });
         }

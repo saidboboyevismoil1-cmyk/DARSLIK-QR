@@ -40,9 +40,14 @@
         <span class="user-greeting-label">Xush kelibsiz 👋</span>
         <h2 class="user-greeting-name" id="header-student-name">EduFocus</h2>
       </div>
-      <div class="header-action-btn" onclick="openNotificationsModal()" title="Xabarlar">
-        <span>🔔</span>
-        <div class="header-action-dot" id="header-bell-dot"></div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div class="header-action-btn" onclick="openNotificationsModal()" title="Xabarlar">
+          <span>🔔</span>
+          <div class="header-action-dot" id="header-bell-dot"></div>
+        </div>
+        <div class="header-action-btn" onclick="exitEduFocusApp()" title="Ilovadan Chiqish">
+          <span>🚪</span>
+        </div>
       </div>
     </div>
 
@@ -246,6 +251,12 @@
         <span style="font-size: 18px">⚠️</span>
         <span>Sahifadan boshqa ilovalarga o'tsangiz, ustoz monitorida darhol xabar ko'rinadi!</span>
       </div>
+
+      <div style="margin-top: 16px; text-align: center">
+        <button type="button" onclick="handleEmergencyUnlockTap()" style="background: rgba(0,0,0,0.05); border: 1px dashed var(--app-border); padding: 8px 16px; border-radius: 9999px; font-size: 12px; color: var(--app-text-secondary); cursor: pointer">
+          Favqulodda Chiqish (3 marta bosing) 🔓
+        </button>
+      </div>
     </div>
 
     <!-- ============================================ -->
@@ -295,6 +306,15 @@
           <span style="font-size: 13px; font-weight: 600; color: var(--app-text-secondary)">Holat</span>
           <strong style="color: var(--app-dark)">To'liq qatnashdi ⭐</strong>
         </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px">
+        <button type="button" class="mobile-btn-lime" onclick="exitEduFocusApp()">
+          Ilovadan Chiqish 🚪
+        </button>
+        <button type="button" class="hero-balance-pill-btn" onclick="showScreen('join')" style="justify-content: center">
+          Bosh Sahifaga Qaytish 🏠
+        </button>
       </div>
     </div>
 
@@ -679,10 +699,15 @@
     let studentId = null;
     let joinTime = null;
     let lockTimerInterval = null;
-    let isLocked = true;
+    let isLocked = false;
     let activeQuizData = null;
     let activeMaterialData = null;
     let currentAllowedTool = null; // null | 'calculator' | 'browser'
+
+    // Reset native kiosk mode when landing on student page
+    if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
+      window.AndroidBridge.stopKioskMode();
+    }
 
     // Name persistence (Ism-familiyani 1 marta kiritish)
     const savedStudentName = localStorage.getItem('edufocus_student_name');
@@ -901,6 +926,7 @@
       document.getElementById('hero-join-action-btn').style.background = 'var(--app-lime)';
       document.getElementById('hero-join-action-btn').style.color = 'var(--app-dark)';
 
+      isLocked = (data.locked === true);
       if (isLocked) {
         showScreen('lock');
         startLockTimer(data.duration);
@@ -910,6 +936,9 @@
         }
       } else {
         showScreen('unlocked');
+        if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
+          window.AndroidBridge.stopKioskMode();
+        }
       }
 
       if (data.activeQuiz) {
@@ -1060,10 +1089,53 @@
         if (el) el.style.display = (s === screen) ? 'block' : 'none';
       });
 
+      // If not on lock screen, ensure kiosk mode is disabled
+      if (screen !== 'lock') {
+        if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
+          window.AndroidBridge.stopKioskMode();
+        }
+      }
+
       // Bottom nav bar visibility
       const bottomNav = document.querySelector('.mobile-bottom-nav');
       if (bottomNav) {
         bottomNav.style.display = (screen === 'lock') ? 'none' : 'flex';
+      }
+    }
+
+    let emergencyTapCount = 0;
+    let emergencyLastTap = 0;
+    function handleEmergencyUnlockTap() {
+      const now = Date.now();
+      if (now - emergencyLastTap < 2500) {
+        emergencyTapCount++;
+      } else {
+        emergencyTapCount = 1;
+      }
+      emergencyLastTap = now;
+
+      if (emergencyTapCount >= 3) {
+        emergencyTapCount = 0;
+        isLocked = false;
+        if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
+          window.AndroidBridge.stopKioskMode();
+        }
+        showToastAlert('🔓 Favqulodda qulf ochildi!');
+        showScreen('join');
+      } else {
+        showToastAlert(`Favqulodda ochish uchun yana ${3 - emergencyTapCount} marta bosing`);
+      }
+    }
+
+    function exitEduFocusApp() {
+      if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
+        window.AndroidBridge.stopKioskMode();
+      }
+      if (window.AndroidBridge && window.AndroidBridge.exitApp) {
+        window.AndroidBridge.exitApp();
+      } else {
+        showScreen('join');
+        showToastAlert('Bosh sahifaga qaytildi');
       }
     }
 
