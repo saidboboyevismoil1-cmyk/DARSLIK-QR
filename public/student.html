@@ -2,1631 +2,367 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="EduFocus - Darsga qo'shilish va mobil ilova">
-  <meta name="theme-color" content="#F5F6F9">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="description" content="EduFocus — darsga qo'shilish va diqqatni boshqarish">
+  <meta name="theme-color" content="#eef1ff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a0e1f" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>EduFocus — Mobil Darslik</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>EduFocus</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="icon" href="/img/icon-192.png">
-  <link rel="stylesheet" href="/css/mobile-app.css">
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/html5-qrcode.min.js"></script>
-  <style>
-    html, body {
-      overscroll-behavior: none;
-      touch-action: pan-y;
-    }
-  </style>
-</head>
-<body class="mobile-theme">
-  <div class="mobile-app-shell">
-    
-    <!-- Phone Top Status Bar (iOS style 9:41) -->
-    <div class="mobile-status-bar">
-      <span id="top-status-time">09:41</span>
-      <div class="status-bar-icons">
-        <span>📶</span>
-        <span>5G</span>
-        <span>🔋</span>
-      </div>
-    </div>
-
-    <!-- App Header (Good morning, Terry style from Ronas IT) -->
-    <div class="app-header">
-      <div class="user-greeting-wrap">
-        <span class="user-greeting-label">Xush kelibsiz 👋</span>
-        <h2 class="user-greeting-name" id="header-student-name">EduFocus</h2>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px">
-        <div class="header-action-btn" onclick="openNotificationsModal()" title="Xabarlar">
-          <span>🔔</span>
-          <div class="header-action-dot" id="header-bell-dot"></div>
-        </div>
-        <div class="header-action-btn" onclick="exitEduFocusApp()" title="Ilovadan Chiqish">
-          <span>🚪</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- SCREEN 1: MAIN DASHBOARD & JOIN FORM         -->
-    <!-- ============================================ -->
-    <div id="screen-join">
-      <!-- Balance Card / Hero Focus Card -->
-      <div class="hero-balance-card">
-        <div class="hero-balance-label-row">
-          <span class="hero-balance-label">DARS REJIMI VA FOKUS</span>
-          <span style="font-size: 11px; background: #F3F4F6; padding: 4px 10px; border-radius: 9999px; font-weight: 700; color: #4B5563">
-            ⚡ Jonli Nazorat
-          </span>
-        </div>
-        <div class="hero-balance-value">
-          <span id="hero-focus-val">100%</span>
-          <span style="font-size: 15px; font-weight: 700; color: #10B981; background: #ECFDF5; padding: 4px 10px; border-radius: 10px">A'lo</span>
-        </div>
-        <p style="font-size: 13px; color: var(--app-text-secondary); margin-bottom: 16px" id="session-info">
-          Darsga ulanish uchun quyidagi tugmani bosing
-        </p>
-        <div style="display: flex; flex-direction: column; gap: 10px">
-          <button type="button" class="mobile-btn-lime" onclick="openQRScanner()" id="hero-scan-btn" style="box-shadow: 0 8px 24px rgba(212, 246, 55, 0.45)">
-            <span style="font-size: 18px">📷</span> QR Kodni Skanerlash
-          </button>
-          <button type="button" class="hero-balance-pill-btn" onclick="openJoinSheet()" id="hero-join-action-btn">
-            <span>✍️</span> Kod / Ism Bilan Kirish
-          </button>
-        </div>
-      </div>
-
-      <!-- Your Cards Section (Ronas IT iconic horizontal carousel) -->
-      <div class="section-title-row">
-        <h3 class="section-title">Dars kartalari</h3>
-        <span class="section-action-link" style="color: var(--app-text-muted)">3 ta faol</span>
-      </div>
-
-      <div class="cards-carousel-container">
-        <!-- Card 1: Electric Lime (Neobank icon card style from Dribbble) -->
-        <div class="fin-card card-lime">
-          <div class="card-top-row">
-            <span class="card-brand">EDUFOCUS</span>
-            <div class="card-chip">⚡</div>
-          </div>
-          <div>
-            <div class="card-middle-label">Diqqat Indeksi</div>
-            <div class="card-middle-val">100% Fokus</div>
-          </div>
-          <div class="card-bottom-row">
-            <span>Dars intizomi</span>
-            <span class="card-pill-tag">Faol</span>
-          </div>
-        </div>
-
-        <!-- Card 2: Dark Charcoal Titanium -->
-        <div class="fin-card card-dark">
-          <div class="card-top-row">
-            <span class="card-brand">INTIZOM</span>
-            <div class="card-chip">🛡️</div>
-          </div>
-          <div>
-            <div class="card-middle-label">Chiqishlar Soni</div>
-            <div class="card-middle-val">0 qoidabuzarlik</div>
-          </div>
-          <div class="card-bottom-row">
-            <span>Standart rejim</span>
-            <span class="card-pill-tag">Namunali</span>
-          </div>
-        </div>
-
-        <!-- Card 3: Soft Silver -->
-        <div class="fin-card" style="background: #FFFFFF; border: 1px solid var(--app-border)">
-          <div class="card-top-row">
-            <span class="card-brand" style="color: var(--app-dark)">QURILMA</span>
-            <div class="card-chip" style="background: #F3F4F6">📱</div>
-          </div>
-          <div>
-            <div class="card-middle-label" style="color: var(--app-text-secondary)">Model</div>
-            <div class="card-middle-val" style="color: var(--app-dark); font-size: 15px" id="device-model-card">Qurilma...</div>
-          </div>
-          <div class="card-bottom-row" style="color: var(--app-text-secondary)">
-            <span>Holat</span>
-            <span class="card-pill-tag" style="background: #F3F4F6; color: var(--app-dark)">Ulandi</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Actions List Section (Add money to Neobank style from Dribbble) -->
-      <div class="section-title-row" style="margin-top: 10px">
-        <h3 class="section-title">Dars xizmatlari</h3>
-      </div>
-
-      <div class="action-list-card">
-        <!-- Action 0: Scan QR Code -->
-        <div class="action-row-item" onclick="openQRScanner()" style="background: rgba(212, 246, 55, 0.1); border-radius: var(--app-radius-md)">
-          <div class="action-icon-box" style="background: var(--app-lime); color: var(--app-dark); font-size: 22px">📷</div>
-          <div class="action-content-wrap">
-            <div class="action-item-title" style="color: var(--app-dark)">QR Kodni Skanerlash</div>
-            <div class="action-item-subtitle">Doska yoki monitordagi QR kodni o'qish</div>
-          </div>
-          <span class="action-chevron" style="color: var(--app-dark)">›</span>
-        </div>
-
-        <!-- Action 1: Download Android APK -->
-        <a href="/edufocus.apk" download="EduFocus.apk" class="action-row-item" style="text-decoration: none">
-          <div class="action-icon-box" style="background: #ECFDF5; color: #059669; font-size: 22px">🤖</div>
-          <div class="action-content-wrap">
-            <div class="action-item-title">Android Ilovani Yuklab Olish (APK)</div>
-            <div class="action-item-subtitle">O'quvchi uchun ilova (2.9 MB)</div>
-          </div>
-          <span class="action-chevron" style="color: #059669; font-weight: 800">↓</span>
-        </a>
-
-        <!-- Action 2: Install PWA -->
-        <div class="action-row-item" onclick="triggerPWAInstall()">
-          <div class="action-icon-box lime">📲</div>
-          <div class="action-content-wrap">
-            <div class="action-item-title">Bosh Ekranga Qo'shish</div>
-            <div class="action-item-subtitle">Brauzer orqali tezkor saqlash</div>
-          </div>
-          <span class="action-chevron">›</span>
-        </div>
-
-        <!-- Action 2: Quiz -->
-        <div class="action-row-item" onclick="openStudentQuizIfAvailable()">
-          <div class="action-icon-box dark">📝</div>
-          <div class="action-content-wrap">
-            <div class="action-item-title">Tezkor Test (Quiz)</div>
-            <div class="action-item-subtitle" id="menu-quiz-subtitle">Ustoz yuborgan testlarni yechish</div>
-          </div>
-          <span class="action-chevron">›</span>
-        </div>
-
-        <!-- Action 3: Material -->
-        <div class="action-row-item" onclick="openStudentMaterialIfAvailable()">
-          <div class="action-icon-box" style="background: #E0E7FF; color: #4338CA">📚</div>
-          <div class="action-content-wrap">
-            <div class="action-item-title">Darslik va Materiallar</div>
-            <div class="action-item-subtitle" id="menu-material-subtitle">Topshiriq va elektron qo'llanmalar</div>
-          </div>
-          <span class="action-chevron">›</span>
-        </div>
-
-        <!-- Action 4: Session code manual -->
-        <div class="action-row-item" onclick="openJoinSheet()">
-          <div class="action-icon-box" style="background: #FEF3C7; color: #B45309">🔑</div>
-          <div class="action-content-wrap">
-            <div class="action-item-title">Dars Kodi Bilan Kirish</div>
-            <div class="action-item-subtitle">8 xonali sessiya kodini kiritish</div>
-          </div>
-          <span class="action-chevron">›</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- SCREEN 2: LOCK SCREEN (Ronas IT Focus Mode)  -->
-    <!-- ============================================ -->
-    <div id="screen-lock" style="display: none" class="focus-lock-container">
-      <div class="focus-badge-pill">
-        <div class="focus-badge-dot"></div>
-        <span>Dars Rejimi Faol — Telefon Qulflangan</span>
-      </div>
-
-      <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px" id="lock-session-name">
-        Dars Davom Etmoqda
-      </h1>
-      <p style="font-size: 13px; color: var(--app-text-secondary); margin-bottom: 10px">
-        Ustoz dars davomida diqqatni jamlashni so'radi
-      </p>
-
-      <!-- Ronas IT Pulsing Timer Ring -->
-      <div class="focus-ring-wrapper">
-        <div class="focus-pulse-glow"></div>
-        <svg class="focus-circle-svg" width="220" height="220">
-          <circle cx="110" cy="110" r="95" stroke="#E2E8F0" stroke-width="12" fill="none"></circle>
-          <circle id="lock-progress-circle" cx="110" cy="110" r="95" stroke="#D4F637" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="0"></circle>
-        </svg>
-        <div class="focus-timer-text-wrap">
-          <div class="focus-timer-digits" id="lock-timer">45:00</div>
-          <div class="focus-timer-label">QOLGAN VAQT</div>
-        </div>
-      </div>
-
-      <!-- Quick Status Cards in Lock Screen -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 10px">
-        <div style="background: #FFFFFF; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 14px; text-align: left">
-          <div style="font-size: 11px; font-weight: 700; color: var(--app-text-muted); text-transform: uppercase">Diqqat Indeksi</div>
-          <div style="font-size: 20px; font-weight: 800; color: #10B981; margin-top: 2px" id="lock-focus-score">100%</div>
-          <div style="font-size: 11px; color: var(--app-text-secondary); margin-top: 2px">Namunali intizom</div>
-        </div>
-        <div style="background: #FFFFFF; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 14px; text-align: left">
-          <div style="font-size: 11px; font-weight: 700; color: var(--app-text-muted); text-transform: uppercase">Chiqishlar</div>
-          <div style="font-size: 20px; font-weight: 800; color: var(--app-dark); margin-top: 2px" id="lock-violation-count">0 marta</div>
-          <div style="font-size: 11px; color: var(--app-text-secondary); margin-top: 2px">Qoidabuzarliksiz</div>
-        </div>
-      </div>
-
-      <div class="focus-warning-notice">
-        <span style="font-size: 18px">⚠️</span>
-        <span>Sahifadan boshqa ilovalarga o'tsangiz, ustoz monitorida darhol xabar ko'rinadi!</span>
-      </div>
-
-      <div style="margin-top: 16px; text-align: center">
-        <button type="button" onclick="handleEmergencyUnlockTap()" style="background: rgba(0,0,0,0.05); border: 1px dashed var(--app-border); padding: 8px 16px; border-radius: 9999px; font-size: 12px; color: var(--app-text-secondary); cursor: pointer">
-          Favqulodda Chiqish (3 marta bosing) 🔓
-        </button>
-      </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- SCREEN 3: UNLOCKED                           -->
-    <!-- ============================================ -->
-    <div id="screen-unlocked" style="display: none; padding: 24px; text-align: center">
-      <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--app-lime); color: var(--app-dark); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 20px auto 16px; box-shadow: 0 10px 25px rgba(212, 246, 55, 0.4)">
-        🔓
-      </div>
-      <h2 style="font-size: 26px; font-weight: 800; color: var(--app-dark); margin-bottom: 6px">Ruxsat Berildi!</h2>
-      <p style="font-size: 14px; color: var(--app-text-secondary); margin-bottom: 24px">
-        Ustoz telefoningizdan foydalanishga ruxsat berdi.
-      </p>
-
-      <div class="hero-balance-card" style="margin: 0 0 20px; text-align: left">
-        <div style="font-size: 12px; font-weight: 700; color: var(--app-text-muted); text-transform: uppercase">Sessiya Nomi</div>
-        <div style="font-size: 20px; font-weight: 800; color: var(--app-dark); margin: 4px 0 12px" id="unlocked-session">—</div>
-        <div style="display: flex; gap: 8px">
-          <span style="background: #ECFDF5; color: #10B981; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 12px">✅ Ruxsat Etilgan</span>
-          <span style="background: #F3F4F6; color: #4B5563; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 12px">Dars davomida</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- SCREEN 4: SESSION ENDED                      -->
-    <!-- ============================================ -->
-    <div id="screen-ended" style="display: none; padding: 24px; text-align: center">
-      <div style="width: 72px; height: 72px; border-radius: 50%; background: #10B981; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 20px auto 16px; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3)">
-        🎉
-      </div>
-      <h2 style="font-size: 26px; font-weight: 800; color: var(--app-dark); margin-bottom: 6px">Dars Tugadi!</h2>
-      <p style="font-size: 14px; color: var(--app-text-secondary); margin-bottom: 24px">
-        Diqqatingiz va faol ishtirokingiz uchun tashakkur!
-      </p>
-
-      <div class="hero-balance-card" style="margin: 0 0 20px; text-align: left">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
-          <span style="font-size: 13px; font-weight: 600; color: var(--app-text-secondary)">Qatnashish vaqti</span>
-          <strong style="font-size: 15px; color: var(--app-dark)" id="end-duration">45 daqiqa</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
-          <span style="font-size: 13px; font-weight: 600; color: var(--app-text-secondary)">Intizom holati</span>
-          <span style="background: #ECFDF5; color: #10B981; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 12px">A'lo (100%)</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span style="font-size: 13px; font-weight: 600; color: var(--app-text-secondary)">Holat</span>
-          <strong style="color: var(--app-dark)">To'liq qatnashdi ⭐</strong>
-        </div>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px">
-        <button type="button" class="mobile-btn-lime" onclick="exitEduFocusApp()">
-          Ilovadan Chiqish 🚪
-        </button>
-        <button type="button" class="hero-balance-pill-btn" onclick="showScreen('join')" style="justify-content: center">
-          Bosh Sahifaga Qaytish 🏠
-        </button>
-      </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- FLOATING BOTTOM NAVIGATION BAR (Ronas IT)    -->
-    <!-- ============================================ -->
-    <div class="mobile-bottom-nav">
-      <button class="nav-tab-btn active" onclick="switchNavTab('home')" id="tab-nav-home">
-        <span class="nav-tab-icon">🏠</span>
-        <span class="nav-tab-label">Dars</span>
-      </button>
-      <button class="nav-tab-btn" onclick="openQRScanner()" id="tab-nav-scan">
-        <span class="nav-tab-icon" style="color: #059669">📷</span>
-        <span class="nav-tab-label">Skaner</span>
-      </button>
-      <button class="nav-tab-btn" onclick="openStudentQuizIfAvailable()" id="tab-nav-quiz">
-        <span class="nav-tab-icon">📝</span>
-        <span class="nav-tab-label">Test</span>
-      </button>
-      <button class="nav-tab-btn" onclick="openStudentMaterialIfAvailable()" id="tab-nav-material">
-        <span class="nav-tab-icon">📚</span>
-        <span class="nav-tab-label">Material</span>
-      </button>
-      <button class="nav-tab-btn" onclick="triggerPWAInstall()" id="tab-nav-install">
-        <span class="nav-tab-icon">📲</span>
-        <span class="nav-tab-label">O'rnatish</span>
-      </button>
-    </div>
-
-  </div> <!-- End mobile-app-shell -->
-
-  <!-- ============================================ -->
-  <!-- BOTTOM SHEET 1: JOIN FORM MODAL             -->
-  <!-- ============================================ -->
-  <div id="join-sheet-modal" class="mobile-modal-overlay">
-    <div class="mobile-bottom-sheet">
-      <div class="sheet-handle"></div>
-      <h3 class="sheet-title">Darsga Qo'shilish 🚀</h3>
-      <p class="sheet-subtitle">Ismingiz va dars kodini kiriting</p>
-
-      <form id="join-form">
-        <div id="join-error" style="color: #EF4444; font-size: 13px; font-weight: 600; margin-bottom: 12px; display: none"></div>
-
-        <div id="manual-session-group" style="margin-bottom: 12px">
-          <label style="font-size: 12px; font-weight: 700; color: var(--app-text-secondary); margin-bottom: 4px; display: block">Dars (Sessiya) Kodi</label>
-          <input type="text" id="manual-session-code" class="mobile-input-field" placeholder="Masalan: 44275fc5">
-        </div>
-
-        <div id="saved-profile-box" style="display: none; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--app-radius-md); padding: 12px 14px; margin-bottom: 14px">
-          <div style="display: flex; justify-content: space-between; align-items: center">
-            <span style="font-size: 13px; font-weight: 700; color: #065F46">👤 O'quvchi: <strong id="saved-name-display">—</strong></span>
-            <button type="button" onclick="editStudentName()" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #059669; cursor: pointer; text-decoration: underline">O'zgartirish</button>
-          </div>
-        </div>
-
-        <div id="name-input-group" style="margin-bottom: 16px">
-          <label style="font-size: 12px; font-weight: 700; color: var(--app-text-secondary); margin-bottom: 4px; display: block">Ismingiz va Familiyangiz</label>
-          <input type="text" id="student-name" class="mobile-input-field" placeholder="Masalan: Ali Karimov" required autocomplete="name">
-        </div>
-
-        <div style="background: #F9FAFB; border-radius: var(--app-radius-md); padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--app-text-secondary)">
-          <span>📱 Qurilma: <strong id="device-model">Aniqlanmoqda...</strong></span>
-          <span id="device-time">—</span>
-        </div>
-
-        <button type="submit" class="mobile-btn-lime" id="join-btn" style="margin-bottom: 10px">
-          Darsga Kirish 🚀
-        </button>
-
-        <button type="button" class="mobile-btn-dark" style="background: #F3F4F6; color: var(--app-dark); margin-bottom: 10px" onclick="closeJoinSheet(); openQRScanner();">
-          <span>📷</span> QR Kodni Kamera Bilan Skanerlash
-        </button>
-
-        <button type="button" class="mobile-btn-dark" style="background: transparent; color: var(--app-text-secondary); border: 1px solid var(--app-border)" onclick="closeJoinSheet()">
-          Bekor Qilish
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- BOTTOM SHEET 2: INSTALL GUIDE MODAL         -->
-  <!-- ============================================ -->
-  <div id="install-guide-modal" class="mobile-modal-overlay">
-    <div class="mobile-bottom-sheet">
-      <div class="sheet-handle"></div>
-      <h3 class="sheet-title">📲 Ilovani O'rnatish</h3>
-      <p class="sheet-subtitle">EduFocus ilovasini telefoningizga yuklab oling</p>
-
-      <a href="/edufocus.apk" download="EduFocus.apk" class="mobile-btn-lime" style="text-decoration: none; margin-bottom: 12px; background: #10B981; color: #FFFFFF">
-        <span>🤖</span> Android APK Faylini Yuklash (2.9 MB)
-      </a>
-
-      <button type="button" id="modal-direct-install-btn" class="mobile-btn-lime" style="margin-bottom: 18px; background: #F3F4F6; color: var(--app-dark)" onclick="performDirectInstall()">
-        🚀 Bosh Ekranga Qo'shish (PWA)
-      </button>
-
-      <!-- Android Guide Card -->
-      <div style="background: #F9FAFB; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 16px; margin-bottom: 12px">
-        <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #10B981; margin-bottom: 8px">
-          <span>🤖</span> Android (Chrome) uchun:
-        </div>
-        <div style="font-size: 13px; color: var(--app-text-secondary); line-height: 1.6">
-          1. Brauzerning yuqori burchagidagi <strong>⋮ (3 nuqta)</strong> menyusini bosing.<br>
-          2. <strong>"Ilovani o'rnatish"</strong> yoki <strong>"Bosh ekranga qo'shish"</strong> tugmasini bosing.
-        </div>
-      </div>
-
-      <!-- iOS Guide Card -->
-      <div style="background: #F9FAFB; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 16px; margin-bottom: 18px">
-        <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #3B82F6; margin-bottom: 8px">
-          <span>🍎</span> iPhone (Safari) uchun:
-        </div>
-        <div style="font-size: 13px; color: var(--app-text-secondary); line-height: 1.6">
-          1. Safari brauzerining pastidagi <strong>⎋ (Ulashish / Share)</strong> tugmasini bosing.<br>
-          2. Pastga surib, <strong>"Bosh ekranga qo'shish" (Add to Home Screen)</strong> tugmasini bosing.
-        </div>
-      </div>
-
-      <button type="button" class="mobile-btn-dark" onclick="closeInstallGuide()">
-        Tushundim
-      </button>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- BOTTOM SHEET 3: STUDENT QUIZ OVERLAY         -->
-  <!-- ============================================ -->
-  <div id="student-quiz-overlay" class="student-quiz-overlay" style="display: none">
-    <div class="student-quiz-container" style="background: #FFFFFF; border-radius: 32px">
-      <div class="student-quiz-header">
-        <div>
-          <h2 style="font-size: 18px; font-weight: 800; margin: 0; color: var(--app-dark)" id="sq-title">📝 Tezkor Test</h2>
-          <span style="font-size: 12px; color: var(--app-text-secondary)" id="sq-qcount">3 ta savol</span>
-        </div>
-        <div id="sq-timer-badge" class="student-quiz-timer" style="display: none">
-          <span>⏱️</span> <span id="sq-timer-val">03:00</span>
-        </div>
-      </div>
-
-      <!-- Questions List Form -->
-      <form id="student-quiz-form" onsubmit="submitStudentQuiz(event)">
-        <div id="sq-questions-body"></div>
-
-        <button type="submit" class="mobile-btn-lime" style="width: 100%; margin-top: 14px" id="sq-submit-btn">
-          Javoblarni Topshirish 🚀
-        </button>
-      </form>
-
-      <!-- Quiz Results View (Shown after submitting) -->
-      <div id="sq-result-view" style="display: none; text-align: center; padding: 20px 0">
-        <div style="font-size: 48px; margin-bottom: 10px" id="sq-result-emoji">🎉</div>
-        <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 6px; color: var(--app-dark)" id="sq-result-title">Ajoyib natija!</h3>
-        <p style="color: var(--app-text-secondary); margin-bottom: 16px" id="sq-result-desc">Test muvaffaqiyatli topshirildi</p>
-        
-        <div style="background: #F9FAFB; border-radius: var(--app-radius-lg); padding: 16px; margin-bottom: 20px; border: 1px solid var(--app-border)">
-          <div style="font-size: 36px; font-weight: 900; color: #10B981" id="sq-result-score">3 / 3</div>
-          <div style="font-size: 13px; color: var(--app-text-secondary)">To'g'ri javoblar soni</div>
-        </div>
-
-        <button type="button" class="mobile-btn-dark" style="width: 100%" onclick="closeStudentQuiz()">
-          Yopish
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- BOTTOM SHEET 4: MATERIAL MODAL               -->
-  <!-- ============================================ -->
-  <div id="student-material-modal" class="mobile-modal-overlay">
-    <div class="mobile-bottom-sheet">
-      <div class="sheet-handle"></div>
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
-        <div style="width: 40px; height: 40px; border-radius: 50%; background: #E0E7FF; color: #4338CA; display: flex; align-items: center; justify-content: center; font-size: 20px">📚</div>
-        <h3 class="sheet-title" id="sm-title" style="margin: 0">Dars Materiali</h3>
-      </div>
-      <div style="padding: 10px 0">
-        <p style="color: var(--app-text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 16px; white-space: pre-wrap" id="sm-text"></p>
-        <a id="sm-link-btn" href="#" target="_blank" class="mobile-btn-lime" style="text-decoration: none; margin-bottom: 10px; display: none">
-          🔗 Havolani Ochish
-        </a>
-      </div>
-      <button type="button" class="mobile-btn-dark" onclick="closeStudentMaterial()">
-        Tushundim
-      </button>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- NOTIFICATIONS / INFO MODAL                   -->
-  <!-- ============================================ -->
-  <div id="notifications-modal" class="mobile-modal-overlay">
-    <div class="mobile-bottom-sheet">
-      <div class="sheet-handle"></div>
-      <h3 class="sheet-title">Xabarnomalar 🔔</h3>
-      <p class="sheet-subtitle">Dars va ilova yangiliklari</p>
-      
-      <div style="background: #F9FAFB; border-radius: var(--app-radius-lg); padding: 14px; margin-bottom: 12px; border-left: 3px solid var(--app-lime)">
-        <div style="font-weight: 700; font-size: 14px; color: var(--app-dark); margin-bottom: 2px">EduFocus Yangi Versiyasi</div>
-        <div style="font-size: 12px; color: var(--app-text-secondary)">Ronas IT zamonaviy dizayni va qulay mobil interfeys faollashtirildi.</div>
-      </div>
-
-      <button type="button" class="mobile-btn-dark" onclick="closeNotificationsModal()">
-        Yopish
-      </button>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- BOTTOM SHEET 5: NEO CALCULATOR MODAL         -->
-  <!-- ============================================ -->
-  <div id="student-calculator-modal" class="mobile-modal-overlay">
-    <div class="mobile-bottom-sheet" style="padding-bottom: 28px">
-      <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
-        <div style="display: flex; align-items: center; gap: 8px">
-          <span style="font-size: 22px">🧮</span>
-          <h3 class="sheet-title" style="margin: 0; font-size: 18px">Kalkulyator</h3>
-        </div>
-        <span style="font-size: 11px; background: #ECFDF5; color: #059669; padding: 3px 8px; border-radius: 9999px; font-weight: 700">Ustoz Ruxsat Berdi</span>
-      </div>
-
-      <!-- Calculator Display -->
-      <div style="background: #111827; border-radius: var(--app-radius-lg); padding: 18px 20px; margin-bottom: 14px; text-align: right">
-        <div id="calc-expression" style="font-size: 13px; color: #9CA3AF; min-height: 18px; font-family: monospace"></div>
-        <div id="calc-display" style="font-size: 32px; font-weight: 800; color: #FFFFFF; font-family: monospace">0</div>
-      </div>
-
-      <!-- Calculator Keypad (4x5 grid) -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px">
-        <button type="button" class="calc-btn op" onclick="calcInput('C')">C</button>
-        <button type="button" class="calc-btn op" onclick="calcInput('(')">(</button>
-        <button type="button" class="calc-btn op" onclick="calcInput(')')">)</button>
-        <button type="button" class="calc-btn op" onclick="calcInput('/')">÷</button>
-
-        <button type="button" class="calc-btn num" onclick="calcInput('7')">7</button>
-        <button type="button" class="calc-btn num" onclick="calcInput('8')">8</button>
-        <button type="button" class="calc-btn num" onclick="calcInput('9')">9</button>
-        <button type="button" class="calc-btn op" onclick="calcInput('*')">×</button>
-
-        <button type="button" class="calc-btn num" onclick="calcInput('4')">4</button>
-        <button type="button" class="calc-btn num" onclick="calcInput('5')">5</button>
-        <button type="button" class="calc-btn num" onclick="calcInput('6')">6</button>
-        <button type="button" class="calc-btn op" onclick="calcInput('-')">−</button>
-
-        <button type="button" class="calc-btn num" onclick="calcInput('1')">1</button>
-        <button type="button" class="calc-btn num" onclick="calcInput('2')">2</button>
-        <button type="button" class="calc-btn num" onclick="calcInput('3')">3</button>
-        <button type="button" class="calc-btn op" onclick="calcInput('+')">+</button>
-
-        <button type="button" class="calc-btn num" onclick="calcInput('0')" style="grid-column: span 2">0</button>
-        <button type="button" class="calc-btn num" onclick="calcInput('.')">.</button>
-        <button type="button" class="calc-btn equal" onclick="calcInput('=')">=</button>
-      </div>
-
-      <button type="button" class="mobile-btn-dark" style="margin-top: 14px; background: #F3F4F6; color: var(--app-dark)" onclick="closeStudentCalculator()">
-        Yopish (Darsga Qaytish)
-      </button>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- BOTTOM SHEET 6: RESOURCE BROWSER MODAL       -->
-  <!-- ============================================ -->
-  <div id="student-browser-modal" class="mobile-modal-overlay">
-    <div class="mobile-bottom-sheet" style="padding-bottom: 24px">
-      <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
-        <div style="display: flex; align-items: center; gap: 8px">
-          <span style="font-size: 22px">🌐</span>
-          <h3 class="sheet-title" id="browser-modal-title" style="margin: 0; font-size: 18px">Dars Manbasi</h3>
-        </div>
-        <span style="font-size: 11px; background: #EFF6FF; color: #2563EB; padding: 3px 8px; border-radius: 9999px; font-weight: 700">Ustoz Ruxsat Berdi</span>
-      </div>
-      <p style="font-size: 13px; color: var(--app-text-secondary); margin-bottom: 16px" id="browser-modal-desc">
-        Ustoz ushbu dars manbasidan foydalanishga ruxsat berdi.
-      </p>
-      <a id="browser-modal-link" href="#" target="_blank" class="mobile-btn-lime" style="text-decoration: none; margin-bottom: 10px; font-size: 15px">
-        🚀 Sahifani Ochish (Tashqi Brauzerda)
-      </a>
-      <button type="button" class="mobile-btn-dark" style="background: #F3F4F6; color: var(--app-dark)" onclick="closeStudentBrowser()">
-        Yopish
-      </button>
-    </div>
-  </div>
-
-  <!-- Floating Toast Banner for Remote Alerts -->
-  <div id="floating-toast-alert" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #111827; color: #FFFFFF; padding: 12px 20px; border-radius: 9999px; font-size: 13px; font-weight: 700; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid var(--app-lime)">
-    <span id="floating-toast-text">—</span>
-  </div>
-  <!-- ============================================ -->
-  <!-- FULLSCREEN IN-APP QR CODE CAMERA SCANNER     -->
-  <!-- ============================================ -->
-  <div id="qr-scanner-modal" class="qr-scanner-fullscreen" style="display: none">
-    <!-- Top Bar -->
-    <div class="scanner-top-bar">
-      <div class="scanner-pill-badge">
-        <div class="dot"></div>
-        <span>Kamera Faol</span>
-      </div>
-      <button type="button" class="scanner-close-btn" onclick="closeQRScanner()" title="Yopish">
-        ✕
-      </button>
-    </div>
-
-    <!-- Camera Viewport Box with Ronas IT Lime Frame -->
-    <div class="scanner-camera-container">
-      <div id="qr-reader"></div>
-      <div class="scanner-frame-overlay">
-        <div class="scanner-corner corner-tl"></div>
-        <div class="scanner-corner corner-tr"></div>
-        <div class="scanner-corner corner-bl"></div>
-        <div class="scanner-corner corner-br"></div>
-        <div class="scanner-laser-line"></div>
-      </div>
-    </div>
-
-    <!-- Bottom Instructions & Controls -->
-    <div class="scanner-bottom-controls">
-      <div class="scanner-hint-text" id="scanner-hint">
-        Kamerani ustoz monitori yoki doskadagi QR kodga qarating
-      </div>
-      <div class="scanner-action-buttons-row">
-        <button type="button" class="scanner-sub-btn" id="scanner-torch-btn" onclick="toggleScannerTorch()">
-          <span>🔦</span> Chiroq
-        </button>
-        <button type="button" class="scanner-sub-btn" onclick="toggleCameraFacing()">
-          <span>🔄</span> Kamera
-        </button>
-      </div>
-      <button type="button" class="scanner-sub-btn" style="width: 100%; max-width: 380px; background: rgba(212, 246, 55, 0.15); border-color: var(--app-lime); color: var(--app-lime)" onclick="closeQRScanner(); openJoinSheet();">
-        ✍️ Kodni qo'lda kiritish
-      </button>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- JAVASCRIPT LOGIC                             -->
-  <!-- ============================================ -->
+  <link rel="stylesheet" href="/css/student.css?v=4.0">
+  <link rel="modulepreload" href="/js/student/app.js?v=4.0">
   <script>
-    // ============================================
-    // CLOCK & STATUS BAR
-    // ============================================
-    function updateClock() {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
-      const el = document.getElementById('top-status-time');
-      if (el) el.textContent = timeStr;
-      const devTime = document.getElementById('device-time');
-      if (devTime) devTime.textContent = timeStr;
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    // ============================================
-    // GET SESSION ID FROM URL
-    // ============================================
-    const urlParams = new URLSearchParams(window.location.search);
-    let sessionId = urlParams.get('session');
-    const actionParam = urlParams.get('action');
-
-    if (!sessionId) {
-      const manualGroup = document.getElementById('manual-session-group');
-      if (manualGroup) manualGroup.style.display = 'block';
-      const infoEl = document.getElementById('session-info');
-      if (infoEl) infoEl.textContent = 'QR kodni skanerlang yoki kodni kiriting';
-
-      if (actionParam === 'scan') {
-        setTimeout(() => {
-          openQRScanner();
-        }, 300);
-      }
-    } else {
-      loadSessionInfo();
-    }
-
-    // ============================================
-    // SOCKET & STATE
-    // ============================================
-    const socket = io();
-    let studentId = null;
-    let joinTime = null;
-    let lockTimerInterval = null;
-    let isLocked = false;
-    let activeQuizData = null;
-    let activeMaterialData = null;
-    let currentAllowedTool = null; // null | 'calculator' | 'browser'
-
-    // Reset native kiosk mode when landing on student page
-    if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
-      window.AndroidBridge.stopKioskMode();
-    }
-
-    // Name persistence (Ism-familiyani 1 marta kiritish)
-    const savedStudentName = localStorage.getItem('edufocus_student_name');
-    if (savedStudentName) {
-      const studentInput = document.getElementById('student-name');
-      if (studentInput) studentInput.value = savedStudentName;
-      const headerGreeting = document.getElementById('header-student-name');
-      if (headerGreeting) headerGreeting.textContent = savedStudentName;
-      const savedBox = document.getElementById('saved-profile-box');
-      if (savedBox) savedBox.style.display = 'block';
-      const savedDisplay = document.getElementById('saved-name-display');
-      if (savedDisplay) savedDisplay.textContent = savedStudentName;
-    }
-
-    function editStudentName() {
-      const savedBox = document.getElementById('saved-profile-box');
-      if (savedBox) savedBox.style.display = 'none';
-      const input = document.getElementById('student-name');
-      if (input) {
-        input.focus();
-        input.select();
-      }
-    }
-
-    // Service Worker & PWA Install
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      });
-    }
-
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const directBtn = document.getElementById('modal-direct-install-btn');
-      if (directBtn) directBtn.style.display = 'flex';
-    });
-
-    function triggerPWAInstall() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          deferredPrompt = null;
-        });
-      } else {
-        openInstallGuideModal();
-      }
-    }
-
-    function openInstallGuideModal() {
-      const modal = document.getElementById('install-guide-modal');
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeInstallGuide() {
-      const modal = document.getElementById('install-guide-modal');
-      if (modal) modal.classList.remove('active');
-    }
-
-    function performDirectInstall() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          deferredPrompt = null;
-          closeInstallGuide();
-        });
-      } else {
-        alert('Ilovani o\'rnatish uchun brauzeringizning 3 nuqta (⋮) yoki Ulashish (Share) menyusi orqali "Ilovani o\'rnatish" yoki "Bosh ekranga qo\'shish" tugmasini bosing.');
-      }
-    }
-
-    function openJoinSheet() {
-      const modal = document.getElementById('join-sheet-modal');
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeJoinSheet() {
-      const modal = document.getElementById('join-sheet-modal');
-      if (modal) modal.classList.remove('active');
-    }
-
-    function openNotificationsModal() {
-      const modal = document.getElementById('notifications-modal');
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeNotificationsModal() {
-      const modal = document.getElementById('notifications-modal');
-      if (modal) modal.classList.remove('active');
-    }
-
-    function switchNavTab(tab) {
-      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-      const activeBtn = document.getElementById(`tab-nav-${tab}`);
-      if (activeBtn) activeBtn.classList.add('active');
-    }
-
-    // ============================================
-    // DEVICE DETECTION
-    // ============================================
-    function getDeviceInfo() {
-      const ua = navigator.userAgent;
-      let device = 'Noma\'lum qurilma';
-
-      if (/iPhone/.test(ua)) {
-        const match = ua.match(/iPhone\s*(?:OS\s*)?(\d+[_\d]*)?/);
-        device = 'iPhone' + (match ? ' (iOS ' + match[1]?.replace(/_/g, '.') + ')' : '');
-      } else if (/iPad/.test(ua)) {
-        device = 'iPad';
-      } else if (/Samsung|SM-/.test(ua)) {
-        const match = ua.match(/SM-[\w]+/);
-        device = 'Samsung ' + (match ? match[0] : 'Galaxy');
-      } else if (/Xiaomi|Redmi|POCO/.test(ua)) {
-        device = ua.match(/Xiaomi|Redmi\s*\w+|POCO\s*\w+/)?.[0] || 'Xiaomi';
-      } else if (/HUAWEI|Honor/.test(ua)) {
-        device = ua.match(/HUAWEI\s*[\w-]+|Honor\s*[\w-]+/)?.[0] || 'Huawei';
-      } else if (/OPPO|vivo|realme|OnePlus/.test(ua)) {
-        device = ua.match(/OPPO\s*[\w]+|vivo\s*[\w]+|realme\s*[\w]+|OnePlus\s*[\w]+/)?.[0] || 'Android';
-      } else if (/Android/.test(ua)) {
-        const match = ua.match(/;\s*([\w\s]+)\s*Build/);
-        device = match ? match[1].trim() : 'Android qurilma';
-      } else if (/Windows/.test(ua)) {
-        device = 'Windows PC';
-      } else if (/Mac/.test(ua)) {
-        device = 'MacBook / Mac';
-      } else if (/Linux/.test(ua)) {
-        device = 'Linux qurilma';
-      }
-
-      return device;
-    }
-
-    const deviceModel = getDeviceInfo();
-    const devModelEl = document.getElementById('device-model');
-    if (devModelEl) devModelEl.textContent = deviceModel;
-    const devModelCard = document.getElementById('device-model-card');
-    if (devModelCard) devModelCard.textContent = deviceModel;
-
-    // ============================================
-    // LOAD SESSION INFO
-    // ============================================
-    async function loadSessionInfo() {
-      if (!sessionId) return;
-
-      try {
-        const res = await fetch(`/api/sessions/${sessionId}`);
-        const data = await res.json();
-
-        if (data.id) {
-          if (data.status !== 'active') {
-            document.getElementById('session-info').textContent = 'Bu dars sessiyasi allaqachon tugagan.';
-            return;
-          }
-          document.getElementById('session-info').textContent = `${data.name} — ${data.subject || ''}`;
-          document.getElementById('header-student-name').textContent = data.name;
-        } else {
-          document.getElementById('session-info').textContent = 'Sessiya topilmadi. Kodni tekshiring.';
-        }
-      } catch (err) {
-        console.log('Session info error');
-      }
-    }
-
-    // ============================================
-    // JOIN FORM
-    // ============================================
-    document.getElementById('join-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      if (!sessionId) {
-        const manualCode = document.getElementById('manual-session-code').value.trim();
-        if (!manualCode) {
-          const errEl = document.getElementById('join-error');
-          errEl.textContent = 'Iltimos, dars kodini kiriting!';
-          errEl.style.display = 'block';
-          return;
-        }
-        sessionId = manualCode;
-      }
-
-      const name = document.getElementById('student-name').value.trim();
-      if (!name) return;
-
-      // Remember name forever so student never has to type it again
-      localStorage.setItem('edufocus_student_name', name);
-
-      const joinBtn = document.getElementById('join-btn');
-      joinBtn.disabled = true;
-      joinBtn.innerHTML = 'Ulanmoqda...';
-
-      socket.emit('student-join', {
-        sessionId: sessionId,
-        studentName: name,
-        device: deviceModel
-      });
-    });
-
-    // ============================================
-    // SOCKET EVENTS
-    // ============================================
-    socket.on('join-success', (data) => {
-      studentId = data.studentId;
-      joinTime = Date.now();
-      isLocked = data.locked;
-
-      closeJoinSheet();
-
-      const studentName = document.getElementById('student-name').value.trim();
-      document.getElementById('header-student-name').textContent = studentName || data.sessionName;
-      document.getElementById('lock-session-name').textContent = `${data.sessionName} — ${data.subject || ''}`;
-      document.getElementById('unlocked-session').textContent = data.sessionName;
-
-      // Update hero
-      document.getElementById('hero-join-action-btn').innerHTML = '✅ Darsga Ulandingiz';
-      document.getElementById('hero-join-action-btn').style.background = 'var(--app-lime)';
-      document.getElementById('hero-join-action-btn').style.color = 'var(--app-dark)';
-
-      isLocked = (data.locked === true);
-      if (isLocked) {
-        showScreen('lock');
-        startLockTimer(data.duration);
-        requestFullscreen();
-        if (window.AndroidBridge && window.AndroidBridge.startKioskMode) {
-          window.AndroidBridge.startKioskMode();
-        }
-      } else {
-        showScreen('unlocked');
-        if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
-          window.AndroidBridge.stopKioskMode();
-        }
-      }
-
-      if (data.activeQuiz) {
-        activeQuizData = data.activeQuiz;
-        renderStudentQuiz(data.activeQuiz);
-      }
-      if (data.activeMaterial) {
-        activeMaterialData = data.activeMaterial;
-        showStudentMaterial(data.activeMaterial);
-      }
-
-      if (data.allowedTool) {
-        currentAllowedTool = data.allowedTool.tool;
-        if (data.allowedTool.tool === 'calculator') {
-          openStudentCalculator();
-        } else if (data.allowedTool.tool === 'browser') {
-          openStudentBrowser(data.allowedTool.url, data.allowedTool.appName);
-        }
-      }
-    });
-
-    // Remote App Control from Teacher (Calculator, Chrome, Whitelist)
-    socket.on('app-control', (data) => {
-      const { tool, action, url, appName } = data;
-      if (action === 'open') {
-        currentAllowedTool = tool;
-        if (tool === 'calculator') {
-          if (window.AndroidBridge && window.AndroidBridge.openCalculator) {
-            window.AndroidBridge.openCalculator();
-          }
-          openStudentCalculator();
-          showToastAlert('🧮 Ustoz kalkulyatorga ruxsat berdi!');
-        } else if (tool === 'browser') {
-          if (window.AndroidBridge && window.AndroidBridge.openBrowser) {
-            window.AndroidBridge.openBrowser(url || 'https://uz.wikipedia.org');
-          }
-          openStudentBrowser(url, appName);
-          showToastAlert(`🌐 Ustoz "${appName || 'Dars manbasi'}"ga ruxsat berdi!`);
-        }
-      } else if (action === 'close' || tool === 'lock_all') {
-        currentAllowedTool = null;
-        closeStudentCalculator();
-        closeStudentBrowser();
-        showToastAlert('🔒 Ustoz ilovalardan foydalanishni yakunladi. Diqqat darsda!');
-      }
-    });
-
-    socket.on('join-error', (data) => {
-      const errorEl = document.getElementById('join-error');
-      errorEl.textContent = data.message;
-      errorEl.style.display = 'block';
-
-      const joinBtn = document.getElementById('join-btn');
-      joinBtn.disabled = false;
-      joinBtn.innerHTML = 'Darsga Kirish 🚀';
-    });
-
-    socket.on('session-unlocked', (data) => {
-      isLocked = false;
-      showScreen('unlocked');
-      exitFullscreen();
-      if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
-        window.AndroidBridge.stopKioskMode();
-      }
-
-      if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200]);
-      }
-    });
-
-    socket.on('session-locked', (data) => {
-      isLocked = true;
-      showScreen('lock');
-      requestFullscreen();
-      if (window.AndroidBridge && window.AndroidBridge.startKioskMode) {
-        window.AndroidBridge.startKioskMode();
-      }
-    });
-
-    socket.on('session-ended', (data) => {
-      isLocked = false;
-
-      if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
-        window.AndroidBridge.stopKioskMode();
-      }
-
-      if (joinTime) {
-        const elapsed = Math.floor((Date.now() - joinTime) / 1000 / 60);
-        document.getElementById('end-duration').textContent = `${elapsed} daqiqa`;
-      }
-
-      showScreen('ended');
-      exitFullscreen();
-      closeStudentQuiz();
-      if (lockTimerInterval) clearInterval(lockTimerInterval);
-
-      if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200, 100, 200]);
-      }
-    });
-
-    // Prevent accidental browser closure / back gesture during class
-    window.addEventListener('beforeunload', (e) => {
-      if (isLocked) {
-        e.preventDefault();
-        e.returnValue = 'Dars davom etmoqda! Ilovadan chiqish taqiqlangan.';
-        return e.returnValue;
-      }
-    });
-
-    socket.on('new-quiz', (quiz) => {
-      activeQuizData = quiz;
-      document.getElementById('menu-quiz-subtitle').textContent = `Yangi: "${quiz.title}"`;
-      renderStudentQuiz(quiz);
-    });
-
-    socket.on('quiz-result', (data) => {
-      document.getElementById('student-quiz-form').style.display = 'none';
-      document.getElementById('sq-result-view').style.display = 'block';
-
-      document.getElementById('sq-result-score').textContent = `${data.correctCount} / ${data.totalQuestions}`;
-
-      const emoji = data.percentage >= 80 ? '🎉' : (data.percentage >= 50 ? '👍' : '📚');
-      document.getElementById('sq-result-emoji').textContent = emoji;
-
-      const title = data.percentage >= 80 ? 'A\'lo natija!' : (data.percentage >= 50 ? 'Yaxshi natija!' : 'Harakat qiling!');
-      document.getElementById('sq-result-title').textContent = title;
-      document.getElementById('sq-result-desc').textContent = `To'g'ri javoblar: ${data.percentage}%`;
-
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 100, 200]);
-      }
-    });
-
-    socket.on('new-material', (material) => {
-      activeMaterialData = material;
-      document.getElementById('menu-material-subtitle').textContent = `Yangi: "${material.title}"`;
-      showStudentMaterial(material);
-    });
-
-    // ============================================
-    // SCREEN MANAGEMENT
-    // ============================================
-    function showScreen(screen) {
-      const screens = ['join', 'lock', 'unlocked', 'ended'];
-      screens.forEach(s => {
-        const el = document.getElementById(`screen-${s}`);
-        if (el) el.style.display = (s === screen) ? 'block' : 'none';
-      });
-
-      // If not on lock screen, ensure kiosk mode is disabled
-      if (screen !== 'lock') {
-        if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
-          window.AndroidBridge.stopKioskMode();
-        }
-      }
-
-      // Bottom nav bar visibility
-      const bottomNav = document.querySelector('.mobile-bottom-nav');
-      if (bottomNav) {
-        bottomNav.style.display = (screen === 'lock') ? 'none' : 'flex';
-      }
-    }
-
-    let emergencyTapCount = 0;
-    let emergencyLastTap = 0;
-    function handleEmergencyUnlockTap() {
-      const now = Date.now();
-      if (now - emergencyLastTap < 2500) {
-        emergencyTapCount++;
-      } else {
-        emergencyTapCount = 1;
-      }
-      emergencyLastTap = now;
-
-      if (emergencyTapCount >= 3) {
-        emergencyTapCount = 0;
-        isLocked = false;
-        if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
-          window.AndroidBridge.stopKioskMode();
-        }
-        showToastAlert('🔓 Favqulodda qulf ochildi!');
-        showScreen('join');
-      } else {
-        showToastAlert(`Favqulodda ochish uchun yana ${3 - emergencyTapCount} marta bosing`);
-      }
-    }
-
-    function exitEduFocusApp() {
-      if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
-        window.AndroidBridge.stopKioskMode();
-      }
-      if (window.AndroidBridge && window.AndroidBridge.exitApp) {
-        window.AndroidBridge.exitApp();
-      } else {
-        showScreen('join');
-        showToastAlert('Bosh sahifaga qaytildi');
-      }
-    }
-
-    // ============================================
-    // LOCK TIMER
-    // ============================================
-    function startLockTimer(durationMinutes) {
-      if (lockTimerInterval) clearInterval(lockTimerInterval);
-
-      let totalSeconds = (durationMinutes || 45) * 60;
-      let remainingSeconds = totalSeconds;
-
-      function updateDisplay() {
-        const minutes = Math.floor(remainingSeconds / 60);
-        const seconds = remainingSeconds % 60;
-        const str = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        const el = document.getElementById('lock-timer');
-        if (el) el.textContent = str;
-
-        // Update circular ring offset
-        const circle = document.getElementById('lock-progress-circle');
-        if (circle) {
-          const circumference = 597;
-          const offset = circumference - (remainingSeconds / totalSeconds) * circumference;
-          circle.style.strokeDashoffset = offset;
-        }
-
-        if (remainingSeconds <= 0) {
-          clearInterval(lockTimerInterval);
-        } else {
-          remainingSeconds--;
-        }
-      }
-
-      updateDisplay();
-      lockTimerInterval = setInterval(updateDisplay, 1000);
-    }
-
-    // ============================================
-    // FULLSCREEN & WAKE LOCK
-    // ============================================
-    function requestFullscreen() {
-      try {
-        const el = document.documentElement;
-        if (el.requestFullscreen) {
-          el.requestFullscreen().catch(() => {});
-        } else if (el.webkitRequestFullscreen) {
-          el.webkitRequestFullscreen();
-        }
-      } catch (e) {}
-
-      requestWakeLock();
-    }
-
-    function exitFullscreen() {
-      try {
-        if (document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
-      } catch (e) {}
-    }
-
-    let wakeLock = null;
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch (e) {}
-    }
-
-    // ============================================
-    // PAGE VISIBILITY (Violation Detection)
-    // ============================================
-    let violationCount = 0;
-    document.addEventListener('visibilitychange', () => {
-      if (!studentId || !sessionId) return;
-
-      // If teacher has explicitly permitted Calculator or Browser, don't count violation!
-      if (currentAllowedTool) {
-        return;
-      }
-
-      if (document.hidden) {
-        violationCount++;
-        const countEl = document.getElementById('lock-violation-count');
-        if (countEl) countEl.textContent = `${violationCount} marta`;
-
-        const scoreEl = document.getElementById('lock-focus-score');
-        if (scoreEl) {
-          const score = Math.max(0, 100 - (violationCount * 15));
-          scoreEl.textContent = `${score}%`;
-          if (score < 70) scoreEl.style.color = '#EF4444';
-          else if (score < 90) scoreEl.style.color = '#F59E0B';
-        }
-
-        socket.emit('student-left-page', {
-          sessionId: sessionId,
-          studentId: studentId
-        });
-      } else {
-        socket.emit('student-returned', {
-          sessionId: sessionId,
-          studentId: studentId
-        });
-
-        if (isLocked) {
-          requestFullscreen();
-        }
-      }
-    });
-
-    // ============================================
-    // STUDENT QUIZ & MATERIAL
-    // ============================================
-    let currentStudentQuiz = null;
-    let quizTimerInterval = null;
-
-    function openStudentQuizIfAvailable() {
-      if (activeQuizData) {
-        renderStudentQuiz(activeQuizData);
-      } else {
-        alert('Hozircha ustoz tomonidan test yuborilmadi.');
-      }
-    }
-
-    function openStudentMaterialIfAvailable() {
-      if (activeMaterialData) {
-        showStudentMaterial(activeMaterialData);
-      } else {
-        alert('Hozircha ustoz tomonidan dars materiali yuborilmadi.');
-      }
-    }
-
-    function renderStudentQuiz(quiz) {
-      currentStudentQuiz = quiz;
-      document.getElementById('sq-title').textContent = `📝 ${quiz.title || 'Tezkor Test'}`;
-      document.getElementById('sq-qcount').textContent = `${quiz.questions.length} ta savol`;
-
-      const body = document.getElementById('sq-questions-body');
-      body.innerHTML = quiz.questions.map((q, qIndex) => {
-        const letters = ['A', 'B', 'C', 'D'];
-        const optionsHtml = q.options.map((opt, oIndex) => `
-          <label class="student-quiz-option" id="opt-label-${q.id}-${oIndex}">
-            <input type="radio" name="answer_${q.id}" value="${oIndex}" required onchange="selectQuizOption('${q.id}', ${oIndex})">
-            <span style="font-weight: 800; width: 22px; color: var(--app-dark)">${letters[oIndex]})</span>
-            <span style="flex: 1; font-size: 14px; font-weight: 600">${opt}</span>
-          </label>
-        `).join('');
-
-        return `
-          <div class="student-quiz-q" style="background: #F9FAFB; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); margin-bottom: 14px">
-            <div class="student-quiz-q-title" style="color: var(--app-dark)">${qIndex + 1}. ${q.text}</div>
-            <div>${optionsHtml}</div>
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById('student-quiz-form').style.display = 'block';
-      document.getElementById('sq-result-view').style.display = 'none';
-      document.getElementById('sq-submit-btn').disabled = false;
-      document.getElementById('sq-submit-btn').textContent = 'Javoblarni Topshirish 🚀';
-
-      if (quiz.timeLimit && quiz.timeLimit > 0) {
-        let secondsLeft = quiz.timeLimit * 60;
-        const timerBadge = document.getElementById('sq-timer-badge');
-        const timerVal = document.getElementById('sq-timer-val');
-        timerBadge.style.display = 'flex';
-
-        if (quizTimerInterval) clearInterval(quizTimerInterval);
-        quizTimerInterval = setInterval(() => {
-          secondsLeft--;
-          const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
-          const s = String(secondsLeft % 60).padStart(2, '0');
-          timerVal.textContent = `${m}:${s}`;
-
-          if (secondsLeft <= 0) {
-            clearInterval(quizTimerInterval);
-            submitStudentQuiz();
-          }
-        }, 1000);
-      } else {
-        document.getElementById('sq-timer-badge').style.display = 'none';
-      }
-
-      document.getElementById('student-quiz-overlay').style.display = 'flex';
-
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]);
-      }
-    }
-
-    function selectQuizOption(qId, oIndex) {
-      document.querySelectorAll(`[id^="opt-label-${qId}-"]`).forEach(l => {
-        l.style.borderColor = 'var(--app-border)';
-        l.style.background = '#FFFFFF';
-      });
-      const activeLabel = document.getElementById(`opt-label-${qId}-${oIndex}`);
-      if (activeLabel) {
-        activeLabel.style.borderColor = 'var(--app-dark)';
-        activeLabel.style.background = 'rgba(212, 246, 55, 0.2)';
-      }
-    }
-
-    function submitStudentQuiz(e) {
-      if (e) e.preventDefault();
-      if (!currentStudentQuiz || !sessionId || !studentId) return;
-
-      const answers = {};
-      currentStudentQuiz.questions.forEach(q => {
-        const checked = document.querySelector(`input[name="answer_${q.id}"]:checked`);
-        if (checked) {
-          answers[q.id] = checked.value;
-        }
-      });
-
-      const studentName = document.getElementById('student-name').value || 'O\'quvchi';
-
-      socket.emit('student-submit-quiz', {
-        sessionId,
-        studentId,
-        studentName,
-        quizId: currentStudentQuiz.quizId,
-        answers
-      });
-
-      if (quizTimerInterval) clearInterval(quizTimerInterval);
-      document.getElementById('sq-submit-btn').disabled = true;
-      document.getElementById('sq-submit-btn').textContent = 'Tekshirilmoqda...';
-    }
-
-    function closeStudentQuiz() {
-      document.getElementById('student-quiz-overlay').style.display = 'none';
-      if (quizTimerInterval) clearInterval(quizTimerInterval);
-    }
-
-    function showStudentMaterial(material) {
-      document.getElementById('sm-title').textContent = material.title || 'Dars Materiali';
-      document.getElementById('sm-text').textContent = material.text || 'Ustoz dars materiali yubordi:';
-
-      const linkBtn = document.getElementById('sm-link-btn');
-      if (material.url) {
-        linkBtn.href = material.url;
-        linkBtn.style.display = 'flex';
-      } else {
-        linkBtn.style.display = 'none';
-      }
-
-      const modal = document.getElementById('student-material-modal');
-      if (modal) modal.classList.add('active');
-
-      if (navigator.vibrate) {
-        navigator.vibrate(200);
-      }
-    }
-
-    function closeStudentMaterial() {
-      const modal = document.getElementById('student-material-modal');
-      if (modal) modal.classList.remove('active');
-    }
-
-    // ============================================
-    // IN-APP CAMERA QR SCANNER LOGIC
-    // ============================================
-    let html5QrScanner = null;
-    let currentCameraFacing = 'environment';
-    let isTorchOn = false;
-
-    async function openQRScanner() {
-      const modal = document.getElementById('qr-scanner-modal');
-      if (modal) modal.style.display = 'flex';
-
-      const hintEl = document.getElementById('scanner-hint');
-      if (hintEl) hintEl.textContent = 'Kamerani ustoz doskasidagi QR kodga qarating';
-
-      try {
-        if (!html5QrScanner) {
-          html5QrScanner = new Html5Qrcode("qr-reader");
-        }
-
-        const config = {
-          fps: 15,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
-        };
-
-        await html5QrScanner.start(
-          { facingMode: currentCameraFacing },
-          config,
-          onScanSuccess,
-          onScanFailure
-        );
-      } catch (err) {
-        console.error('Camera start error:', err);
-        const hintEl = document.getElementById('scanner-hint');
-        if (hintEl) {
-          hintEl.textContent = 'Kameraga ruxsat berilmadi yoki kamera band. Kodni qo\'lda kiriting.';
-          hintEl.style.color = '#EF4444';
-        }
-      }
-    }
-
-    async function closeQRScanner() {
-      const modal = document.getElementById('qr-scanner-modal');
-      if (modal) modal.style.display = 'none';
-
-      if (html5QrScanner && html5QrScanner.isScanning) {
-        try {
-          await html5QrScanner.stop();
-        } catch (e) {
-          console.log('Error stopping scanner:', e);
-        }
-      }
-    }
-
-    function onScanFailure(error) {
-      // Ignored - frame didn't contain QR
-    }
-
-    function extractSessionIdFromQR(qrText) {
-      if (!qrText) return null;
-      qrText = qrText.trim();
-
-      // Check if text is URL containing ?session= or &session=
-      if (qrText.includes('session=')) {
-        try {
-          const urlObj = new URL(qrText.startsWith('http') ? qrText : 'https://dummy.uz/' + qrText);
-          const s = urlObj.searchParams.get('session');
-          if (s) return s.trim();
-        } catch (e) {}
-      }
-
-      // Check if it's in format: session:1234abcd or code:1234abcd
-      const match = qrText.match(/(?:session|code)[:=\/]([a-zA-Z0-9_-]+)/i);
-      if (match) return match[1];
-
-      // Otherwise if it's alphanumeric up to 36 chars
-      if (/^[a-zA-Z0-9_-]{4,36}$/.test(qrText)) {
-        return qrText;
-      }
-
-      return qrText;
-    }
-
-    async function onScanSuccess(decodedText, decodedResult) {
-      console.log('QR Code detected:', decodedText);
-
-      // Haptic feedback
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]);
-      }
-
-      // Stop camera
-      await closeQRScanner();
-
-      const extractedSession = extractSessionIdFromQR(decodedText);
-      if (extractedSession) {
-        sessionId = extractedSession;
-        const codeInput = document.getElementById('manual-session-code');
-        if (codeInput) codeInput.value = extractedSession;
-
-        // Update URL without page reload
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set('session', extractedSession);
-        window.history.replaceState({}, '', newUrl);
-
-        // Load session metadata from server
-        loadSessionInfo();
-
-        // Check if student name is already saved (1-marta kiritish)
-        const savedName = localStorage.getItem('edufocus_student_name');
-        if (savedName) {
-          showToastAlert(`Xush kelibsiz, ${savedName}! Darsga ulanmoqda... 🚀`);
-          socket.emit('student-join', {
-            sessionId: sessionId,
-            studentName: savedName,
-            device: deviceModel
-          });
-          return;
-        }
-
-        // If first time, open join sheet once to get name
-        openJoinSheet();
-
-        const studentInput = document.getElementById('student-name');
-        if (studentInput) {
-          studentInput.focus();
-        }
-      } else {
-        alert('QR koddan sessiya kodi topilmadi. Qayta urinib ko\'ring.');
-      }
-    }
-
-    async function toggleCameraFacing() {
-      currentCameraFacing = (currentCameraFacing === 'environment') ? 'user' : 'environment';
-      if (html5QrScanner && html5QrScanner.isScanning) {
-        await html5QrScanner.stop();
-        await openQRScanner();
-      }
-    }
-
-    async function toggleScannerTorch() {
-      try {
-        if (html5QrScanner && html5QrScanner.isScanning) {
-          isTorchOn = !isTorchOn;
-          await html5QrScanner.applyVideoConstraints({
-            advanced: [{ torch: isTorchOn }]
-          });
-          const torchBtn = document.getElementById('scanner-torch-btn');
-          if (torchBtn) {
-            torchBtn.style.background = isTorchOn ? 'var(--app-lime)' : 'rgba(255,255,255,0.1)';
-            torchBtn.style.color = isTorchOn ? 'var(--app-dark)' : '#FFFFFF';
-          }
-        }
-      } catch (e) {
-        alert('Ushbu qurilmada chiroqni dasturiy boshqarish qo\'llab-quvvatlanmaydi.');
-      }
-    }
-    // ============================================
-    // NEO CALCULATOR & BROWSER CONTROLS
-    // ============================================
-    let calcCurrent = '0';
-    let calcExpr = '';
-
-    function openStudentCalculator() {
-      const modal = document.getElementById('student-calculator-modal');
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeStudentCalculator() {
-      const modal = document.getElementById('student-calculator-modal');
-      if (modal) modal.classList.remove('active');
-    }
-
-    function openStudentBrowser(url, title) {
-      const modal = document.getElementById('student-browser-modal');
-      const titleEl = document.getElementById('browser-modal-title');
-      const linkEl = document.getElementById('browser-modal-link');
-      if (titleEl) titleEl.textContent = title || 'Dars Manbasi';
-      if (linkEl) linkEl.href = url || 'https://uz.wikipedia.org';
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeStudentBrowser() {
-      const modal = document.getElementById('student-browser-modal');
-      if (modal) modal.classList.remove('active');
-    }
-
-    function calcInput(val) {
-      const disp = document.getElementById('calc-display');
-      const expr = document.getElementById('calc-expression');
-
-      if (val === 'C') {
-        calcCurrent = '0';
-        calcExpr = '';
-      } else if (val === '=') {
-        try {
-          const clean = calcCurrent.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
-          const res = Function(`'use strict'; return (${clean})`)();
-          calcExpr = calcCurrent + ' =';
-          calcCurrent = String(Number.isFinite(res) ? Math.round(res * 100000000) / 100000000 : 'Error');
-        } catch (e) {
-          calcCurrent = 'Xato';
-        }
-      } else {
-        if (calcCurrent === '0' && !isNaN(val)) {
-          calcCurrent = val;
-        } else {
-          calcCurrent += val;
-        }
-      }
-
-      if (disp) disp.textContent = calcCurrent;
-      if (expr) expr.textContent = calcExpr;
-    }
-
-    let toastTimeout = null;
-    function showToastAlert(msg) {
-      const toast = document.getElementById('floating-toast-alert');
-      const text = document.getElementById('floating-toast-text');
-      if (toast && text) {
-        text.textContent = msg;
-        toast.style.display = 'block';
-        if (toastTimeout) clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => {
-          toast.style.display = 'none';
-        }, 4000);
-      }
-    }
+    try { var t = localStorage.getItem('ef_theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
   </script>
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script type="module" src="/js/student/app.js?v=4.0"></script>
+</head>
+<body>
+<!-- Ikonalar -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient>
+    <symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1.5"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></symbol>
+    <symbol id="i-quiz" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M1 1l22 22M16.7 11.1A11 11 0 0 1 21 13.5M5 13.5a11 11 0 0 1 5.2-2.4M8.5 16.5a6 6 0 0 1 7 0M12 20h.01M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8"/></symbol>
+    <symbol id="i-flash" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.8-3.4L23 10M1 14l4.7 4.4A9 9 0 0 0 20.5 15"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L8 14.2 3 9.3l6.9-1z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></symbol>
+  </defs>
+</svg>
+
+<div class="bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div id="net-banner" class="net-banner" role="status">Internet aloqasi yo'q</div>
+<div id="toast" class="glass" role="status" aria-live="polite"></div>
+
+<main class="app">
+
+  <!-- 0. Boshlang'ich yuklanish -->
+  <section id="s-splash" class="screen splash active">
+    <div class="logo"><svg class="i" viewBox="0 0 24 24"><use href="#i-target"/></svg></div>
+  </section>
+
+  <!-- 1. Onboarding -->
+  <section id="s-onboard" class="screen">
+    <div class="wrap">
+      <div class="row between">
+        <div class="row"><div class="logo sm"><svg class="i" viewBox="0 0 24 24"><use href="#i-target"/></svg></div><b>EduFocus</b></div>
+        <button class="btn btn-ghost" style="min-height:44px;padding:0 10px" data-act="onb-skip">O'tkazish</button>
+      </div>
+      <div class="slides" id="slides">
+        <div class="slide">
+          <div class="art a1"><svg class="i" viewBox="0 0 24 24"><use href="#i-target"/></svg></div>
+          <h1 class="title">Darsda to'liq <span class="grad-text">fokus</span></h1>
+          <p class="muted">Bildirishnomalar va chalg'ituvchi ilovalardan xoli bo'ling. Diqqatni jamlab, yangi mavzuni tezroq o'zlashtiring.</p>
+        </div>
+        <div class="slide">
+          <div class="art a2"><svg class="i" viewBox="0 0 24 24"><use href="#i-bolt"/></svg></div>
+          <h1 class="title">Jonli <span class="grad-text">interaktiv</span> dars</h1>
+          <p class="muted">Ustoz yuborgan tezkor testlarni yeching, slayd va hujjatlarni to'g'ridan-to'g'ri ilovada oching.</p>
+        </div>
+        <div class="slide">
+          <div class="art a3"><svg class="i" viewBox="0 0 24 24"><use href="#i-qr"/></svg></div>
+          <h1 class="title">QR bilan <span class="grad-text">bir zumda</span></h1>
+          <p class="muted">Ustoz doskasidagi QR kodni skanerlang — darsga avtomatik ulanasiz. Buning uchun kamera ruxsati kerak bo'ladi.</p>
+          <button class="btn btn-glass" data-act="onb-camera" id="onb-cam-btn"><svg class="i"><use href="#i-camera"/></svg><span>Kameraga ruxsat berish</span></button>
+        </div>
+      </div>
+      <div class="dots" id="dots"><i class="on"></i><i></i><i></i></div>
+      <button class="btn btn-primary block" data-act="onb-next" id="onb-next">Keyingisi</button>
+    </div>
+  </section>
+
+  <!-- 2. Ism -->
+  <section id="s-name" class="screen">
+    <div class="wrap">
+      <div class="bar" id="name-bar" hidden>
+        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+      </div>
+      <div class="grow"></div>
+      <div class="stack center">
+        <div class="logo"><svg class="i" viewBox="0 0 24 24"><use href="#i-user"/></svg></div>
+        <h1 class="title">Ismingiz nima?</h1>
+        <p class="muted">Ustoz sizni shu ism bilan ko'radi. Ism qurilmada saqlanadi.</p>
+      </div>
+      <form id="name-form" class="stack" autocomplete="off">
+        <input id="name-input" class="field" type="text" maxlength="60" placeholder="Ism va familiya" autocapitalize="words" enterkeyhint="done" aria-label="Ism va familiya">
+        <div class="err" id="name-err"></div>
+        <button class="btn btn-primary block" type="submit">Davom etish</button>
+      </form>
+      <div class="grow"></div>
+    </div>
+  </section>
+
+  <!-- 3. Bosh sahifa: QR yoki kod -->
+  <section id="s-home" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="row" style="background:none;border:0;color:inherit;padding:0;cursor:pointer;flex:1;text-align:left;min-width:0" data-act="go-profile" aria-label="Profil">
+          <div class="avatar" id="home-avatar">T</div>
+          <div style="min-width:0"><div class="muted small">Xush kelibsiz</div><b id="home-name" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Talaba</b></div>
+        </button>
+        <button class="icon-btn" data-act="theme" aria-label="Rejimni almashtirish"><svg class="i"><use href="#i-moon" id="theme-ico"/></svg></button>
+      </div>
+
+      <div class="glass hero-scan fade-in">
+        <div class="scan-orb"><svg class="i"><use href="#i-qr"/></svg></div>
+        <h1 class="title">Darsga qo'shiling</h1>
+        <p class="muted">Ustoz ko'rsatgan QR kodni skanerlang</p>
+        <button class="btn btn-primary block" data-act="scan"><svg class="i"><use href="#i-camera"/></svg>QR kodni skanerlash</button>
+      </div>
+
+      <div class="or">yoki kodni kiriting</div>
+
+      <form id="code-form" class="stack" autocomplete="off">
+        <input id="code-input" class="field code-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••••" aria-label="6 xonali dars kodi">
+        <div class="err" id="code-err" role="alert"></div>
+        <button class="btn btn-glass block" type="submit" id="code-btn">Kirish</button>
+      </form>
+      <div class="grow"></div>
+    </div>
+  </section>
+
+  <!-- 4. Ulanmoqda / kutish (qulf ochiq) -->
+  <section id="s-wait" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <div class="chip ok"><span class="dot"></span><span id="wait-state">Darsga ulandingiz</span></div>
+        <div class="grow"></div>
+        <button class="icon-btn" data-act="leave" aria-label="Darsdan chiqish"><svg class="i"><use href="#i-logout"/></svg></button>
+      </div>
+      <div class="stack center" style="padding:10px 0">
+        <div class="logo" id="wait-logo"><svg class="i"><use href="#i-unlock"/></svg></div>
+        <h1 class="title" id="wait-title">Dars</h1>
+        <p class="muted" id="wait-sub">Ustoz sizga ruxsat berdi. Ilovadan erkin foydalanishingiz mumkin.</p>
+      </div>
+      <div class="glass card row between"><div><div class="muted small">Dars tugashigacha</div><b style="font-size:26px;font-variant-numeric:tabular-nums" id="wait-timer">--:--</b></div><svg class="i lg" style="color:var(--primary)"><use href="#i-clock"/></svg></div>
+      <div class="tiles" id="wait-tiles"></div>
+      <div class="grow"></div>
+    </div>
+  </section>
+
+  <!-- 5. Dars rejimi (qulflangan) -->
+  <section id="s-lesson" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <div class="chip warn"><svg class="i sm"><use href="#i-lock"/></svg>Dars rejimi</div>
+        <div class="grow"></div>
+        <div class="chip" id="lesson-conn"><span class="dot"></span>Onlayn</div>
+      </div>
+      <div class="center stack" style="gap:2px"><h1 class="h2" id="lesson-name">Dars</h1><div class="muted small" id="lesson-subject"></div></div>
+      <div class="glass timer-card">
+        <div class="ring">
+          <svg class="r" viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="92"/><circle class="bar-p" id="ring-p" cx="100" cy="100" r="92"/></svg>
+          <div class="t" id="lesson-timer">--:--</div><div class="tl">qoldi</div>
+        </div>
+        <div class="muted small">Dars tugagach ilova avtomatik ochiladi</div>
+      </div>
+      <div class="tiles" id="lesson-tiles"></div>
+      <div class="stats">
+        <div class="glass stat"><b id="focus-score">100%</b><span>Fokus bahosi</span></div>
+        <div class="glass stat"><b id="viol-count">0</b><span>Chiqishlar</span></div>
+      </div>
+      <div class="glass lock-note"><svg class="i"><use href="#i-shield"/></svg><span>Ilova ochiq qolsa, fokus bahosi saqlanadi. Boshqa ilovaga o'tish ustozga ko'rinadi.</span></div>
+    </div>
+  </section>
+
+  <!-- 6. Test -->
+  <section id="s-quiz" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" id="quiz-title">Test</div>
+        <div class="chip timer-chip" id="quiz-timer" hidden><svg class="i sm"><use href="#i-clock"/></svg><span>00:00</span></div>
+      </div>
+      <div id="quiz-empty" class="glass empty"><div class="eic"><svg class="i lg"><use href="#i-quiz"/></svg></div><h3>Hozircha test yo'q</h3><p>Ustoz test yuborganda bu yerda paydo bo'ladi.</p></div>
+      <form id="quiz-form" class="stack" hidden novalidate>
+        <div class="row between"><span class="muted small" id="quiz-progress-text">0 / 0</span><span class="muted small" id="quiz-count"></span></div>
+        <div class="progress"><i id="quiz-progress"></i></div>
+        <div id="quiz-body" class="stack" style="gap:14px"></div>
+        <div class="dock"><button class="btn btn-primary block" type="submit" id="quiz-submit"><svg class="i"><use href="#i-check"/></svg>Javoblarni topshirish</button></div>
+      </form>
+      <div id="quiz-result" class="stack" hidden></div>
+    </div>
+  </section>
+
+  <!-- 7. Materiallar -->
+  <section id="s-mats" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title">Materiallar</div>
+        <div style="width:46px"></div>
+      </div>
+      <div id="mats-list" class="stack"></div>
+    </div>
+  </section>
+
+  <!-- 8. Hujjat ko'rish -->
+  <section id="s-viewer" class="screen">
+    <div class="row vbar">
+      <button class="icon-btn" data-act="back" aria-label="Yopish"><svg class="i"><use href="#i-x"/></svg></button>
+      <div style="flex:1;min-width:0"><b id="v-title" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Material</b><span id="v-sub" style="font-size:12px;opacity:.7"></span></div>
+    </div>
+    <div class="vnote" id="v-note" hidden></div>
+    <div class="vstage" id="v-stage">
+      <div class="vinner" id="v-inner"></div>
+      <div class="vspin" id="v-spin" hidden><div class="spinner"></div></div>
+    </div>
+    <div class="vfoot" id="v-foot" hidden>
+      <button class="icon-btn" data-act="pdf-prev" aria-label="Oldingi"><svg class="i"><use href="#i-back"/></svg></button>
+      <b id="v-page" style="min-width:90px;text-align:center;font-variant-numeric:tabular-nums">1 / 1</b>
+      <button class="icon-btn" data-act="pdf-next" aria-label="Keyingi"><svg class="i"><use href="#i-next"/></svg></button>
+    </div>
+  </section>
+
+  <!-- 9. QR skaner -->
+  <section id="s-scan" class="screen">
+    <div id="qr-reader"></div>
+    <div class="scan-top">
+      <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+      <div class="bar-title">QR skaner</div>
+      <button class="icon-btn" data-act="torch" id="torch-btn" aria-label="Chiroq" hidden><svg class="i"><use href="#i-flash"/></svg></button>
+      <button class="icon-btn" data-act="flip" aria-label="Kamerani almashtirish"><svg class="i"><use href="#i-flip"/></svg></button>
+    </div>
+    <div class="scan-frame"><i></i><i></i><i></i><i></i><div class="scan-line"></div></div>
+    <div class="scan-bottom">
+      <div class="scan-hint" id="scan-hint">Kamerani ustozning QR kodiga qarating</div>
+      <button class="btn btn-glass" data-act="back" style="color:#fff;background:rgba(255,255,255,.14)">Kodni qo'lda kiritish</button>
+    </div>
+  </section>
+
+  <!-- 10. Dars tugadi -->
+  <section id="s-ended" class="screen">
+    <div class="wrap center">
+      <div class="grow"></div>
+      <div class="result-ico" style="background:linear-gradient(135deg,#10b981,#06b6d4)"><svg class="i"><use href="#i-check"/></svg></div>
+      <h1 class="title">Dars yakunlandi</h1>
+      <p class="muted" id="end-sub">Qatnashganingiz uchun rahmat!</p>
+      <div class="stats" style="width:100%;text-align:left">
+        <div class="glass stat"><b id="end-dur">0 daq</b><span>Davomiylik</span></div>
+        <div class="glass stat"><b id="end-disc">100%</b><span>Intizom</span></div>
+        <div class="glass stat"><b id="end-quiz">—</b><span>Test natijasi</span></div>
+        <div class="glass stat"><b id="end-rate">—</b><span>Sizning bahoingiz</span></div>
+      </div>
+      <button class="btn btn-glass block" data-act="rate" id="end-rate-btn"><svg class="i"><use href="#i-star"/></svg>Ustozni baholash</button>
+      <button class="btn btn-primary block" data-act="home">Bosh sahifaga</button>
+      <div class="grow"></div>
+    </div>
+  </section>
+
+  <!-- 11. Profil -->
+  <section id="s-profile" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title">Profil</div>
+        <div style="width:46px"></div>
+      </div>
+      <div class="glass card row"><div class="avatar" id="prof-avatar" style="width:56px;height:56px;border-radius:18px;font-size:22px">T</div><div style="flex:1;min-width:0"><b id="prof-name" style="font-size:18px;display:block;overflow:hidden;text-overflow:ellipsis">Talaba</b><span class="muted small">Talaba</span></div><button class="btn btn-glass" style="min-height:44px;padding:0 16px" data-act="edit-name">O'zgartirish</button></div>
+      <div class="stack" style="gap:8px"><b class="small muted" style="padding-left:6px">Ko'rinish</b>
+        <div class="seg" id="theme-seg"><button data-act="theme-set" data-v="auto">Avto</button><button data-act="theme-set" data-v="light">Yorug'</button><button data-act="theme-set" data-v="dark">Qorong'i</button></div>
+      </div>
+      <div class="glass" style="overflow:hidden">
+        <a class="list-row" href="/privacy-policy"><span class="ric"><svg class="i sm"><use href="#i-shield"/></svg></span><span class="grow">Maxfiylik siyosati</span><svg class="i sm muted"><use href="#i-next"/></svg></a>
+        <a class="list-row" href="/terms"><span class="ric"><svg class="i sm"><use href="#i-file"/></svg></span><span class="grow">Foydalanish shartlari</span><svg class="i sm muted"><use href="#i-next"/></svg></a>
+        <button class="list-row danger" data-act="reset-ask" id="reset-row"><span class="ric"><svg class="i sm"><use href="#i-trash"/></svg></span><span class="grow">Ma'lumotlarni o'chirish<span class="sub">Ism va sozlamalar qurilmadan tozalanadi</span></span></button>
+        <button class="list-row" data-act="exit-app" id="exit-row" hidden><span class="ric"><svg class="i sm"><use href="#i-logout"/></svg></span><span class="grow">Ilovadan chiqish</span></button>
+      </div>
+      <div class="muted small center" style="text-align:center">EduFocus · versiya 4.0</div>
+    </div>
+  </section>
+</main>
+
+<!-- Aloqa uzildi -->
+<div class="overlay mid" id="o-conn" role="alertdialog" aria-labelledby="conn-title">
+  <div class="sheet glass center" style="text-align:center;align-items:center">
+    <div class="result-ico" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" id="conn-ico"><svg class="i"><use href="#i-wifi-off"/></svg></div>
+    <h2 class="h2" id="conn-title">Aloqa uzildi</h2>
+    <p class="muted" id="conn-text">Internet qaytganda darsga avtomatik qaytasiz.</p>
+    <div class="spinner" id="conn-spin"></div>
+    <button class="btn btn-primary block" data-act="reconnect">Qayta urinish</button>
+  </div>
+</div>
+
+<!-- Tasdiqlash -->
+<div class="overlay mid" id="o-confirm" role="alertdialog" aria-labelledby="cf-title">
+  <div class="sheet glass center" style="text-align:center">
+    <h2 class="h2" id="cf-title">Tasdiqlang</h2>
+    <p class="muted" id="cf-text"></p>
+    <button class="btn btn-primary block" id="cf-ok" data-act="confirm-ok">Ha</button>
+    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-confirm">Bekor qilish</button>
+  </div>
+</div>
+
+<!-- Baholash -->
+<div class="overlay" id="o-rate" role="dialog" aria-labelledby="rate-title">
+  <div class="sheet glass">
+    <h2 class="h2 center" id="rate-title" style="text-align:center">Ustozni baholang</h2>
+    <div class="stars" id="rate-stars"></div>
+    <div class="center muted" id="rate-label" style="text-align:center;min-height:22px"></div>
+    <textarea class="field" id="rate-comment" maxlength="500" placeholder="Fikringiz (ixtiyoriy)"></textarea>
+    <button class="btn btn-primary block" data-act="rate-send">Yuborish</button>
+    <button class="btn btn-ghost block" data-act="rate-close">Keyinroq</button>
+  </div>
+</div>
+
+<!-- Kalkulyator -->
+<div class="overlay" id="o-calc" role="dialog" aria-label="Kalkulyator">
+  <div class="sheet glass">
+    <div class="row between"><b class="h2">Kalkulyator</b><button class="icon-btn" data-act="close-overlay" data-id="o-calc" aria-label="Yopish"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <div class="calc-disp"><small id="calc-expr"></small><b id="calc-out">0</b></div>
+    <div class="calc-grid" id="calc-grid"></div>
+  </div>
+</div>
+
+<!-- Ruxsat etilgan vosita -->
+<div class="overlay mid" id="o-tool" role="dialog" aria-labelledby="tool-title">
+  <div class="sheet glass center" style="text-align:center;align-items:center">
+    <div class="result-ico" style="background:linear-gradient(135deg,#06b6d4,#3b82f6)"><svg class="i"><use href="#i-globe"/></svg></div>
+    <h2 class="h2" id="tool-title">Dars manbasi</h2>
+    <p class="muted">Ustoz bu manbadan foydalanishga ruxsat berdi.</p>
+    <a class="btn btn-primary block" id="tool-link" target="_blank" rel="noopener noreferrer" href="#"><svg class="i"><use href="#i-ext"/></svg>Ochish</a>
+    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-tool">Yopish</button>
+  </div>
+</div>
+
+<script type="module">
+  // Moduli skriptlar yuklanmasa (eski brauzer) foydalanuvchiga xabar beramiz
+  window.__efBooted = false;
+  setTimeout(function () {
+    if (!window.__efBooted) {
+      var s = document.getElementById('s-splash');
+      if (s) s.insertAdjacentHTML('beforeend', '<p style="position:absolute;bottom:40px;left:0;right:0;text-align:center;opacity:.7">Ilova yuklanmadi. Sahifani yangilang.</p>');
+    }
+  }, 6000);
+</script>
 </body>
 </html>
