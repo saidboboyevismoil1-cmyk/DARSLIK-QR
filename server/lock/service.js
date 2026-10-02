@@ -322,6 +322,7 @@ function createService({ io, legacy, sql, config, helpers }) {
     }
     for (const s of targets) logEvent(session, s, type, { reason, by: by || null });
     helpers.saveSessions();
+    emitOverview(session);
     return targets.length;
   }
 
@@ -339,6 +340,7 @@ function createService({ io, legacy, sql, config, helpers }) {
     }
     for (const s of ids ? session.students.filter((x) => ids.includes(x.id)) : session.students) logEvent(session, s, 'relocked', { by: by || null });
     helpers.saveSessions();
+    emitOverview(session);
   }
 
   // Eski /unlock va /lock endpoint'lari uchun hook'lar

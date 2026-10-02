@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dars rejimi — EduFocus</title>
+<style>
+:root{--bg:#f4f5fb;--card:#fff;--ink:#111827;--mut:#6b7280;--line:#e5e7eb;--pri:#6366f1;--g:#16a34a;--y:#d97706;--r:#dc2626;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b1020;--card:#151b2e;--ink:#e5e7eb;--mut:#9ca3af;--line:#26304a;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:16px}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-block:14px}
+header h1{font-size:20px;margin:0;flex:1}a{color:var(--pri);text-decoration:none}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;cursor:pointer}
+button.pri{background:var(--pri);border-color:var(--pri);color:#fff}button.danger{color:var(--r)}button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+button:disabled{opacity:.5}
+input,select,textarea{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px;max-width:100%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.grow{flex:1}
+.pill{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600}
+.g{background:#dcfce7;color:#166534}.y{background:#fef3c7;color:#92400e}.r{background:#fee2e2;color:#991b1b}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:24px}
+.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:var(--mut);font-weight:600}
+.muted{color:var(--mut)}.hidden{display:none!important}
+.qrbox{text-align:center}.qrbox img{width:min(320px,100%);border-radius:12px}
+#projector{position:fixed;inset:0;background:#0f172a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:9;padding:16px}
+#projector img{width:min(70vmin,560px);border-radius:16px}#projector .code{font-size:min(14vmin,96px);letter-spacing:.15em;font-weight:800}
+.req{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
+.set{display:grid;grid-template-columns:minmax(160px,260px) 1fr;gap:8px;align-items:center;margin:6px 0}
+@media(max-width:560px){.set{grid-template-columns:1fr}}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;z-index:20}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔒 Dars rejimi</h1>
+  <a href="/dashboard.html">← Boshqaruv paneli</a>
+  <button id="bell" title="Ovozli ogohlantirish">🔔 Ovoz: o'chiq</button>
+</header>
+<nav id="tabs">
+  <button data-tab="live" class="on">Dars</button>
+  <button data-tab="rosters">Guruh ro'yxatlari</button>
+  <button data-tab="admin" class="admin hidden">Admin</button>
+</nav>
+
+<!-- ===== Dars ===== -->
+<section id="tab-live">
+  <div class="card row">
+    <label>Dars: <select id="sess"></select></label>
+    <span id="locked" class="pill"></span>
+    <span class="grow"></span>
+    <button id="btnProj" class="pri">QR ni proyektorga chiqarish</button>
+  </div>
+  <div id="liveBody" class="hidden">
+    <div class="stats card" id="sum"></div>
+    <div class="card" id="reqCard"><b>So'rovlar</b><div id="reqs" class="muted">Hozircha yo'q</div></div>
+    <div class="card row">
+      <button id="btnRelease">Hammaga ruxsat berish</button>
+      <button id="btnRelock">Qayta qulflash</button>
+      <label>+ <input id="extMin" type="number" min="1" max="180" value="10" style="width:70px"> daqiqa</label>
+      <button id="btnExt">Vaqtni uzaytirish</button>
+      <span class="grow"></span>
+      <a id="csvLink" href="#">Hisobot (CSV)</a>
+      <button id="btnPdf">PDF / chop etish</button>
+    </div>
+    <div class="card">
+      <div class="row"><b class="grow">Talabalar</b><label><input type="checkbox" id="onlyEx" checked> faqat istisnolar (sariq/qizil)</label></div>
+      <div class="tbl"><table><thead><tr><th></th><th>Ism</th><th>Daraja</th><th>Holat</th><th>Chetlanish</th><th>Himoyasiz</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div id="allGreen" class="muted hidden" style="padding:10px 0">Hamma yaxshi — istisno yo'q ✅</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Guruhlar ===== -->
+<section id="tab-rosters" class="hidden">
+  <div class="card">
+    <b>Yangi guruh (CSV)</b>
+    <p class="muted">Har qatorda: <code>Ism Familiya</code> yoki <code>Ism Familiya,HEMIS ID</code> (sarlavha: <code>FISH,HEMIS ID</code>). Talaba birinchi kirishda qurilmasi bilan bog'lanadi (bir martalik).</p>
+    <div class="row"><input id="gName" placeholder="Guruh nomi (masalan, 101-guruh)"><input type="file" id="gFile" accept=".csv,text/csv,text/plain"></div>
+    <textarea id="gCsv" rows="5" style="width:100%;margin-top:8px" placeholder="Ali Valiyev&#10;Madina Karimova"></textarea>
+    <div class="row" style="margin-top:8px"><button class="pri" id="gSave">Saqlash</button><span id="gMsg" class="muted"></span></div>
+  </div>
+  <div id="groups"></div>
+</section>
+
+<!-- ===== Admin ===== -->
+<section id="tab-admin" class="hidden">
+  <div class="card"><b>Fakultetlar</b>
+    <div id="facs"></div>
+    <div class="row" style="margin-top:8px"><input id="facName" placeholder="Yangi fakultet nomi"><button id="facAdd">Qo'shish</button></div>
+  </div>
+  <div class="card"><b>Sozlamalar</b>
+    <div class="row" style="margin:8px 0"><label>Doira: <select id="setScope"><option value="global">Hammasi uchun</option></select></label><span class="muted">Fakultet tanlansa, faqat o'sha fakultet uchun qiymatlar yoziladi.</span></div>
+    <div id="settings"></div>
+    <div class="row"><button class="pri" id="setSave">Saqlash</button><span id="setMsg" class="muted"></span></div>
+  </div>
+  <div class="card"><b>Haftalik hisobot</b>
+    <div class="row"><input id="wk" placeholder="Hafta (YYYY-Www), bo'sh = oxirgi"><button id="wkLoad">Ko'rsatish</button><a id="wkCsv" href="#">CSV</a><button id="wkPdf">PDF / chop etish</button></div>
+    <div class="tbl" id="wkOut"></div>
+    <p class="muted">Hisobot faqat shu panelda. E-pochta orqali yuborish uchun SMTP sozlamalari <code>config/.env</code> da (hozircha o'chiq).</p>
+  </div>
+  <div class="card"><b>Statistika (oxirgi 4 hafta, shaxssiz)</b><pre id="tele" class="muted" style="white-space:pre-wrap;margin:6px 0 0"></pre></div>
+  <div class="card"><b>Ma'lumot o'chirish so'rovlari</b><div id="dels" class="muted">Yo'q</div></div>
+</section>
+
+<div id="projector" class="hidden"><div>Darsga qo'shiling</div><img id="projQr" alt="QR"><div class="code" id="projCode"></div><div class="muted" style="color:#cbd5e1">Yopish uchun bosing</div></div>
+<div id="toast" class="hidden"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const token = localStorage.getItem('edufocus_token');
+  const me = JSON.parse(localStorage.getItem('edufocus_teacher') || '{}');
+  if (!token) { location.href = '/login.html'; return; }
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const api = async (path, opt = {}) => {
+    const r = await fetch('/api' + path, { ...opt, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(opt.headers || {}) }, body: opt.body ? JSON.stringify(opt.body) : undefined });
+    if (r.status === 401) { localStorage.removeItem('edufocus_token'); location.href = '/login.html'; throw new Error('401'); }
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Xato');
+    return j;
+  };
+  const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 3000); };
+  const isAdmin = me.role === 'admin';
+  if (isAdmin) document.querySelector('.admin').classList.remove('hidden');
+
+  // ---------- tablar
+  document.querySelectorAll('#tabs button').forEach((b) => b.onclick = () => {
+    document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x === b));
+    ['live', 'rosters', 'admin'].forEach((t) => $('#tab-' + t).classList.toggle('hidden', t !== b.dataset.tab));
+    if (b.dataset.tab === 'rosters') loadGroups();
+    if (b.dataset.tab === 'admin') loadAdmin();
+  });
+
+  // ---------- ovoz
+  let sound = false, ac;
+  $('#bell').onclick = () => { sound = !sound; $('#bell').textContent = '🔔 Ovoz: ' + (sound ? 'yoqiq' : "o'chiq"); if (sound) { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); beep(); } };
+  function beep() { if (!sound || !ac) return; const o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.value = .15; o.start(); o.stop(ac.currentTime + .18); }
+
+  // ---------- dars
+  let sessions = [], cur = null, ov = null;
+  const socket = io({ auth: { token } });
+  socket.on('connect', () => { if (cur) socket.emit('lock-subscribe', { sessionId: cur.id }); });
+  socket.on('lock-overview', (o) => { if (cur && o.sessionId === cur.id) { ov = o; renderLive(); } });
+  socket.on('access-request', (r) => { if (cur && r.sessionId === cur.id) { toast('Yangi so\'rov: ' + (r.studentName || '')); beep(); } });
+
+  async function loadSessions() {
+    sessions = (await api('/sessions')).filter((s) => s.status !== 'ended').reverse();
+    const sel = $('#sess'); sel.innerHTML = sessions.length ? sessions.map((s) => `<option value="${esc(s.id)}">${esc(s.name)} · ${esc(s.id)}</option>`).join('') : '<option value="">Faol dars yo\'q</option>';
+    pick(sessions[0]);
+  }
+  $('#sess').onchange = (e) => pick(sessions.find((s) => s.id === e.target.value));
+  function pick(s) {
+    cur = s || null; ov = null; $('#liveBody').classList.toggle('hidden', !cur);
+    if (!cur) return;
+    $('#csvLink').onclick = (e) => { e.preventDefault(); download(`/lock/sessions/${cur.id}/report?format=csv`, `edufocus-${cur.id}-hisobot.csv`); };
+    socket.emit('lock-subscribe', { sessionId: cur.id });
+  }
+  async function download(path, name) {
+    const r = await fetch('/api' + path, { headers: { Authorization: 'Bearer ' + token } });
+    const b = await r.blob(), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; a.click();
+  }
+  const LV = { 'ios-l1': 'iOS L1', 'ios-l2': 'iOS L2', 'ios-l0': 'iOS', 'android-full': 'Android+', 'android-lite': 'Android', 'android-l0': 'Android (himoyasiz)', web: 'Brauzer' };
+  const ST = { protected: 'Himoyalangan', unprotected: 'Himoyasiz', offline: 'Aloqa yo\'q', assumed: 'Taxminan himoyalangan', free: 'Ruxsat berilgan' };
+  const CL = { green: 'g', yellow: 'y', red: 'r' };
+  const RS = { background: 'Ilova orqada', not_pinned: 'Mahkamlanmagan', no_accessibility: 'Maxsus imkoniyat o\'chiq', no_dnd: 'DND o\'chiq', permission_revoked: 'Ruxsat olingan', no_assessment: 'Imtihon rejimi yo\'q', no_shield: 'Qalqon yo\'q', no_authorization: 'Ekran vaqti ruxsati yo\'q', screen_off: 'Ekran o\'chiq' };
+  function renderLive() {
+    if (!ov) return;
+    const allFree = !ov.locked || (ov.students.length > 0 && ov.students.every((x) => x.released));
+    $('#locked').textContent = allFree ? 'Ruxsat berilgan' : 'Qulflangan'; $('#locked').className = 'pill ' + (allFree ? 'g' : 'y');
+    const s = ov.summary;
+    $('#sum').innerHTML = `<div class="stat"><b>${s.total}</b>Jami</div><div class="stat"><b style="color:var(--g)">${s.green}</b>Yaxshi</div><div class="stat"><b style="color:var(--y)">${s.yellow}</b>Diqqat</div><div class="stat"><b style="color:var(--r)">${s.red}</b>Qoidabuzar</div>`;
+    $('#reqs').innerHTML = ov.requests.length ? ov.requests.map((r) => `<div class="req"><b>${esc(r.student_name || r.studentName || 'Talaba')}</b><span class="muted">${r.kind === 'emergency_exit' ? 'Favqulodda chiqish' : 'Himoyasiz kirish'}: ${esc(r.reason || '')}</span><span class="grow"></span><button class="pri" data-d="${esc(r.id)}" data-a="1">Ruxsat</button><button data-d="${esc(r.id)}" data-a="0">Rad etish</button></div>`).join('') : 'Hozircha yo\'q';
+    const only = $('#onlyEx').checked;
+    const list = ov.students.filter((x) => !only || x.color !== 'green');
+    $('#allGreen').classList.toggle('hidden', list.length > 0);
+    $('#rows').innerHTML = list.map((x) => `<tr><td><span class="pill ${CL[x.color]}">${x.color === 'green' ? '●' : x.color === 'yellow' ? '▲' : '■'}</span></td><td>${esc(x.name)}</td><td>${esc(LV[x.level] || x.level)}</td><td>${esc(ST[x.status] || x.status)}${x.reasons && x.reasons.length ? ' <span class="muted">(' + x.reasons.map((r) => esc(RS[r] || r)).join(', ') + ')</span>' : ''}</td><td>${x.bypass || 0}</td><td>${fmt(x.unprotectedSec)}</td><td>${x.released ? '<button data-relock="' + esc(x.id) + '">Qulflash</button>' : '<button data-rel="' + esc(x.id) + '">Ruxsat</button>'}</td></tr>`).join('');
+  }
+  const fmt = (sec) => { sec = sec || 0; return sec >= 60 ? Math.floor(sec / 60) + ' d ' + (sec % 60) + ' s' : sec + ' s'; };
+  $('#onlyEx').onchange = renderLive;
+  document.addEventListener('click', async (e) => {
+    const t = e.target; if (!cur || !(t instanceof HTMLElement)) return;
+    try {
+      if (t.dataset.d) { await api(`/lock/requests/${t.dataset.d}/decision`, { method: 'POST', body: { approve: t.dataset.a === '1' } }); }
+      if (t.dataset.rel) { await api(`/lock/sessions/${cur.id}/release`, { method: 'POST', body: { studentIds: [t.dataset.rel] } }); }
+      if (t.dataset.relock) { await api(`/lock/sessions/${cur.id}/relock`, { method: 'POST', body: { studentIds: [t.dataset.relock] } }); }
+    } catch (err) { toast(err.message); }
+  });
+  $('#btnRelease').onclick = () => cur && api(`/lock/sessions/${cur.id}/release`, { method: 'POST', body: {} }).then(() => toast('Hammaga ruxsat berildi')).catch((e) => toast(e.message));
+  $('#btnRelock').onclick = () => cur && api(`/lock/sessions/${cur.id}/relock`, { method: 'POST', body: {} }).then(() => toast('Qayta qulflandi')).catch((e) => toast(e.message));
+  $('#btnExt').onclick = () => cur && api(`/lock/sessions/${cur.id}/extend`, { method: 'POST', body: { minutes: Number($('#extMin').value) } }).then(() => toast('Vaqt uzaytirildi')).catch((e) => toast(e.message));
+  $('#btnPdf').onclick = async () => { if (!cur) return; const rep = await api(`/lock/sessions/${cur.id}/report`); printTable('Dars hisoboti: ' + cur.name, ['Ism', 'Davomat', 'Test', 'Fokus', 'Jami', 'Chetlanish'], (rep.students || []).map((s) => [s.name, s.attendance, s.quizzes, s.focus, s.total, s.bypass])); };
+  $('#btnProj').onclick = () => { if (!cur) return; $('#projQr').src = cur.qrCode; $('#projCode').textContent = cur.id; $('#projector').classList.remove('hidden'); };
+  $('#projector').onclick = () => $('#projector').classList.add('hidden');
+  function printTable(title, head, rows) {
+    const w = window.open('', '_blank'); if (!w) { toast('Oynani ochishga ruxsat bering'); return; }
+    w.document.write(`<title>${esc(title)}</title><style>body{font:13px system-ui;padding:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:5px 8px;text-align:left}</style><h2>${esc(title)}</h2><table><tr>${head.map((h) => '<th>' + esc(h) + '</th>').join('')}</tr>${rows.map((r) => '<tr>' + r.map((c) => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('')}</table>`);
+    w.document.close(); w.focus(); w.print();
+  }
+  // Ustoz faolligi (statistika uchun, shaxssiz): ko'rinib turgan har 60 soniya
+  setInterval(() => { if (document.visibilityState === 'visible' && cur) api('/lock/telemetry/teacher-active', { method: 'POST', body: { seconds: 60 } }).catch(() => {}); }, 60000);
+
+  // ---------- guruhlar
+  $('#gFile').onchange = async (e) => { const f = e.target.files[0]; if (f) { $('#gCsv').value = await f.text(); if (!$('#gName').value) $('#gName').value = f.name.replace(/\.[^.]+$/, ''); } };
+  $('#gSave').onclick = async () => {
+    try { const r = await api('/rosters', { method: 'POST', body: { name: $('#gName').value, csv: $('#gCsv').value } }); $('#gMsg').textContent = r.students + ' ta talaba saqlandi' + (r.warnings && r.warnings.length ? ' (ogohlantirish: ' + r.warnings.length + ')' : ''); $('#gCsv').value = ''; loadGroups(); }
+    catch (e) { $('#gMsg').textContent = e.message; }
+  };
+  async function loadGroups() {
+    const { groups } = await api('/rosters');
+    $('#groups').innerHTML = groups.length ? '' : '<div class="muted">Guruh yo\'q</div>';
+    for (const g of groups) {
+      const d = await api('/rosters/' + g.id);
+      const el = document.createElement('div'); el.className = 'card';
+      el.innerHTML = `<div class="row"><b class="grow">${esc(g.name)} <span class="muted">(${d.students.length})</span></b><button class="danger" data-delg="${esc(g.id)}">O'chirish</button></div><div class="tbl"><table><tbody>${d.students.map((s) => `<tr><td>${esc(s.full_name)}</td><td class="muted">${esc(s.hemis_id || '')}</td><td>${s.bound_at ? 'Qurilma bog\'langan' : 'Bog\'lanmagan'}</td><td>${s.bound_at ? `<button data-reset="${esc(g.id)}|${esc(s.id)}">Bog'lanishni bekor qilish</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+      $('#groups').appendChild(el);
+    }
+  }
+  document.addEventListener('click', async (e) => {
+    const t = e.target; if (!(t instanceof HTMLElement)) return;
+    try {
+      if (t.dataset.delg && confirmTwice(t)) { await api('/rosters/' + t.dataset.delg, { method: 'DELETE' }); loadGroups(); }
+      if (t.dataset.reset) { const [g, s] = t.dataset.reset.split('|'); await api(`/rosters/${g}/students/${s}/reset-binding`, { method: 'POST', body: {} }); toast('Bog\'lanish bekor qilindi'); loadGroups(); }
+      if (t.dataset.facdel && confirmTwice(t)) { await api('/admin/faculties/' + t.dataset.facdel, { method: 'DELETE' }); loadAdmin(); }
+      if (t.dataset.delreq) { await api(`/admin/deletion-requests/${t.dataset.delreq}/resolve`, { method: 'POST', body: {} }); loadAdmin(); }
+    } catch (err) { toast(err.message); }
+  });
+  function confirmTwice(btn) { if (btn.dataset.armed) return true; btn.dataset.armed = '1'; btn.textContent = 'Aniqmi? Yana bosing'; setTimeout(() => { delete btn.dataset.armed; }, 4000); return false; }
+
+  // ---------- admin
+  let sdata = null;
+  async function loadAdmin() {
+    if (!isAdmin) return;
+    const { faculties } = await api('/admin/faculties');
+    $('#facs').innerHTML = faculties.map((f) => `<div class="row"><span class="grow">${esc(f.name)}</span><button class="danger" data-facdel="${esc(f.id)}">O'chirish</button></div>`).join('') || '<span class="muted">Yo\'q</span>';
+    const sc = $('#setScope'); const prev = sc.value;
+    sc.innerHTML = '<option value="global">Hammasi uchun</option>' + faculties.map((f) => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join(''); sc.value = prev || 'global';
+    await loadSettings();
+    loadWeekly();
+    const t = await api('/admin/telemetry'); $('#tele').textContent = JSON.stringify(t, null, 1);
+    const { requests } = await api('/admin/deletion-requests');
+    $('#dels').innerHTML = requests.length ? requests.map((r) => `<div class="req"><span>${esc(r.contact || r.name || r.id)}</span><span class="muted">${esc(r.status || '')} ${new Date(r.created_at).toLocaleDateString()}</span><span class="grow"></span>${r.status === 'done' ? '' : `<button data-delreq="${esc(r.id)}">Bajarildi</button>`}</div>`).join('') : 'Yo\'q';
+  }
+  $('#facAdd').onclick = async () => { try { await api('/admin/faculties', { method: 'POST', body: { name: $('#facName').value } }); $('#facName').value = ''; loadAdmin(); } catch (e) { toast(e.message); } };
+  $('#setScope').onchange = loadSettings;
+  async function loadSettings() {
+    const v = $('#setScope').value; sdata = await api('/admin/settings' + (v !== 'global' ? '?facultyId=' + encodeURIComponent(v) : ''));
+    const over = v === 'global' ? sdata.global : sdata.faculty;
+    $('#settings').innerHTML = Object.keys(sdata.defaults).filter((k) => v === 'global' || !sdata.globalOnly.includes(k)).map((k) => {
+      const val = sdata.effective[k], isOv = Object.prototype.hasOwnProperty.call(over, k);
+      return `<div class="set"><label>${esc(k)}${isOv ? ' ●' : ''}</label><input data-k="${esc(k)}" value='${esc(JSON.stringify(val))}'></div>`;
+    }).join('');
+  }
+  $('#setSave').onclick = async () => {
+    const v = $('#setScope').value, over = v === 'global' ? sdata.global : sdata.faculty, values = {};
+    try {
+      document.querySelectorAll('#settings input').forEach((i) => { const k = i.dataset.k; const val = JSON.parse(i.value); if (JSON.stringify(val) !== JSON.stringify(sdata.effective[k])) values[k] = val; });
+      if (!Object.keys(values).length) { $('#setMsg').textContent = 'O\'zgarish yo\'q'; return; }
+      await api('/admin/settings', { method: 'PUT', body: { scope: v === 'global' ? 'global' : 'faculty', facultyId: v === 'global' ? '' : v, values } });
+      $('#setMsg').textContent = 'Saqlandi'; loadSettings();
+    } catch (e) { $('#setMsg').textContent = e.message; }
+  };
+  async function loadWeekly() {
+    const w = $('#wk').value.trim(), q = w ? '?week=' + encodeURIComponent(w) : '';
+    const r = await api('/admin/reports/weekly' + q);
+    $('#wkOut').innerHTML = `<p class="muted">${esc(r.weekFrom)} — ${esc(r.weekTo)} · darslar: ${r.lessons}</p><table><thead><tr><th>Fakultet</th><th>O'qituvchi</th><th>Darslar</th><th>Talabalar</th><th>O'rtacha ball</th><th>Chetlanish</th><th>Qatnashmagan</th></tr></thead><tbody>${r.rows.map((x) => `<tr><td>${esc(x.faculty)}</td><td>${esc(x.teacher)}</td><td>${x.lessons}</td><td>${x.students}</td><td>${x.averageScore}</td><td>${x.bypass}</td><td>${x.absent}</td></tr>`).join('')}</tbody></table>`;
+    $('#wkCsv').onclick = (e) => { e.preventDefault(); download('/admin/reports/weekly?format=csv' + (w ? '&week=' + encodeURIComponent(w) : ''), 'edufocus-haftalik.csv'); };
+    $('#wkPdf').onclick = () => printTable('Haftalik hisobot ' + r.weekFrom, ['Fakultet', "O'qituvchi", 'Darslar', 'Talabalar', "O'rtacha ball", 'Chetlanish', 'Qatnashmagan'], r.rows.map((x) => [x.faculty, x.teacher, x.lessons, x.students, x.averageScore, x.bypass, x.absent]));
+  }
+  $('#wkLoad').onclick = () => loadWeekly().catch((e) => toast(e.message));
+
+  loadSessions().catch((e) => toast(e.message));
+})();
+</script>
+</body>
+</html>
