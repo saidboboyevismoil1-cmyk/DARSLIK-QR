@@ -15,6 +15,7 @@ function applyTheme() {
   if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
   const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   $('#theme-ico').setAttribute('href', dark ? '#i-sun' : '#i-moon');
+  native.call('setSystemBarsDark', dark);
   $$('#theme-seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === t));
 }
 actions['theme-set'] = (el) => { store.set('ef_theme', el.dataset.v); applyTheme(); };

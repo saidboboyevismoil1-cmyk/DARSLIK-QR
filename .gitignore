@@ -10,3 +10,5 @@ android/app/build/
 android/local.properties
 tests/screenshots/
 *.log
+android/keystore.properties
+*.jks

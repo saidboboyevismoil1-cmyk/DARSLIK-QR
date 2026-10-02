@@ -1,0 +1,7 @@
+{
+  "_comment": "Native ilovalar (Android va iOS) uchun yagona sozlama. Server manzili faqat shu yerda o'zgartiriladi.",
+  "productionUrl": "https://edufocus.agrosmart24.uz",
+  "developmentUrl": "http://localhost:3000",
+  "androidEmulatorUrl": "http://10.0.2.2:3000",
+  "startPath": "/student.html"
+}

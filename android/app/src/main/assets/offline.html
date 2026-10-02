@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="uz"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EduFocus</title>
+<style>
+:root{--bg:#eef1ff;--g:linear-gradient(160deg,#eef2ff,#f5f0ff 45%,#e8f7ff);--text:#0f172a;--muted:#5b6478;--card:rgba(255,255,255,.9);--bd:rgba(255,255,255,.9)}
+@media(prefers-color-scheme:dark){:root{--bg:#0a0e1f;--g:linear-gradient(160deg,#0a0e1f,#14103a 55%,#07192b);--text:#f1f5f9;--muted:#9aa5bd;--card:rgba(30,34,70,.95);--bd:rgba(255,255,255,.12)}}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg)}
+body{font:16px/1.45 -apple-system,Roboto,"Segoe UI",sans-serif;color:var(--text);background:var(--g);display:flex;align-items:center;justify-content:center;padding:24px;-webkit-font-smoothing:antialiased}
+.card{max-width:380px;width:100%;text-align:center;padding:32px 24px;border-radius:28px;background:var(--card);border:1px solid var(--bd);box-shadow:0 20px 50px -20px rgba(49,46,129,.35)}
+.ico{width:88px;height:88px;border-radius:28px;margin:0 auto 18px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#f59e0b,#ef4444)}
+h1{font-size:22px;margin:0 0 8px}p{margin:0 0 22px;color:var(--muted)}
+button{appearance:none;border:0;width:100%;min-height:52px;border-radius:18px;font:600 16px inherit;font-family:inherit;color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 12px 26px -10px rgba(99,102,241,.55)}
+button:active{transform:scale(.97)}.s{margin-top:14px;font-size:13px;color:var(--muted)}
+</style></head><body>
+<div class="card" role="alert">
+<div class="ico"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22M16.7 11.1A11 11 0 0 1 21 13.5M5 13.5a11 11 0 0 1 5.2-2.4M8.5 16.5a6 6 0 0 1 7 0M12 20h.01M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8"/></svg></div>
+<h1>Internet aloqasi yo'q</h1>
+<p>EduFocus serverga ulana olmadi. Internetni tekshiring — aloqa qaytganda ilova o'zi ochiladi.</p>
+<button id="r" type="button">Qayta urinish</button>
+<div class="s" id="s"></div>
+</div>
+<script>
+function retry(){document.getElementById('s').textContent='Ulanmoqda…';try{AndroidBridge.retry()}catch(e){location.reload()}}
+document.getElementById('r').addEventListener('click',retry);
+window.addEventListener('online',retry);
+setInterval(function(){if(navigator.onLine)retry()},8000);
+</script></body></html>
