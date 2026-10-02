@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, makeApi, teacherLogin } from '../server/helpers.mjs';
-import { adb, sh, sleep, connectPage, ui, tapText, topActivity } from './cdp.mjs';
+import { adb, sh, sleep, connectPage, ui, tapText, topActivity, acceptPinning } from './cdp.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const flavor = (process.argv[2] || 'direct').toLowerCase();
@@ -28,16 +28,6 @@ const zen = () => sh('settings get global zen_mode');
 const inApp = () => topActivity().includes(PKG);
 /** Shart bajarilguncha kutadi (tizim o'zgarishlari bir necha yuz ms kechikadi). */
 async function until(fn, timeout = 8000) { const t0 = Date.now(); while (Date.now() - t0 < timeout) { try { if (fn()) return true; } catch { /* qayta */ } await sleep(400); } return false; }
-
-/** Tizimning "Ekranni mahkamlash" oynasi paydo bo'lsa "Start/Boshlash" ni bosadi. */
-async function acceptPinning(timeout = 20000) {
-  const t0 = Date.now();
-  while (Date.now() - t0 < timeout) {
-    try { if (tapText(/^(Start|Got it|OK|Boshlash|Начать|Понятно)$/i)) return true; } catch { /* dump xatosi */ }
-    await sleep(700);
-  }
-  return false;
-}
 
 // ---------------------------------------------------------------- tayyorgarlik
 try { execFileSync('pkill', ['-f', 'node server.js']); } catch { /* jarayon yo'q */ }

@@ -81,3 +81,23 @@ export function topActivity() {
   return o;
 }
 export const pinnedState = () => sh('dumpsys activity activities | grep -iE "mLockTaskModeState|lockTaskMode" | head -3');
+
+/**
+ * Tizimning "Ekranni mahkamlash" tasdiq oynasini qabul qiladi (Got it / Start).
+ * API 34+: uiautomator --windows matnni topadi. Eski API'larda oyna uiautomator'da ko'rinmaydi —
+ * ScreenPinningConfirmation oynasi mavjudligi tekshirilib, tugma koordinata bo'yicha bosiladi (≈79.6% × 95.5%).
+ */
+export async function acceptPinning(timeout = 25000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeout) {
+    try { if (tapText(/^(Start|Got it|GOT IT|OK|Boshlash|Начать|Понятно)$/i)) return true; } catch { /* dump xatosi */ }
+    try {
+      if (sh('dumpsys window windows | grep -c ScreenPinningConfirmation').trim() !== '0') {
+        const m = sh('wm size').match(/(\d+)x(\d+)/);
+        if (m) { sh(`input tap ${Math.round(Number(m[1]) * 0.796)} ${Math.round(Number(m[2]) * 0.955)}`); await sleep(800); return true; }
+      }
+    } catch { /* oyna yo'q */ }
+    await sleep(700);
+  }
+  return false;
+}
