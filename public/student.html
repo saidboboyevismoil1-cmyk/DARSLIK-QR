@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <meta name="description" content="EduFocus — darsga qo'shilish va diqqatni boshqarish">
+  <meta name="description" content="EduFocus">
   <meta name="theme-color" content="#eef1ff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0a0e1f" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,13 +13,13 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="icon" href="/img/icon-192.png">
-  <link rel="stylesheet" href="/css/student.css?v=4.0">
-  <link rel="modulepreload" href="/js/student/app.js?v=4.0">
+  <link rel="stylesheet" href="/css/student.css?v=5.0">
+  <link rel="modulepreload" href="/js/student/app.js?v=5.0">
   <script>
     try { var t = localStorage.getItem('ef_theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
   </script>
   <script src="/socket.io/socket.io.js" defer></script>
-  <script type="module" src="/js/student/app.js?v=4.0"></script>
+  <script type="module" src="/js/student/app.js?v=5.0"></script>
 </head>
 <body>
 <!-- Ikonalar -->
@@ -30,6 +30,7 @@
     <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
     <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></symbol>
     <symbol id="i-quiz" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
     <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
@@ -46,6 +47,7 @@
     <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L8 14.2 3 9.3l6.9-1z"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
     <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
     <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
     <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
@@ -54,13 +56,19 @@
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
     <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></symbol>
     <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
-    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
     <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+    <symbol id="i-sos" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 9.5c0-1 .8-1.5 2-1.5s2 .5 2 1.3c0 1.5-4 1.2-4 3.2 0 1 .9 1.5 2 1.5s2-.5 2-1.5M16 8v6"/></symbol>
   </defs>
 </svg>
 
 <div class="bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-<div id="net-banner" class="net-banner" role="status">Internet aloqasi yo'q</div>
+<div id="net-banner" class="net-banner" role="status" data-i18n="net.offlineBanner">Internet aloqasi yo'q</div>
 <div id="toast" class="glass" role="status" aria-live="polite"></div>
 
 <main class="app">
@@ -70,165 +78,315 @@
     <div class="logo"><svg class="i" viewBox="0 0 24 24"><use href="#i-target"/></svg></div>
   </section>
 
-  <!-- 1. Onboarding -->
+  <!-- 1. Rozilik -->
+  <section id="s-consent" class="screen">
+    <div class="wrap">
+      <div class="row"><div class="logo sm"><svg class="i" viewBox="0 0 24 24"><use href="#i-target"/></svg></div><b>EduFocus</b></div>
+      <div class="lang-row" id="lang-chips" role="group" data-i18n-aria="lang.title"></div>
+      <div class="stack" style="gap:6px">
+        <h1 class="title"><span data-i18n="consent.title">Ilova qanday ishlaydi</span></h1>
+        <p class="muted" data-i18n="consent.lead">Davom etishdan oldin quyidagilarni o'qib chiqing. Bu sizning ma'lumotlaringiz va qurilmangiz haqida.</p>
+      </div>
+      <div class="glass card consent-card">
+        <div class="cs"><span class="cs-ic a"><svg class="i"><use href="#i-lock"/></svg></span><div><b data-i18n="consent.s1.t">Dars paytida nima cheklanadi</b><p class="muted small" data-i18n="consent.s1.d">Ustoz darsni boshlagach, ilova boshqa ilovalarga o'tishni cheklashga harakat qiladi (qurilmangiz imkoniyatiga qarab) va qoidabuzarlikni qayd etadi. Bu qurilmani 100% bloklamaydi.</p></div></div>
+        <div class="cs"><span class="cs-ic b"><svg class="i"><use href="#i-unlock"/></svg></span><div><b data-i18n="consent.s2.t">Qachon ochiladi</b><p class="muted small" data-i18n="consent.s2.d">Ustoz ruxsat bergach, dars vaqti tugagach, server bilan aloqa 15 daqiqa uzilsa yoki favqulodda chiqish tasdiqlansa. Favqulodda qo'ng'iroq hech qachon bloklanmaydi.</p></div></div>
+        <div class="cs"><span class="cs-ic c"><svg class="i"><use href="#i-user"/></svg></span><div><b data-i18n="consent.s3.t">Qanday ma'lumot yig'iladi</b><p class="muted small" data-i18n="consent.s3.d">Ism va guruh, qurilma modeli va tizim versiyasi, himoya holati, darsdagi faollik (ilovada o'tgan vaqt, ilovadan chiqish hodisalari) va test javoblari.</p></div></div>
+        <div class="cs"><span class="cs-ic d"><svg class="i"><use href="#i-shield-check"/></svg></span><div><b data-i18n="consent.s4.t">Nima yig'ilmaydi</b><p class="muted small" data-i18n="consent.s4.d">O'rnatilgan ilovalar ro'yxati, kontaktlar, xabarlar, joylashuv, ekran mazmuni va kamera tasvirlari yig'ilmaydi. Kamera faqat QR kodni o'qish uchun ishlatiladi.</p></div></div>
+      </div>
+      <a class="muted small center" style="text-align:center;text-decoration:underline" href="/privacy-policy" data-i18n="consent.privacy">Maxfiylik siyosatini o'qish</a>
+      <div class="grow"></div>
+      <button class="btn btn-primary block" data-act="consent-accept" data-i18n="consent.accept">Roziman</button>
+      <button class="btn btn-ghost block" data-act="consent-decline" data-i18n="consent.decline">Rozi emasman</button>
+    </div>
+  </section>
+
+  <section id="s-declined" class="screen">
+    <div class="wrap center">
+      <div class="grow"></div>
+      <div class="result-ico" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><svg class="i"><use href="#i-alert"/></svg></div>
+      <h1 class="title" data-i18n="declined.title">Rozilik kerak</h1>
+      <p class="muted" data-i18n="declined.text">Rozilik bermasangiz, EduFocus dars rejimini ishga tushira olmaydi. Ma'lumotlaringiz hech qayerga yuborilmadi. Istasangiz, shartlarni qayta ko'rib chiqing yoki ustozingizdan muqobil davomat usulini so'rang.</p>
+      <button class="btn btn-primary block" data-act="consent-review" data-i18n="declined.review">Qayta ko'rib chiqish</button>
+      <div class="grow"></div>
+    </div>
+  </section>
+
+  <!-- 2. Onboarding -->
   <section id="s-onboard" class="screen">
     <div class="wrap">
       <div class="row between">
         <div class="row"><div class="logo sm"><svg class="i" viewBox="0 0 24 24"><use href="#i-target"/></svg></div><b>EduFocus</b></div>
-        <button class="btn btn-ghost" style="min-height:44px;padding:0 10px" data-act="onb-skip">O'tkazish</button>
+        <button class="btn btn-ghost" style="min-height:44px;padding:0 10px" data-act="onb-skip" data-i18n="onb.skip">O'tkazish</button>
       </div>
       <div class="slides" id="slides">
         <div class="slide">
           <div class="art a1"><svg class="i" viewBox="0 0 24 24"><use href="#i-target"/></svg></div>
-          <h1 class="title">Darsda to'liq <span class="grad-text">fokus</span></h1>
-          <p class="muted">Bildirishnomalar va chalg'ituvchi ilovalardan xoli bo'ling. Diqqatni jamlab, yangi mavzuni tezroq o'zlashtiring.</p>
+          <h1 class="title" data-i18n="onb.s1.title">Darsda to'liq fokus</h1>
+          <p class="muted" data-i18n="onb.s1.text">Dars paytida chalg'ituvchi ilovalar cheklanadi va qoidabuzarlik ustozga ko'rinadi. Diqqatni jamlab, yangi mavzuni tezroq o'zlashtiring.</p>
         </div>
         <div class="slide">
           <div class="art a2"><svg class="i" viewBox="0 0 24 24"><use href="#i-bolt"/></svg></div>
-          <h1 class="title">Jonli <span class="grad-text">interaktiv</span> dars</h1>
-          <p class="muted">Ustoz yuborgan tezkor testlarni yeching, slayd va hujjatlarni to'g'ridan-to'g'ri ilovada oching.</p>
+          <h1 class="title" data-i18n="onb.s2.title">Jonli interaktiv dars</h1>
+          <p class="muted" data-i18n="onb.s2.text">Ustoz yuborgan tezkor testlarni yeching, slayd va hujjatlarni to'g'ridan-to'g'ri ilovada oching.</p>
         </div>
         <div class="slide">
-          <div class="art a3"><svg class="i" viewBox="0 0 24 24"><use href="#i-qr"/></svg></div>
-          <h1 class="title">QR bilan <span class="grad-text">bir zumda</span></h1>
-          <p class="muted">Ustoz doskasidagi QR kodni skanerlang — darsga avtomatik ulanasiz. Buning uchun kamera ruxsati kerak bo'ladi.</p>
-          <button class="btn btn-glass" data-act="onb-camera" id="onb-cam-btn"><svg class="i"><use href="#i-camera"/></svg><span>Kameraga ruxsat berish</span></button>
+          <div class="art a3"><svg class="i" viewBox="0 0 24 24"><use href="#i-shield-check"/></svg></div>
+          <h1 class="title" data-i18n="onb.s3.title">Oldindan sozlab qo'ying</h1>
+          <p class="muted" data-i18n="onb.s3.text">Keyingi qadamda kerakli ruxsatlarni bir marta sozlaysiz. Dars vaqtida shoshilmaslik uchun buni uyda qilib qo'ying.</p>
         </div>
       </div>
       <div class="dots" id="dots"><i class="on"></i><i></i><i></i></div>
-      <button class="btn btn-primary block" data-act="onb-next" id="onb-next">Keyingisi</button>
+      <button class="btn btn-primary block" data-act="onb-next" id="onb-next" data-i18n="onb.next">Keyingisi</button>
     </div>
   </section>
 
-  <!-- 2. Ism -->
+  <!-- 3. Ruxsatlarni sozlash -->
+  <section id="s-setup" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" data-i18n="setup.title">Sozlash</div>
+        <button class="icon-btn" data-act="skip-setup-info" data-i18n-aria="setup.why" aria-label="Nega kerak?"><svg class="i"><use href="#i-help"/></svg></button>
+      </div>
+      <div class="glass card stack" style="gap:10px">
+        <div class="row between"><b id="setup-summary" data-i18n="setup.summary0">Tekshirilmoqda…</b><span class="chip" id="setup-level"></span></div>
+        <div class="progress"><i id="setup-progress"></i></div>
+        <p class="muted small" id="setup-hint" data-i18n="setup.hint">Quyidagi ruxsatlar dars paytida himoyani ishga tushirish uchun kerak. Har birini yoqing, so'ng bu ekranga qayting.</p>
+      </div>
+      <div id="perm-list" class="stack"></div>
+      <div class="glass card small muted" id="setup-note" hidden></div>
+      <div class="grow"></div>
+      <button class="btn btn-primary block" data-act="setup-continue" id="setup-continue" data-i18n="setup.continue">Davom etish</button>
+      <button class="btn btn-ghost block" data-act="setup-later" id="setup-later" data-i18n="setup.later">Keyinroq sozlayman</button>
+    </div>
+  </section>
+
+  <!-- 4. Darsga tayyormisiz? -->
+  <section id="s-ready" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" data-i18n="ready.title">Darsga tayyormisiz?</div>
+        <div style="width:46px"></div>
+      </div>
+      <p class="muted" data-i18n="ready.lead">Telefoningiz dars himoyasini ishga tushira oladimi — hozir, dars boshlanishidan oldin tekshiring.</p>
+      <div id="ready-list" class="stack"></div>
+      <div class="glass card center stack" id="ready-result" style="align-items:center;text-align:center" hidden></div>
+      <div class="grow"></div>
+      <button class="btn btn-primary block" data-act="ready-run" id="ready-run" data-i18n="ready.run">Tekshirishni boshlash</button>
+      <button class="btn btn-glass block" data-act="open-setup" data-i18n="ready.openSetup">Ruxsatlarni sozlash</button>
+    </div>
+  </section>
+
+  <!-- 5. Ism -->
   <section id="s-name" class="screen">
     <div class="wrap">
       <div class="bar" id="name-bar" hidden>
-        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
       </div>
       <div class="grow"></div>
       <div class="stack center">
         <div class="logo"><svg class="i" viewBox="0 0 24 24"><use href="#i-user"/></svg></div>
-        <h1 class="title">Ismingiz nima?</h1>
-        <p class="muted">Ustoz sizni shu ism bilan ko'radi. Ism qurilmada saqlanadi.</p>
+        <h1 class="title" data-i18n="name.title">Ismingiz nima?</h1>
+        <p class="muted" data-i18n="name.text">Ustoz sizni shu ism bilan ko'radi. Ism qurilmada saqlanadi.</p>
       </div>
       <form id="name-form" class="stack" autocomplete="off">
-        <input id="name-input" class="field" type="text" maxlength="60" placeholder="Ism va familiya" autocapitalize="words" enterkeyhint="done" aria-label="Ism va familiya">
+        <input id="name-input" class="field" type="text" maxlength="60" data-i18n-ph="name.ph" placeholder="Ism va familiya" autocapitalize="words" enterkeyhint="done" data-i18n-aria="name.ph" aria-label="Ism va familiya">
         <div class="err" id="name-err"></div>
-        <button class="btn btn-primary block" type="submit">Davom etish</button>
+        <button class="btn btn-primary block" type="submit" data-i18n="common.continue">Davom etish</button>
       </form>
       <div class="grow"></div>
     </div>
   </section>
 
-  <!-- 3. Bosh sahifa: QR yoki kod -->
+  <!-- 6. Bosh sahifa -->
   <section id="s-home" class="screen">
     <div class="wrap">
       <div class="bar">
-        <button class="row" style="background:none;border:0;color:inherit;padding:0;cursor:pointer;flex:1;text-align:left;min-width:0" data-act="go-profile" aria-label="Profil">
+        <button class="row" style="background:none;border:0;color:inherit;padding:0;cursor:pointer;flex:1;text-align:left;min-width:0" data-act="go-profile" data-i18n-aria="profile.title" aria-label="Profil">
           <div class="avatar" id="home-avatar">T</div>
-          <div style="min-width:0"><div class="muted small">Xush kelibsiz</div><b id="home-name" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Talaba</b></div>
+          <div style="min-width:0"><div class="muted small" data-i18n="home.welcome">Xush kelibsiz</div><b id="home-name" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Talaba</b></div>
         </button>
-        <button class="icon-btn" data-act="theme" aria-label="Rejimni almashtirish"><svg class="i"><use href="#i-moon" id="theme-ico"/></svg></button>
+        <button class="icon-btn" data-act="theme" data-i18n-aria="profile.theme" aria-label="Rejim"><svg class="i"><use href="#i-moon" id="theme-ico"/></svg></button>
       </div>
+
+      <button class="glass ready-card" data-act="open-ready" id="home-ready">
+        <span class="rc-ic" id="home-ready-ic"><svg class="i"><use href="#i-shield"/></svg></span>
+        <span class="rc-tx"><b data-i18n="ready.title">Darsga tayyormisiz?</b><span class="muted small" id="home-ready-sub" data-i18n="ready.homeSub">Ruxsatlarni oldindan tekshiring</span></span>
+        <svg class="i sm muted"><use href="#i-next"/></svg>
+      </button>
 
       <div class="glass hero-scan fade-in">
         <div class="scan-orb"><svg class="i"><use href="#i-qr"/></svg></div>
-        <h1 class="title">Darsga qo'shiling</h1>
-        <p class="muted">Ustoz ko'rsatgan QR kodni skanerlang</p>
-        <button class="btn btn-primary block" data-act="scan"><svg class="i"><use href="#i-camera"/></svg>QR kodni skanerlash</button>
+        <h1 class="title" data-i18n="home.title">Darsga qo'shiling</h1>
+        <p class="muted" data-i18n="home.scanText">Ustoz ko'rsatgan QR kodni skanerlang</p>
+        <button class="btn btn-primary block" data-act="scan"><svg class="i"><use href="#i-camera"/></svg><span data-i18n="home.scanBtn">QR kodni skanerlash</span></button>
       </div>
 
-      <div class="or">yoki kodni kiriting</div>
+      <div class="or" data-i18n="home.or">yoki kodni kiriting</div>
 
       <form id="code-form" class="stack" autocomplete="off">
-        <input id="code-input" class="field code-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••••" aria-label="6 xonali dars kodi">
+        <input id="code-input" class="field code-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••••" data-i18n-aria="home.codeAria" aria-label="6 xonali dars kodi">
         <div class="err" id="code-err" role="alert"></div>
-        <button class="btn btn-glass block" type="submit" id="code-btn">Kirish</button>
+        <button class="btn btn-glass block" type="submit" id="code-btn" data-i18n="home.join">Kirish</button>
       </form>
+
+      <div class="glass card stack gate" id="join-gate" hidden>
+        <div class="row"><span class="rc-ic warn"><svg class="i"><use href="#i-shield"/></svg></span><b data-i18n="gate.title">Bu dars himoya talab qiladi</b></div>
+        <p class="muted small" id="gate-text" data-i18n="gate.text">Darsga kirishdan oldin quyidagilarni yoqing:</p>
+        <ul id="gate-missing" class="gate-list"></ul>
+        <button class="btn btn-primary block" data-act="gate-setup" data-i18n="gate.setup">Sozlash</button>
+        <button class="btn btn-glass block" data-act="gate-exempt" data-i18n="gate.exempt">Himoyasiz kirish so'rovi</button>
+      </div>
       <div class="grow"></div>
     </div>
   </section>
 
-  <!-- 4. Ulanmoqda / kutish (qulf ochiq) -->
+  <!-- 7. Ro'yxatdan ismni tanlash -->
+  <section id="s-roster" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" id="roster-group" data-i18n="roster.title">Guruh ro'yxati</div>
+        <div style="width:46px"></div>
+      </div>
+      <p class="muted" data-i18n="roster.lead">Ismingizni tanlang. Tanlov bir marta qurilmangizga bog'lanadi, keyingi darslarda qayta tanlamaysiz.</p>
+      <div class="field-wrap"><svg class="i sm"><use href="#i-search"/></svg><input id="roster-search" class="field" type="search" data-i18n-ph="roster.search" placeholder="Qidirish" data-i18n-aria="roster.search" aria-label="Qidirish"></div>
+      <div id="roster-list" class="stack"></div>
+      <div class="err" id="roster-err" role="alert"></div>
+    </div>
+  </section>
+
+  <!-- 8. Brauzerda: ilova kerak -->
+  <section id="s-needapp" class="screen">
+    <div class="wrap center">
+      <div class="grow"></div>
+      <div class="logo"><svg class="i"><use href="#i-download"/></svg></div>
+      <h1 class="title" data-i18n="needapp.title">Ilovani yuklab oling</h1>
+      <p class="muted" data-i18n="needapp.text">Ustoz bu dars uchun himoyani majburiy qildi. Himoya faqat EduFocus ilovasida ishlaydi, brauzerda emas.</p>
+      <a class="btn btn-primary block" id="dl-android" href="/download/apk"><svg class="i"><use href="#i-download"/></svg><span data-i18n="needapp.android">Android uchun yuklab olish</span></a>
+      <a class="btn btn-glass block" id="dl-ios" href="/download/ios"><svg class="i"><use href="#i-download"/></svg><span data-i18n="needapp.ios">iPhone uchun yuklab olish</span></a>
+      <button class="btn btn-ghost block" data-act="gate-exempt" data-i18n="gate.exempt">Himoyasiz kirish so'rovi</button>
+      <button class="btn btn-ghost block" data-act="back" data-i18n="common.back">Orqaga</button>
+      <div class="grow"></div>
+    </div>
+  </section>
+
+  <!-- 9. Himoyasiz kirish so'rovi -->
+  <section id="s-exempt" class="screen">
+    <div class="wrap">
+      <div class="bar">
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" data-i18n="exempt.title">Himoyasiz kirish</div>
+        <div style="width:46px"></div>
+      </div>
+      <div id="exempt-form-box" class="stack">
+        <p class="muted" data-i18n="exempt.lead">Telefoningizda himoyani yoqib bo'lmasa, sababni tanlang. So'rov ustozga yuboriladi, u ruxsat bersa darsga kirasiz.</p>
+        <div class="stack" id="exempt-reasons" role="radiogroup">
+          <label class="opt"><input type="radio" name="exreason" value="old_phone"><span class="ot" data-i18n="exempt.old">Eski telefon</span></label>
+          <label class="opt"><input type="radio" name="exreason" value="tech_issue"><span class="ot" data-i18n="exempt.tech">Texnik muammo</span></label>
+          <label class="opt"><input type="radio" name="exreason" value="no_phone"><span class="ot" data-i18n="exempt.nophone">Telefonim yo'q / boshqa qurilma</span></label>
+        </div>
+        <input id="exempt-name" class="field" type="text" maxlength="80" data-i18n-ph="name.ph" placeholder="Ism va familiya" data-i18n-aria="name.ph" aria-label="Ism va familiya">
+        <div class="err" id="exempt-err" role="alert"></div>
+        <button class="btn btn-primary block" data-act="exempt-send" data-i18n="exempt.send">So'rov yuborish</button>
+      </div>
+      <div id="exempt-wait" class="glass card center stack" style="align-items:center;text-align:center" hidden>
+        <div class="spinner"></div>
+        <h2 class="h2" id="exempt-wait-title" data-i18n="exempt.waiting">Ustoz javobi kutilmoqda…</h2>
+        <p class="muted small" id="exempt-wait-text" data-i18n="exempt.waitText">Ustoz so'rovni ko'rishi bilan javob keladi. Sahifani yopmang.</p>
+        <button class="btn btn-ghost" data-act="exempt-cancel" data-i18n="common.cancel">Bekor qilish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Kutish (qulf ochiq) -->
   <section id="s-wait" class="screen">
     <div class="wrap">
       <div class="bar">
-        <div class="chip ok"><span class="dot"></span><span id="wait-state">Darsga ulandingiz</span></div>
+        <div class="chip ok"><span class="dot"></span><span id="wait-state" data-i18n="wait.joined">Darsga ulandingiz</span></div>
         <div class="grow"></div>
-        <button class="icon-btn" data-act="leave" aria-label="Darsdan chiqish"><svg class="i"><use href="#i-logout"/></svg></button>
+        <button class="icon-btn" data-act="leave" data-i18n-aria="wait.leave" aria-label="Darsdan chiqish"><svg class="i"><use href="#i-logout"/></svg></button>
       </div>
       <div class="stack center" style="padding:10px 0">
         <div class="logo" id="wait-logo"><svg class="i"><use href="#i-unlock"/></svg></div>
         <h1 class="title" id="wait-title">Dars</h1>
-        <p class="muted" id="wait-sub">Ustoz sizga ruxsat berdi. Ilovadan erkin foydalanishingiz mumkin.</p>
+        <p class="muted" id="wait-sub" data-i18n="wait.sub">Ustoz sizga ruxsat berdi. Ilovadan erkin foydalanishingiz mumkin.</p>
       </div>
-      <div class="glass card row between"><div><div class="muted small">Dars tugashigacha</div><b style="font-size:26px;font-variant-numeric:tabular-nums" id="wait-timer">--:--</b></div><svg class="i lg" style="color:var(--primary)"><use href="#i-clock"/></svg></div>
+      <div class="glass card row between"><div><div class="muted small" data-i18n="wait.remaining">Dars tugashigacha</div><b style="font-size:26px;font-variant-numeric:tabular-nums" id="wait-timer">--:--</b></div><svg class="i lg" style="color:var(--primary)"><use href="#i-clock"/></svg></div>
       <div class="tiles" id="wait-tiles"></div>
       <div class="grow"></div>
     </div>
   </section>
 
-  <!-- 5. Dars rejimi (qulflangan) -->
+  <!-- 11. Dars rejimi (qulflangan) -->
   <section id="s-lesson" class="screen">
     <div class="wrap">
       <div class="bar">
-        <div class="chip warn"><svg class="i sm"><use href="#i-lock"/></svg>Dars rejimi</div>
+        <div class="chip warn"><svg class="i sm"><use href="#i-lock"/></svg><span data-i18n="lesson.mode">Dars rejimi</span></div>
         <div class="grow"></div>
-        <div class="chip" id="lesson-conn"><span class="dot"></span>Onlayn</div>
+        <div class="chip" id="lesson-conn"><span class="dot"></span><span data-i18n="conn.online">Onlayn</span></div>
       </div>
       <div class="center stack" style="gap:2px"><h1 class="h2" id="lesson-name">Dars</h1><div class="muted small" id="lesson-subject"></div></div>
+      <div class="glass prot-banner" id="prot-banner" hidden>
+        <div class="row"><svg class="i" style="color:var(--bad)"><use href="#i-alert"/></svg><div class="grow"><b data-i18n="prot.lostTitle">Himoya o'chdi</b><div class="muted small" id="prot-banner-text"></div></div></div>
+        <button class="btn btn-primary block" data-act="fix-protection" data-i18n="prot.fix">Qayta yoqish</button>
+      </div>
       <div class="glass timer-card">
         <div class="ring">
           <svg class="r" viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="92"/><circle class="bar-p" id="ring-p" cx="100" cy="100" r="92"/></svg>
-          <div class="t" id="lesson-timer">--:--</div><div class="tl">qoldi</div>
+          <div class="t" id="lesson-timer">--:--</div><div class="tl" data-i18n="lesson.left">qoldi</div>
         </div>
-        <div class="muted small">Dars tugagach ilova avtomatik ochiladi</div>
+        <div class="chip" id="prot-chip"><svg class="i sm"><use href="#i-shield"/></svg><span id="prot-chip-text" data-i18n="prot.checking">Tekshirilmoqda</span></div>
       </div>
       <div class="tiles" id="lesson-tiles"></div>
       <div class="stats">
-        <div class="glass stat"><b id="focus-score">100%</b><span>Fokus bahosi</span></div>
-        <div class="glass stat"><b id="viol-count">0</b><span>Chiqishlar</span></div>
+        <div class="glass stat"><b id="focus-score">100%</b><span data-i18n="lesson.focus">Fokus bahosi</span></div>
+        <div class="glass stat"><b id="viol-count">0</b><span data-i18n="lesson.exits">Chiqishlar</span></div>
       </div>
-      <div class="glass lock-note"><svg class="i"><use href="#i-shield"/></svg><span>Ilova ochiq qolsa, fokus bahosi saqlanadi. Boshqa ilovaga o'tish ustozga ko'rinadi.</span></div>
+      <div class="sos-row">
+        <button class="btn btn-glass" data-act="open-sos"><svg class="i"><use href="#i-phone"/></svg><span data-i18n="sos.btn">Favqulodda qo'ng'iroq</span></button>
+        <button class="btn btn-glass" data-act="open-emergency" id="emergency-btn"><svg class="i"><use href="#i-logout"/></svg><span data-i18n="emg.btn">Favqulodda chiqish</span></button>
+      </div>
+      <div class="glass lock-note"><svg class="i"><use href="#i-shield"/></svg><span data-i18n="lesson.note">Dars paytida boshqa ilovalar cheklanadi va qoidabuzarlik ustozga ko'rinadi.</span></div>
     </div>
   </section>
 
-  <!-- 6. Test -->
+  <!-- 12. Test -->
   <section id="s-quiz" class="screen">
     <div class="wrap">
       <div class="bar">
-        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
-        <div class="bar-title" id="quiz-title">Test</div>
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" id="quiz-title" data-i18n="quiz.title">Test</div>
         <div class="chip timer-chip" id="quiz-timer" hidden><svg class="i sm"><use href="#i-clock"/></svg><span>00:00</span></div>
       </div>
-      <div id="quiz-empty" class="glass empty"><div class="eic"><svg class="i lg"><use href="#i-quiz"/></svg></div><h3>Hozircha test yo'q</h3><p>Ustoz test yuborganda bu yerda paydo bo'ladi.</p></div>
+      <div id="quiz-empty" class="glass empty"><div class="eic"><svg class="i lg"><use href="#i-quiz"/></svg></div><h3 data-i18n="quiz.emptyT">Hozircha test yo'q</h3><p data-i18n="quiz.emptyD">Ustoz test yuborganda bu yerda paydo bo'ladi.</p></div>
       <form id="quiz-form" class="stack" hidden novalidate>
         <div class="row between"><span class="muted small" id="quiz-progress-text">0 / 0</span><span class="muted small" id="quiz-count"></span></div>
         <div class="progress"><i id="quiz-progress"></i></div>
         <div id="quiz-body" class="stack" style="gap:14px"></div>
-        <div class="dock"><button class="btn btn-primary block" type="submit" id="quiz-submit"><svg class="i"><use href="#i-check"/></svg>Javoblarni topshirish</button></div>
+        <div class="dock"><button class="btn btn-primary block" type="submit" id="quiz-submit"><svg class="i"><use href="#i-check"/></svg><span data-i18n="quiz.submit">Javoblarni topshirish</span></button></div>
       </form>
       <div id="quiz-result" class="stack" hidden></div>
     </div>
   </section>
 
-  <!-- 7. Materiallar -->
+  <!-- 13. Materiallar -->
   <section id="s-mats" class="screen">
     <div class="wrap">
       <div class="bar">
-        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
-        <div class="bar-title">Materiallar</div>
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" data-i18n="mats.title">Materiallar</div>
         <div style="width:46px"></div>
       </div>
       <div id="mats-list" class="stack"></div>
     </div>
   </section>
 
-  <!-- 8. Hujjat ko'rish -->
+  <!-- 14. Hujjat ko'rish -->
   <section id="s-viewer" class="screen">
     <div class="row vbar">
-      <button class="icon-btn" data-act="back" aria-label="Yopish"><svg class="i"><use href="#i-x"/></svg></button>
+      <button class="icon-btn" data-act="back" data-i18n-aria="common.close" aria-label="Yopish"><svg class="i"><use href="#i-x"/></svg></button>
       <div style="flex:1;min-width:0"><b id="v-title" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Material</b><span id="v-sub" style="font-size:12px;opacity:.7"></span></div>
     </div>
     <div class="vnote" id="v-note" hidden></div>
@@ -237,66 +395,72 @@
       <div class="vspin" id="v-spin" hidden><div class="spinner"></div></div>
     </div>
     <div class="vfoot" id="v-foot" hidden>
-      <button class="icon-btn" data-act="pdf-prev" aria-label="Oldingi"><svg class="i"><use href="#i-back"/></svg></button>
+      <button class="icon-btn" data-act="pdf-prev" data-i18n-aria="viewer.prev" aria-label="Oldingi"><svg class="i"><use href="#i-back"/></svg></button>
       <b id="v-page" style="min-width:90px;text-align:center;font-variant-numeric:tabular-nums">1 / 1</b>
-      <button class="icon-btn" data-act="pdf-next" aria-label="Keyingi"><svg class="i"><use href="#i-next"/></svg></button>
+      <button class="icon-btn" data-act="pdf-next" data-i18n-aria="viewer.next" aria-label="Keyingi"><svg class="i"><use href="#i-next"/></svg></button>
     </div>
   </section>
 
-  <!-- 9. QR skaner -->
+  <!-- 15. QR skaner -->
   <section id="s-scan" class="screen">
     <div id="qr-reader"></div>
     <div class="scan-top">
-      <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
-      <div class="bar-title">QR skaner</div>
-      <button class="icon-btn" data-act="torch" id="torch-btn" aria-label="Chiroq" hidden><svg class="i"><use href="#i-flash"/></svg></button>
-      <button class="icon-btn" data-act="flip" aria-label="Kamerani almashtirish"><svg class="i"><use href="#i-flip"/></svg></button>
+      <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+      <div class="bar-title" data-i18n="scan.title">QR skaner</div>
+      <button class="icon-btn" data-act="torch" id="torch-btn" data-i18n-aria="scan.torch" aria-label="Chiroq" hidden><svg class="i"><use href="#i-flash"/></svg></button>
+      <button class="icon-btn" data-act="flip" data-i18n-aria="scan.flip" aria-label="Kamera"><svg class="i"><use href="#i-flip"/></svg></button>
     </div>
     <div class="scan-frame"><i></i><i></i><i></i><i></i><div class="scan-line"></div></div>
     <div class="scan-bottom">
-      <div class="scan-hint" id="scan-hint">Kamerani ustozning QR kodiga qarating</div>
-      <button class="btn btn-glass" data-act="back" style="color:#fff;background:rgba(255,255,255,.14)">Kodni qo'lda kiritish</button>
+      <div class="scan-hint" id="scan-hint" data-i18n="scan.hint">Kamerani ustozning QR kodiga qarating</div>
+      <button class="btn btn-glass" data-act="back" style="color:#fff;background:rgba(255,255,255,.14)" data-i18n="scan.manual">Kodni qo'lda kiritish</button>
     </div>
   </section>
 
-  <!-- 10. Dars tugadi -->
+  <!-- 16. Dars tugadi -->
   <section id="s-ended" class="screen">
     <div class="wrap center">
       <div class="grow"></div>
       <div class="result-ico" style="background:linear-gradient(135deg,#10b981,#06b6d4)"><svg class="i"><use href="#i-check"/></svg></div>
-      <h1 class="title">Dars yakunlandi</h1>
-      <p class="muted" id="end-sub">Qatnashganingiz uchun rahmat!</p>
+      <h1 class="title" data-i18n="ended.title">Dars yakunlandi</h1>
+      <p class="muted" id="end-sub" data-i18n="ended.sub">Qatnashganingiz uchun rahmat!</p>
       <div class="stats" style="width:100%;text-align:left">
-        <div class="glass stat"><b id="end-dur">0 daq</b><span>Davomiylik</span></div>
-        <div class="glass stat"><b id="end-disc">100%</b><span>Intizom</span></div>
-        <div class="glass stat"><b id="end-quiz">—</b><span>Test natijasi</span></div>
-        <div class="glass stat"><b id="end-rate">—</b><span>Sizning bahoingiz</span></div>
+        <div class="glass stat"><b id="end-dur">0</b><span data-i18n="ended.duration">Davomiylik</span></div>
+        <div class="glass stat"><b id="end-disc">100%</b><span data-i18n="ended.discipline">Intizom</span></div>
+        <div class="glass stat"><b id="end-quiz">—</b><span data-i18n="ended.quiz">Test natijasi</span></div>
+        <div class="glass stat"><b id="end-rate">—</b><span data-i18n="ended.rate">Sizning bahoingiz</span></div>
       </div>
-      <button class="btn btn-glass block" data-act="rate" id="end-rate-btn"><svg class="i"><use href="#i-star"/></svg>Ustozni baholash</button>
-      <button class="btn btn-primary block" data-act="home">Bosh sahifaga</button>
+      <button class="btn btn-glass block" data-act="rate" id="end-rate-btn"><svg class="i"><use href="#i-star"/></svg><span data-i18n="ended.rateBtn">Ustozni baholash</span></button>
+      <button class="btn btn-primary block" data-act="home" data-i18n="ended.home">Bosh sahifaga</button>
       <div class="grow"></div>
     </div>
   </section>
 
-  <!-- 11. Profil -->
+  <!-- 17. Profil -->
   <section id="s-profile" class="screen">
     <div class="wrap">
       <div class="bar">
-        <button class="icon-btn" data-act="back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
-        <div class="bar-title">Profil</div>
+        <button class="icon-btn" data-act="back" data-i18n-aria="common.back" aria-label="Orqaga"><svg class="i"><use href="#i-back"/></svg></button>
+        <div class="bar-title" data-i18n="profile.title">Profil</div>
         <div style="width:46px"></div>
       </div>
-      <div class="glass card row"><div class="avatar" id="prof-avatar" style="width:56px;height:56px;border-radius:18px;font-size:22px">T</div><div style="flex:1;min-width:0"><b id="prof-name" style="font-size:18px;display:block;overflow:hidden;text-overflow:ellipsis">Talaba</b><span class="muted small">Talaba</span></div><button class="btn btn-glass" style="min-height:44px;padding:0 16px" data-act="edit-name">O'zgartirish</button></div>
-      <div class="stack" style="gap:8px"><b class="small muted" style="padding-left:6px">Ko'rinish</b>
-        <div class="seg" id="theme-seg"><button data-act="theme-set" data-v="auto">Avto</button><button data-act="theme-set" data-v="light">Yorug'</button><button data-act="theme-set" data-v="dark">Qorong'i</button></div>
+      <div class="glass card row"><div class="avatar" id="prof-avatar" style="width:56px;height:56px;border-radius:18px;font-size:22px">T</div><div style="flex:1;min-width:0"><b id="prof-name" style="font-size:18px;display:block;overflow:hidden;text-overflow:ellipsis">Talaba</b><span class="muted small" data-i18n="profile.student">Talaba</span></div><button class="btn btn-glass" style="min-height:44px;padding:0 16px" data-act="edit-name" data-i18n="profile.edit">O'zgartirish</button></div>
+      <div class="stack" style="gap:8px"><b class="small muted" style="padding-left:6px" data-i18n="lang.title">Til</b>
+        <div class="seg" id="lang-seg"></div>
+      </div>
+      <div class="stack" style="gap:8px"><b class="small muted" style="padding-left:6px" data-i18n="profile.theme">Ko'rinish</b>
+        <div class="seg" id="theme-seg"><button data-act="theme-set" data-v="auto" data-i18n="theme.auto">Avto</button><button data-act="theme-set" data-v="light" data-i18n="theme.light">Yorug'</button><button data-act="theme-set" data-v="dark" data-i18n="theme.dark">Qorong'i</button></div>
       </div>
       <div class="glass" style="overflow:hidden">
-        <a class="list-row" href="/privacy-policy"><span class="ric"><svg class="i sm"><use href="#i-shield"/></svg></span><span class="grow">Maxfiylik siyosati</span><svg class="i sm muted"><use href="#i-next"/></svg></a>
-        <a class="list-row" href="/terms"><span class="ric"><svg class="i sm"><use href="#i-file"/></svg></span><span class="grow">Foydalanish shartlari</span><svg class="i sm muted"><use href="#i-next"/></svg></a>
-        <button class="list-row danger" data-act="reset-ask" id="reset-row"><span class="ric"><svg class="i sm"><use href="#i-trash"/></svg></span><span class="grow">Ma'lumotlarni o'chirish<span class="sub">Ism va sozlamalar qurilmadan tozalanadi</span></span></button>
-        <button class="list-row" data-act="exit-app" id="exit-row" hidden><span class="ric"><svg class="i sm"><use href="#i-logout"/></svg></span><span class="grow">Ilovadan chiqish</span></button>
+        <button class="list-row" data-act="open-setup"><span class="ric"><svg class="i sm"><use href="#i-settings"/></svg></span><span class="grow"><span data-i18n="profile.setup">Ruxsatlar va himoya</span><span class="sub" id="prof-level"></span></span><svg class="i sm muted"><use href="#i-next"/></svg></button>
+        <button class="list-row" data-act="open-ready"><span class="ric"><svg class="i sm"><use href="#i-shield-check"/></svg></span><span class="grow" data-i18n="ready.title">Darsga tayyormisiz?</span><svg class="i sm muted"><use href="#i-next"/></svg></button>
+        <a class="list-row" href="/privacy-policy"><span class="ric"><svg class="i sm"><use href="#i-shield"/></svg></span><span class="grow" data-i18n="profile.privacy">Maxfiylik siyosati</span><svg class="i sm muted"><use href="#i-next"/></svg></a>
+        <a class="list-row" href="/terms"><span class="ric"><svg class="i sm"><use href="#i-file"/></svg></span><span class="grow" data-i18n="profile.terms">Foydalanish shartlari</span><svg class="i sm muted"><use href="#i-next"/></svg></a>
+        <button class="list-row" data-act="consent-withdraw"><span class="ric"><svg class="i sm"><use href="#i-user"/></svg></span><span class="grow"><span data-i18n="profile.consent">Rozilikni ko'rish</span><span class="sub" id="prof-consent"></span></span></button>
+        <button class="list-row danger" data-act="reset-ask"><span class="ric"><svg class="i sm"><use href="#i-trash"/></svg></span><span class="grow"><span data-i18n="profile.delete">Ma'lumotlarimni o'chirish</span><span class="sub" data-i18n="profile.deleteSub">Serverdagi yozuvlaringiz anonimlashtiriladi, qurilmadagi sozlamalar tozalanadi</span></span></button>
+        <button class="list-row" data-act="exit-app" id="exit-row" hidden><span class="ric"><svg class="i sm"><use href="#i-logout"/></svg></span><span class="grow" data-i18n="profile.exit">Ilovadan chiqish</span></button>
       </div>
-      <div class="muted small center" style="text-align:center">EduFocus · versiya 4.0</div>
+      <div class="muted small center" style="text-align:center" id="prof-version">EduFocus</div>
     </div>
   </section>
 </main>
@@ -305,10 +469,10 @@
 <div class="overlay mid" id="o-conn" role="alertdialog" aria-labelledby="conn-title">
   <div class="sheet glass center" style="text-align:center;align-items:center">
     <div class="result-ico" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" id="conn-ico"><svg class="i"><use href="#i-wifi-off"/></svg></div>
-    <h2 class="h2" id="conn-title">Aloqa uzildi</h2>
-    <p class="muted" id="conn-text">Internet qaytganda darsga avtomatik qaytasiz.</p>
+    <h2 class="h2" id="conn-title" data-i18n="conn.title">Aloqa uzildi</h2>
+    <p class="muted" id="conn-text" data-i18n="conn.text">Serverga qayta ulanilmoqda. Dars holatingiz saqlanadi.</p>
     <div class="spinner" id="conn-spin"></div>
-    <button class="btn btn-primary block" data-act="reconnect">Qayta urinish</button>
+    <button class="btn btn-primary block" data-act="reconnect" data-i18n="conn.retry">Qayta urinish</button>
   </div>
 </div>
 
@@ -318,26 +482,26 @@
     <h2 class="h2" id="cf-title">Tasdiqlang</h2>
     <p class="muted" id="cf-text"></p>
     <button class="btn btn-primary block" id="cf-ok" data-act="confirm-ok">Ha</button>
-    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-confirm">Bekor qilish</button>
+    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-confirm" data-i18n="common.cancel">Bekor qilish</button>
   </div>
 </div>
 
 <!-- Baholash -->
 <div class="overlay" id="o-rate" role="dialog" aria-labelledby="rate-title">
   <div class="sheet glass">
-    <h2 class="h2 center" id="rate-title" style="text-align:center">Ustozni baholang</h2>
+    <h2 class="h2 center" id="rate-title" style="text-align:center" data-i18n="rate.title">Ustozni baholang</h2>
     <div class="stars" id="rate-stars"></div>
     <div class="center muted" id="rate-label" style="text-align:center;min-height:22px"></div>
-    <textarea class="field" id="rate-comment" maxlength="500" placeholder="Fikringiz (ixtiyoriy)"></textarea>
-    <button class="btn btn-primary block" data-act="rate-send">Yuborish</button>
-    <button class="btn btn-ghost block" data-act="rate-close">Keyinroq</button>
+    <textarea class="field" id="rate-comment" maxlength="500" data-i18n-ph="rate.comment" placeholder="Fikringiz (ixtiyoriy)"></textarea>
+    <button class="btn btn-primary block" data-act="rate-send" data-i18n="rate.send">Yuborish</button>
+    <button class="btn btn-ghost block" data-act="rate-close" data-i18n="rate.later">Keyinroq</button>
   </div>
 </div>
 
 <!-- Kalkulyator -->
-<div class="overlay" id="o-calc" role="dialog" aria-label="Kalkulyator">
+<div class="overlay" id="o-calc" role="dialog" data-i18n-aria="tools.calc" aria-label="Kalkulyator">
   <div class="sheet glass">
-    <div class="row between"><b class="h2">Kalkulyator</b><button class="icon-btn" data-act="close-overlay" data-id="o-calc" aria-label="Yopish"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <div class="row between"><b class="h2" data-i18n="tools.calc">Kalkulyator</b><button class="icon-btn" data-act="close-overlay" data-id="o-calc" data-i18n-aria="common.close" aria-label="Yopish"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="calc-disp"><small id="calc-expr"></small><b id="calc-out">0</b></div>
     <div class="calc-grid" id="calc-grid"></div>
   </div>
@@ -347,10 +511,51 @@
 <div class="overlay mid" id="o-tool" role="dialog" aria-labelledby="tool-title">
   <div class="sheet glass center" style="text-align:center;align-items:center">
     <div class="result-ico" style="background:linear-gradient(135deg,#06b6d4,#3b82f6)"><svg class="i"><use href="#i-globe"/></svg></div>
-    <h2 class="h2" id="tool-title">Dars manbasi</h2>
-    <p class="muted">Ustoz bu manbadan foydalanishga ruxsat berdi.</p>
-    <a class="btn btn-primary block" id="tool-link" target="_blank" rel="noopener noreferrer" href="#"><svg class="i"><use href="#i-ext"/></svg>Ochish</a>
-    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-tool">Yopish</button>
+    <h2 class="h2" id="tool-title" data-i18n="tools.source">Dars manbasi</h2>
+    <p class="muted" data-i18n="tools.allowed">Ustoz bu manbadan foydalanishga ruxsat berdi.</p>
+    <a class="btn btn-primary block" id="tool-link" target="_blank" rel="noopener noreferrer" href="#"><svg class="i"><use href="#i-ext"/></svg><span data-i18n="tools.open">Ochish</span></a>
+    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-tool" data-i18n="common.close">Yopish</button>
+  </div>
+</div>
+
+<!-- Favqulodda qo'ng'iroq (hech qachon bloklanmaydi) -->
+<div class="overlay" id="o-sos" role="dialog" aria-labelledby="sos-title">
+  <div class="sheet glass">
+    <h2 class="h2" id="sos-title" data-i18n="sos.title">Favqulodda qo'ng'iroq</h2>
+    <p class="muted small" data-i18n="sos.text">Qo'ng'iroq jazosiz: ustozga faqat "favqulodda qo'ng'iroq" belgisi yuboriladi. Qo'ng'iroqdan keyin ilovaga qaytasiz.</p>
+    <div class="stack" style="gap:10px">
+      <button class="btn btn-danger block" data-act="sos-call" data-n="112"><svg class="i"><use href="#i-phone"/></svg><span data-i18n="sos.n112">112 — Yagona favqulodda xizmat</span></button>
+      <button class="btn btn-glass block" data-act="sos-call" data-n="101"><span data-i18n="sos.n101">101 — O't o'chirish</span></button>
+      <button class="btn btn-glass block" data-act="sos-call" data-n="102"><span data-i18n="sos.n102">102 — Militsiya</span></button>
+      <button class="btn btn-glass block" data-act="sos-call" data-n="103"><span data-i18n="sos.n103">103 — Tez yordam</span></button>
+      <button class="btn btn-glass block" data-act="sos-call" data-n=""><span data-i18n="sos.dialer">Telefon ilovasini ochish</span></button>
+    </div>
+    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-sos" data-i18n="common.close">Yopish</button>
+  </div>
+</div>
+
+<!-- Favqulodda chiqish so'rovi -->
+<div class="overlay" id="o-emergency" role="dialog" aria-labelledby="emg-title">
+  <div class="sheet glass">
+    <h2 class="h2" id="emg-title" data-i18n="emg.title">Favqulodda chiqish</h2>
+    <p class="muted small" data-i18n="emg.text">So'rov ustozga yuboriladi. U tasdiqlasa, sizga qulf ochiladi. Shoshilinch qo'ng'iroq uchun "Favqulodda qo'ng'iroq" tugmasidan foydalaning.</p>
+    <div class="stack" id="emg-reasons" role="radiogroup">
+      <label class="opt"><input type="radio" name="emgreason" value="call" checked><span class="ot" data-i18n="emg.call">Muhim telefon qo'ng'irog'i</span></label>
+      <label class="opt"><input type="radio" name="emgreason" value="health"><span class="ot" data-i18n="emg.health">O'zimni yomon his qilyapman</span></label>
+      <label class="opt"><input type="radio" name="emgreason" value="other"><span class="ot" data-i18n="emg.other">Boshqa sabab</span></label>
+    </div>
+    <button class="btn btn-primary block" data-act="emg-send" data-i18n="emg.send">So'rov yuborish</button>
+    <button class="btn btn-ghost block" data-act="close-overlay" data-id="o-emergency" data-i18n="common.cancel">Bekor qilish</button>
+  </div>
+</div>
+
+<!-- Sozlash yo'riqnomasi (OEM bo'yicha) -->
+<div class="overlay" id="o-guide" role="dialog" aria-labelledby="guide-title">
+  <div class="sheet glass">
+    <div class="row between"><h2 class="h2" id="guide-title">Yo'riqnoma</h2><button class="icon-btn" data-act="close-overlay" data-id="o-guide" data-i18n-aria="common.close" aria-label="Yopish"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <div id="guide-body" class="stack"></div>
+    <button class="btn btn-primary block" data-act="guide-open" id="guide-open" data-i18n="guide.openSettings">Sozlamalarni ochish</button>
+    <button class="btn btn-glass block" data-act="guide-done" id="guide-done" data-i18n="guide.done">Sozladim</button>
   </div>
 </div>
 
@@ -360,7 +565,7 @@
   setTimeout(function () {
     if (!window.__efBooted) {
       var s = document.getElementById('s-splash');
-      if (s) s.insertAdjacentHTML('beforeend', '<p style="position:absolute;bottom:40px;left:0;right:0;text-align:center;opacity:.7">Ilova yuklanmadi. Sahifani yangilang.</p>');
+      if (s) s.insertAdjacentHTML('beforeend', '<p style="position:absolute;bottom:40px;left:0;right:0;text-align:center;opacity:.7">EduFocus: yuklanmadi / failed to load</p>');
     }
   }, 6000);
 </script>

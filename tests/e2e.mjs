@@ -65,8 +65,11 @@ const waitScreen = async (id, t = 8000) => { await page.waitForFunction((i) => d
 // ---------- 1. Onboarding ----------
 const t0 = Date.now();
 await page.goto(BASE + '/student.html');
+await waitScreen('s-consent');
+console.log(`[rozilik] ochilish: ${Date.now() - t0} ms`);
+await shot('rozilik');
+await page.click('[data-act=consent-accept]');
 await waitScreen('s-onboard');
-console.log(`[onboarding] ochilish: ${Date.now() - t0} ms`);
 await shot('onboarding-1');
 await page.click('#onb-next'); await sleep(600);
 await page.click('#onb-next'); await sleep(600);
@@ -221,7 +224,7 @@ await page.reload(); await sleep(1200);       // SW sahifani boshqarishi uchun
 const swCtl = await page.evaluate(() => !!navigator.serviceWorker.controller);
 ok(swCtl, 'service worker sahifani boshqaryapti');
 const cached = await page.evaluate(async () => {
-  const names = ['/student.html', '/css/student.css?v=4.0', '/js/student/app.js?v=4.0', '/js/student/net.js', '/socket.io/socket.io.js'];
+  const names = ['/student.html', '/css/student.css?v=5.0', '/js/student/app.js?v=5.0', '/js/student/net.js', '/socket.io/socket.io.js'];
   const res = await Promise.all(names.map((n) => caches.match(n, { ignoreSearch: n === '/student.html' })));
   return res.every(Boolean);
 });

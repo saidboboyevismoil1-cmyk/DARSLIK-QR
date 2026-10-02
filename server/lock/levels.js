@@ -5,6 +5,7 @@ const LEVELS = {
   'ios-l0': { platform: 'ios', strong: false },     // faqat kuzatish
   'android-full': { platform: 'android', strong: true },   // pinning + Accessibility + DND (direct APK)
   'android-lite': { platform: 'android', strong: true },   // pinning + DND (store flavor)
+  'android-l0': { platform: 'android', strong: false },    // ilova bor, himoya yoqilmagan (faqat kuzatish)
   'web': { platform: 'web', strong: false },        // brauzer
 };
 const isStrong = (l) => !!(LEVELS[l] && LEVELS[l].strong);
@@ -41,7 +42,7 @@ function normalizeClient(c, settings) {
       else if (claimed === 'ios-l2' && settings['features.iosL2']) level = 'ios-l2';
       else level = 'ios-l0';
     } else if (platform === 'android') {
-      level = claimed === 'android-full' ? 'android-full' : claimed === 'android-lite' ? 'android-lite' : 'android-lite';
+      level = ['android-full', 'android-lite', 'android-l0'].includes(claimed) ? claimed : 'android-l0';
     }
   }
   const brandRaw = String(c.brand || '').toLowerCase();

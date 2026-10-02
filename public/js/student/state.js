@@ -16,6 +16,8 @@ export const S = {
   materials: [],
   tool: null,
   sess: null,          // saqlanadigan sessiya yozuvi (qarang net.js)
+  policy: null,        // serverdan kelgan himoya siyosati (join-success.protection)
+  unlockReason: '',    // oxirgi ochilish sababi: teacher | timer | emergency | demo | offline
   summary: null,       // dars tugagandagi ma'lumot
 };
 
@@ -67,7 +69,7 @@ export function popTo(id) { while (stack.length && current !== id) pop(); }
 
 // ---- Overlaylar ----
 export function openOverlay(id) { const el = $('#' + id); if (!el) return; el.classList.add('open'); el.removeAttribute('inert'); bus.emit('overlay', id); }
-export function closeOverlay(id) { const el = $('#' + id); if (el) { el.classList.remove('open'); el.setAttribute('inert', ''); } }
+export function closeOverlay(id) { const el = $('#' + id); if (el) { el.classList.remove('open'); el.setAttribute('inert', ''); bus.emit('overlay-closed', id); } }
 export const isOverlayOpen = (id) => !!$('#' + id)?.classList.contains('open');
 export function topOverlay() {
   const open = $$('.overlay.open').filter((o) => o.id !== 'o-conn');

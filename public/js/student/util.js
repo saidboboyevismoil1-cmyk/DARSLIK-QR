@@ -60,14 +60,3 @@ export function toast(msg, ms = 3500) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
-
-// Native o'ram (Android: AndroidBridge, iOS: iOSBridge → AndroidBridge nomi bilan ham mavjud)
-const bridge = () => window.AndroidBridge || window.iOSBridge || null;
-export const native = {
-  get present() { try { const b = bridge(); return !!(b && b.isNativeApp && b.isNativeApp()); } catch { return false; } },
-  get android() { return /Android/i.test(navigator.userAgent) && !!window.AndroidBridge; },
-  call(name, ...args) {
-    try { const b = bridge(); if (b && typeof b[name] === 'function') { b[name](...args); return true; } } catch { /* ignore */ }
-    return false;
-  },
-};

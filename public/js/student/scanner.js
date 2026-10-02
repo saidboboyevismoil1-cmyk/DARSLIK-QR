@@ -1,5 +1,7 @@
 // QR skaner. html5-qrcode faqat skaner ochilganda yuklanadi (lazy-load).
 import { $, loadScript, haptic, toast } from './util.js';
+import { t } from './i18n.js';
+import { native } from './native.js';
 import { bus, actions, push, onEnter, onLeave } from './state.js';
 
 let qr = null;
@@ -23,18 +25,34 @@ export function parseCode(text) {
   return /^\d{6}$/.test(text) ? text : null;
 }
 
-export const openScanner = () => push('s-scan');
+/** Native skaner (AVFoundation / CameraX + ML Kit) mavjud bo'lsa shuni ishlatadi; aks holda veb skaner (html5-qrcode). */
+export async function openScanner() {
+  if (native.present) {
+    const r = await native.safe('scanQR', {}, undefined, 120000);
+    if (r && r.text) {
+      const code = parseCode(r.text);
+      if (code) { haptic([100, 50, 100]); bus.emit('scanned', code); return; }
+      toast(t('scan.notEduFocus'));
+      return;
+    }
+    if (r && r.cancelled) return;
+    if (r && r.error === 'permission_denied') { toast(t('scan.denied')); return; }
+    if (r !== undefined) { if (r && r.error) toast(t('scan.fail')); if (r) return; }
+    // native skaner yo'q (undefined) — veb skanerga o'tamiz
+  }
+  push('s-scan');
+}
 
 async function start() {
   const my = ++run;
   handled = false;
   torchOn = false;
   $('#torch-btn').hidden = true;
-  hint('Kamera ishga tushmoqda…');
+  hint(t('scan.starting'));
   try {
     await loadScript('/js/html5-qrcode.min.js');
   } catch {
-    hint("Skaner yuklanmadi. Internetni tekshiring yoki kodni qo'lda kiriting.", true);
+    hint(t('scan.loadFail'), true);
     return;
   }
   if (my !== run) return;
@@ -43,12 +61,12 @@ async function start() {
     qr = new H('qr-reader', { formatsToSupport: [window.Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
     await qr.start({ facingMode: facing }, { fps: 12 }, onScan, () => {});
     if (my !== run) { stop(); return; }
-    hint('Kamerani ustozning QR kodiga qarating');
+    hint(t('scan.hint'));
     try { if (qr.getRunningTrackCameraCapabilities().torchFeature().isSupported()) $('#torch-btn').hidden = false; } catch { /* chiroq yo'q */ }
   } catch (e) {
     if (my !== run) return;
     const denied = /NotAllowed|Permission|denied/i.test(String(e && (e.name || e)));
-    hint(denied ? "Kameraga ruxsat berilmagan. Sozlamalardan ruxsat bering yoki kodni qo'lda kiriting." : "Kamerani ochib bo'lmadi. Kodni qo'lda kiriting.", true);
+    hint(denied ? t('scan.denied') : t('scan.fail'), true);
   }
 }
 
@@ -64,7 +82,7 @@ async function stop() {
 function onScan(text) {
   if (handled) return;
   const code = parseCode(text);
-  if (!code) { hint("Bu EduFocus dars QR kodi emas. Qayta urinib ko'ring.", true); return; }
+  if (!code) { hint(t('scan.notEduFocus'), true); return; }
   handled = true;
   haptic([100, 50, 100]);
   bus.emit('scanned', code);
@@ -76,9 +94,9 @@ onLeave('s-scan', stop);
 actions.flip = async () => { facing = facing === 'environment' ? 'user' : 'environment'; await stop(); start(); };
 actions.torch = async () => {
   try {
-    const t = qr.getRunningTrackCameraCapabilities().torchFeature();
+    const torch = qr.getRunningTrackCameraCapabilities().torchFeature();
     torchOn = !torchOn;
-    await t.apply(torchOn);
+    await torch.apply(torchOn);
     $('#torch-btn').style.background = torchOn ? 'rgba(250,204,21,.85)' : '';
-  } catch { toast("Bu qurilmada chiroqni yoqib bo'lmadi"); }
+  } catch { toast(t('scan.noTorch')); }
 };

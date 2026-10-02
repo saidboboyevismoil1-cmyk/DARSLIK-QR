@@ -1,6 +1,7 @@
 // Test yechish: savollar, javob qoralamasi, taymer, offline navbat, natija va tahlil.
 import { $, esc, icon, fmtTime, haptic, toast } from './util.js';
 import { S, bus, actions, push, onEnter, onLeave, currentScreen } from './state.js';
+import { t, tn } from './i18n.js';
 import * as net from './net.js';
 
 let builtId = null;
@@ -19,13 +20,13 @@ function show(which) {
 function render() {
   clearInterval(timerId); timerId = null;
   const q = S.quiz;
-  if (!q || !q.questions || !q.questions.length) { builtId = null; $('#quiz-title').textContent = 'Test'; $('#quiz-timer').hidden = true; show('empty'); return; }
-  $('#quiz-title').textContent = q.title || 'Tezkor test';
+  if (!q || !q.questions || !q.questions.length) { builtId = null; $('#quiz-title').textContent = t('quiz.title'); $('#quiz-timer').hidden = true; show('empty'); return; }
+  $('#quiz-title').textContent = q.title || t('quiz.defaultTitle');
   if (isDone()) { renderResult(q, S.sess.quizDone[q.quizId]); return; }
 
   show('form');
   if (builtId !== q.quizId) { buildForm(q); builtId = q.quizId; }
-  $('#quiz-count').textContent = `${q.questions.length} ta savol`;
+  $('#quiz-count').textContent = tn('quiz.count', q.questions.length);
   updateProgress();
   syncSubmitButton();
   startTimer(q);
@@ -53,7 +54,7 @@ function collect() {
 function updateProgress() {
   const total = S.quiz ? S.quiz.questions.length : 0;
   const n = Object.keys(collect()).length;
-  $('#quiz-progress-text').textContent = `${n} / ${total} javob`;
+  $('#quiz-progress-text').textContent = t('quiz.progress', { n, total });
   $('#quiz-progress').style.transform = `scaleX(${total ? n / total : 0})`;
 }
 
@@ -61,7 +62,7 @@ function syncSubmitButton() {
   const btn = $('#quiz-submit');
   const pend = isPending();
   btn.disabled = pend;
-  btn.innerHTML = pend ? `<span class="spinner" style="width:20px;height:20px;border-width:3px"></span>${net.connected() ? 'Yuborilmoqda…' : 'Internet qaytganda yuboriladi'}` : `${icon('check')}Javoblarni topshirish`;
+  btn.innerHTML = pend ? `<span class="spinner" style="width:20px;height:20px;border-width:3px"></span>${esc(net.connected() ? t('quiz.sending') : t('quiz.queued'))}` : `${icon('check')}${esc(t('quiz.submit'))}`;
 }
 
 $('#quiz-body').addEventListener('change', (e) => {
@@ -100,7 +101,7 @@ function submit(auto) {
   const total = S.quiz.questions.length;
   if (!auto && Object.keys(answers).length < total) {
     const first = S.quiz.questions.find((qq) => answers[qq.id] === undefined);
-    toast(`Barcha savollarga javob bering (${Object.keys(answers).length}/${total})`);
+    toast(t('quiz.answerAll', { n: Object.keys(answers).length, total }));
     const card = first && document.querySelector(`#quiz-body [data-q="${CSS.escape(String(first.id))}"]`);
     if (card) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return;
@@ -110,7 +111,7 @@ function submit(auto) {
   syncSubmitButton();
   clearTimeout(watchId);
   watchId = setTimeout(() => {
-    if (isPending() && net.connected()) { toast("Javob hali tasdiqlanmadi. Qayta urinib ko'ring"); net.flushPending(); }
+    if (isPending() && net.connected()) { toast(t('quiz.notConfirmed')); net.flushPending(); }
   }, 10000);
 }
 $('#quiz-form').addEventListener('submit', (e) => { e.preventDefault(); submit(false); });
@@ -121,7 +122,7 @@ function renderResult(q, res) {
   clearInterval(timerId); timerId = null;
   $('#quiz-timer').hidden = true;
   const pct = res.percentage;
-  const [grad, title] = pct >= 80 ? ['linear-gradient(135deg,#10b981,#06b6d4)', "A'lo natija!"] : pct >= 50 ? ['linear-gradient(135deg,#f59e0b,#f97316)', 'Yaxshi natija!'] : ['linear-gradient(135deg,#ef4444,#f97316)', 'Harakat qiling!'];
+  const [grad, title] = pct >= 80 ? ['linear-gradient(135deg,#10b981,#06b6d4)', t('quiz.r.great')] : pct >= 50 ? ['linear-gradient(135deg,#f59e0b,#f97316)', t('quiz.r.good')] : ['linear-gradient(135deg,#ef4444,#f97316)', t('quiz.r.try')];
   const byId = {};
   (res.results || []).forEach((r) => { byId[r.questionId] = r; });
   const review = q.questions.map((qq, i) => {
@@ -139,17 +140,17 @@ function renderResult(q, res) {
       <div class="result-ico" style="background:${grad}">${icon('award')}</div>
       <h2 class="h2">${title}</h2>
       <div class="score grad-text">${res.correctCount} / ${res.totalQuestions}</div>
-      <p class="muted">To'g'ri javoblar: ${pct}%</p>
+      <p class="muted">${esc(t('quiz.correct', { pct }))}</p>
     </div>
-    <b class="muted small" style="padding-left:6px">Javoblar tahlili</b>${review}
-    <button class="btn btn-glass block" data-act="back">Orqaga</button>`;
+    <b class="muted small" style="padding-left:6px">${esc(t('quiz.review'))}</b>${review}
+    <button class="btn btn-glass block" data-act="back">${esc(t('common.back'))}</button>`;
   show('result');
 }
 
 bus.on('quiz-result', () => { if (currentScreen() === 's-quiz') render(); });
 bus.on('quiz', (quiz) => {
   haptic([100, 50, 100]);
-  toast(`📝 Ustoz yangi test yubordi: «${quiz.title || 'Test'}»`);
+  toast(t('quiz.new', { title: quiz.title || t('quiz.title') }));
   if (S.phase === 'joined') { if (currentScreen() === 's-quiz') render(); else push('s-quiz'); }
 });
 bus.on('applied', ({ fresh }) => {

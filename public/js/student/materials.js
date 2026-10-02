@@ -1,16 +1,19 @@
 // Materiallar ro'yxati va hujjat ko'rish oynasi (PDF — lazy-load pdf.js, rasm, boshqa fayllar).
 import { $, esc, icon, loadScript, safeUrl, toast, haptic } from './util.js';
 import { S, bus, actions, push, onEnter, onLeave, currentScreen } from './state.js';
+import { t } from './i18n.js';
 import { markMaterialsSeen } from './lesson.js';
 
+const kindLabel = (k) => t('kind.' + k);
+
 const KINDS = {
-  pdf: { badge: 'PDF', label: 'PDF hujjat', bg: 'linear-gradient(135deg,#ef4444,#f97316)' },
-  word: { badge: 'DOC', label: 'Word hujjat', bg: 'linear-gradient(135deg,#3b82f6,#6366f1)' },
-  ppt: { badge: 'PPT', label: 'Taqdimot', bg: 'linear-gradient(135deg,#f97316,#f59e0b)' },
-  excel: { badge: 'XLS', label: 'Excel jadval', bg: 'linear-gradient(135deg,#10b981,#06b6d4)' },
-  image: { badge: 'IMG', label: 'Rasm', bg: 'linear-gradient(135deg,#8b5cf6,#d946ef)' },
-  text: { badge: 'TXT', label: 'Izoh', bg: 'linear-gradient(135deg,#64748b,#475569)' },
-  file: { badge: 'FILE', label: 'Fayl', bg: 'linear-gradient(135deg,#64748b,#334155)' },
+  pdf: { badge: 'PDF', bg: 'linear-gradient(135deg,#ef4444,#f97316)' },
+  word: { badge: 'DOC', bg: 'linear-gradient(135deg,#3b82f6,#6366f1)' },
+  ppt: { badge: 'PPT', bg: 'linear-gradient(135deg,#f97316,#f59e0b)' },
+  excel: { badge: 'XLS', bg: 'linear-gradient(135deg,#10b981,#06b6d4)' },
+  image: { badge: 'IMG', bg: 'linear-gradient(135deg,#8b5cf6,#d946ef)' },
+  text: { badge: 'TXT', bg: 'linear-gradient(135deg,#64748b,#475569)' },
+  file: { badge: 'FILE', bg: 'linear-gradient(135deg,#64748b,#334155)' },
 };
 export function kindOf(m) {
   const name = String(m.fileName || m.fileUrl || '').toLowerCase().split('?')[0];
@@ -29,13 +32,13 @@ export function kindOf(m) {
 function renderList() {
   const box = $('#mats-list');
   if (!S.materials.length) {
-    box.innerHTML = `<div class="glass empty"><div class="eic">${icon('file', 'lg')}</div><h3>Materiallar yo'q</h3><p>Ustoz dars materialini yuborganda bu yerda paydo bo'ladi.</p></div>`;
+    box.innerHTML = `<div class="glass empty"><div class="eic">${icon('file', 'lg')}</div><h3>${esc(t('mats.emptyT'))}</h3><p>${esc(t('mats.emptyD'))}</p></div>`;
     return;
   }
   box.innerHTML = S.materials.map((m) => {
     const k = KINDS[kindOf(m)];
-    const meta = [m.fileName || k.label, m.fileSize].filter(Boolean).join(' · ');
-    return `<button class="glass item fade-in" data-act="open-mat" data-id="${esc(m.id)}"><span class="ftype" style="background:${k.bg}">${k.badge}</span><span class="it"><b>${esc(m.title || 'Dars materiali')}</b><span>${esc(meta)}</span></span>${icon('next', 'sm muted')}</button>`;
+    const meta = [m.fileName || kindLabel(kindOf(m)), m.fileSize].filter(Boolean).join(' · ');
+    return `<button class="glass item fade-in" data-act="open-mat" data-id="${esc(m.id)}"><span class="ftype" style="background:${k.bg}">${k.badge}</span><span class="it"><b>${esc(m.title || t('mats.defaultTitle'))}</b><span>${esc(meta)}</span></span>${icon('next', 'sm muted')}</button>`;
   }).join('');
 }
 onEnter('s-mats', () => { renderList(); markMaterialsSeen(); });
@@ -79,8 +82,8 @@ async function renderViewer() {
   const m = cur;
   const kind = kindOf(m);
   const k = KINDS[kind];
-  $('#v-title').textContent = m.title || m.fileName || 'Material';
-  $('#v-sub').textContent = [k.label, m.fileSize].filter(Boolean).join(' · ');
+  $('#v-title').textContent = m.title || m.fileName || t('mats.material');
+  $('#v-sub').textContent = [kindLabel(kindOf(m)), m.fileSize].filter(Boolean).join(' · ');
   const note = $('#v-note');
   note.textContent = m.text || '';
   note.hidden = !m.text || kind === 'text' || kind === 'file';
@@ -90,17 +93,17 @@ async function renderViewer() {
   if (kind === 'pdf' && url) return openPdf(url);
   if (kind === 'image' && url) {
     const img = document.createElement('img');
-    img.alt = m.title || 'Rasm';
+    img.alt = m.title || kindLabel('image');
     img.draggable = false;
     img.src = url;
     inner.appendChild(img);
     return;
   }
   inner.innerHTML = `<div class="glass vcard"><span class="ftype" style="background:${k.bg};width:64px;height:64px;font-size:15px;border-radius:20px">${k.badge}</span>
-    <h3>${esc(m.fileName || m.title || 'Material')}</h3>
+    <h3>${esc(m.fileName || m.title || t('mats.material'))}</h3>
     ${m.fileSize ? `<div style="opacity:.7;font-size:13px">${esc(m.fileSize)}</div>` : ''}
     ${m.text ? `<div style="text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5">${esc(m.text)}</div>` : ''}
-    ${url && kind === 'file' || (url && ['word', 'ppt', 'excel'].includes(kind)) ? `<div style="font-size:13px;opacity:.75">Bu format dars vaqtida ilova ichida ko'rsatilmaydi. Ustoz izohiga e'tibor bering.</div>` : ''}
+    ${url && kind === 'file' || (url && ['word', 'ppt', 'excel'].includes(kind)) ? `<div style="font-size:13px;opacity:.75">${esc(t('viewer.noPreview'))}</div>` : ''}
   </div>`;
 }
 
@@ -121,7 +124,7 @@ async function openPdf(url) {
   } catch (e) {
     if (my !== token) return;
     console.error(e);
-    $('#v-inner').innerHTML = `<div class="glass vcard">${icon('alert', 'lg')}<h3>Hujjatni ochib bo'lmadi</h3><div style="opacity:.75;font-size:14px">Internetni tekshirib, qayta urinib ko'ring.</div><button class="btn btn-primary" data-act="retry-viewer">Qayta urinish</button></div>`;
+    $('#v-inner').innerHTML = `<div class="glass vcard">${icon('alert', 'lg')}<h3>${esc(t('viewer.errT'))}</h3><div style="opacity:.75;font-size:14px">${esc(t('viewer.errD'))}</div><button class="btn btn-primary" data-act="retry-viewer">${esc(t('conn.retry'))}</button></div>`;
   } finally {
     if (my === token) $('#v-spin').hidden = true;
   }
@@ -216,7 +219,7 @@ actions['pdf-prev'] = () => showPage(page - 1);
 // ---------- Yangi material ----------
 bus.on('material', (m) => {
   haptic([100, 50, 100]);
-  toast(`📚 Yangi material: «${m.title || 'Dars materiali'}»`);
+  toast(t('mats.new', { title: m.title || t('mats.defaultTitle') }));
   if (S.phase !== 'joined') return;
   if (currentScreen() === 's-mats') { renderList(); markMaterialsSeen(); }
   if (m.fileUrl || m.text) { markMaterialsSeen(); openMaterial(m); }

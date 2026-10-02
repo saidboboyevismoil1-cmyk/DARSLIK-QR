@@ -1,21 +1,28 @@
 // EduFocus talaba ilovasi — service worker.
 // Faqat talaba ilovasi resurslarini keshlaydi. Ustoz paneli, API va socket.io trafigi tarmoqdan o'tadi.
-const VERSION = 'v4.1';
+const VERSION = 'v5.0';
 const SHELL = `edufocus-shell-${VERSION}`;
 const RUNTIME = `edufocus-runtime-${VERSION}`;
 
 const PRECACHE = [
   '/student.html',
-  '/css/student.css?v=4.0',
-  '/js/student/app.js?v=4.0',
+  '/css/student.css?v=5.0',
+  '/js/student/app.js?v=5.0',
   '/js/student/util.js',
   '/js/student/state.js',
+  '/js/student/i18n.js',
+  '/js/student/i18n/uz.js',
+  '/js/student/native.js',
+  '/js/student/protection.js',
+  '/js/student/track.js',
   '/js/student/net.js',
   '/js/student/lesson.js',
   '/js/student/quiz.js',
   '/js/student/materials.js',
   '/js/student/scanner.js',
   '/js/student/tools.js',
+  '/js/student/setup.js',
+  '/js/student/join.js',
   '/socket.io/socket.io.js',
   '/manifest.json',
   '/img/icon-192.png',

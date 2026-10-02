@@ -10,6 +10,7 @@ Barcha vaqtlar server soati bo'yicha. Mijoz taymerni `remainingSeconds` dan **mo
 | `ios-l0` | faqat kuzatish | ilova oldinda |
 | `android-full` | pinning + Accessibility + DND (direct APK) | uchalasi yoqilgan va ilova oldinda |
 | `android-lite` | pinning + DND (store) | ikkalasi yoqilgan va ilova oldinda |
+| `android-l0` | ilova bor, himoya yoqilmagan | ilova oldinda |
 | `web` | brauzer | sahifa ko'rinib turibdi |
 
 Server `ios-l1/l2` ni faqat `features.iosL1/iosL2` yoqilgan bo'lsa qabul qiladi (aks holda `ios-l0`). `GET /api/lock/capabilities` shu bayroqlarni qaytaradi.
