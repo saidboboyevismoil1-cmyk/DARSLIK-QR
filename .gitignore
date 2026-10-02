@@ -1,17 +1,21 @@
-node_modules/
-.DS_Store
-.env
-npm-debug.log*
 
 # Android build outputs & local sdk paths
-android/.gradle/
-android/build/
-android/app/build/
-android/local.properties
-tests/screenshots/
-*.log
-android/keystore.properties
 *.jks
-ios/build/
+*.keystore
+*.log
+*.mobileprovision
+*.p12
+*.p8
+.DS_Store
+.env
+android/.gradle/
+android/app/build/
+android/build/
+android/keystore.properties
+android/local.properties
+build/
 config/.env
 ios/build/
+node_modules/
+npm-debug.log*
+tests/screenshots/

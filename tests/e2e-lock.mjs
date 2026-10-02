@@ -9,9 +9,10 @@ import { startServer, makeApi, teacherLogin, sleep } from './server/helpers.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const target = (process.argv[2] || 'android').toLowerCase();
-const outDir = path.join(here, 'screenshots', 'lock-' + target);
+const store = process.env.STORE_SHOTS === '1';   // do'kon skrinshotlari: iPhone 6.9" (1320x2868) / Android 1080x2400
+const outDir = store ? path.join(here, '..', 'docs', 'store', 'screenshots', target) : path.join(here, 'screenshots', 'lock-' + target);
 fs.rmSync(outDir, { recursive: true, force: true }); fs.mkdirSync(outDir, { recursive: true });
-const cfg = target === 'ios' ? { engine: webkit, device: devices['iPhone 15'] } : { engine: chromium, device: devices['Pixel 7'] };
+const cfg = target === 'ios' ? { engine: webkit, device: store ? { ...devices['iPhone 15'], viewport: { width: 440, height: 956 }, deviceScaleFactor: 3 } : devices['iPhone 15'] } : { engine: chromium, device: store ? { ...devices['Pixel 7'], viewport: { width: 360, height: 800 }, deviceScaleFactor: 3 } : devices['Pixel 7'] };
 
 let n = 0, failed = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failed++; console.error('  ✗ FAIL:', m); } };
