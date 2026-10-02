@@ -5,12 +5,13 @@ const jwt = require('jsonwebtoken');
 const { rateLimitKeyed } = require('../security');
 const { createMailer } = require('./mailer');
 const { createPush } = require('./push');
+const { createApi } = require('./api');
 
 const sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
 const rnd = () => crypto.randomBytes(32).toString('base64url');
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function init({ app, config, legacy, sql, authMiddleware, helpers, users, rosters, onDeleteData }) {
+function init({ app, config, legacy, sql, authMiddleware, helpers, users, rosters, svc, QRCode, onDeleteData }) {
   const mailer = createMailer(config);
   const push = createPush({ config, sql });
   const day = 86400000;
@@ -20,7 +21,7 @@ function init({ app, config, legacy, sql, authMiddleware, helpers, users, roster
   const emailKey = (req) => `${req.ip}|${String((req.body && req.body.email) || '').toLowerCase().slice(0, 120)}`;
   const loginLimit = rateLimitKeyed({ windowMs: 600000, max: 8, name: 'login', key: emailKey });
   const loginIpLimit = rateLimitKeyed({ windowMs: 600000, max: 60, name: 'loginip', key: (req) => req.ip });
-  const registerLimit = rateLimitKeyed({ windowMs: 3600000, max: 10, name: 'register', key: (req) => req.ip });
+  const registerLimit = rateLimitKeyed({ windowMs: 3600000, max: config.rate.registerPerHour, name: 'register', key: (req) => req.ip });
   const forgotLimit = rateLimitKeyed({ windowMs: 3600000, max: 5, name: 'forgot', key: emailKey });
   const refreshLimit = rateLimitKeyed({ windowMs: 60000, max: 30, name: 'refresh', key: (req) => req.ip });
 
@@ -51,6 +52,9 @@ function init({ app, config, legacy, sql, authMiddleware, helpers, users, roster
     sql.run('UPDATE refresh_tokens SET revoked_at = ?, replaced_by = ? WHERE id = ?', [Date.now(), next._id, row.id]);
     res.json({ success: true, ...strip(next), teacher: publicTeacher(t) });
   });
+
+  // Eski panel (edufocus_token) bilan kirgan ustoz yangi panelga o'tganda: joriy access token evaziga refresh token beriladi
+  app.post('/api/auth/exchange', refreshLimit, authMiddleware, (req, res) => res.json({ success: true, ...login(req.teacher, req), teacher: publicTeacher(req.teacher) }));
 
   app.post('/api/auth/logout', (req, res) => {
     const raw = String((req.body && req.body.refreshToken) || '');
@@ -149,6 +153,8 @@ function init({ app, config, legacy, sql, authMiddleware, helpers, users, roster
     app.get('/api/_test/push', (req, res) => res.json({ sent: push.sent }));
     app.get('/api/_test/mail', (req, res) => res.json({ outbox: mailer.outbox }));
   }
+
+  app.use('/api', createApi({ config, legacy, svc, sql, auth: authMiddleware, helpers, QRCode }));
 
   return { login, accessToken, push, mailer, limits: { login: loginLimit, loginIp: loginIpLimit, register: registerLimit }, close: () => push.close() };
 }

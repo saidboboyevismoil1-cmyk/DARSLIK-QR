@@ -1493,7 +1493,7 @@ const lock = lockModule.init({
 // O'QITUVCHI MODULI (refresh token, parol tiklash, hisobni o'chirish, push)
 // ============================================
 const teacherAuth = teacherModule.init({
-  app, config, legacy: db, sql: lock.sql, authMiddleware, helpers: { uuid: uuidv4 }, users: lock.svc.users, rosters: lock.svc.rosters,
+  app, config, legacy: db, sql: lock.sql, authMiddleware, helpers: { uuid: uuidv4 }, users: lock.svc.users, rosters: lock.svc.rosters, svc: lock.svc, QRCode,
   // Hisob o'chirilganda: guruhlar, testlar, ro'yxatlar va darslar ham o'chadi
   onDeleteData: (teacherId) => {
     const groups = loadGroups(), packs = loadTestpacks();

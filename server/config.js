@@ -66,6 +66,7 @@ function load(envFile) {
       apnsTopic: str('APNS_TOPIC', 'com.edufocus.teacher') || 'com.edufocus.teacher', apnsProduction: raw('APNS_ENV', 'production') !== 'development',
       vapidPublic: str('VAPID_PUBLIC_KEY'), vapidPrivate: str('VAPID_PRIVATE_KEY'), vapidSubject: str('VAPID_SUBJECT'),
     },
+    rate: { registerPerHour: int('RATE_REGISTER_PER_HOUR', 10) },
     accessTokenTtl: str('ACCESS_TOKEN_TTL', '12h') || '12h',
     refreshTokenDays: int('REFRESH_TOKEN_DAYS', 30),
     smtp: { host: str('SMTP_HOST'), port: int('SMTP_PORT', 587), user: str('SMTP_USER'), password: str('SMTP_PASSWORD'), from: str('SMTP_FROM') },

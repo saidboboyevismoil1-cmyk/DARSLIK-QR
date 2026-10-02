@@ -144,6 +144,13 @@ function createRouter({ svc, config, auth, legacy, helpers }) {
       res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="edufocus-${s.id}-hisobot.csv"` });
       return res.send(svc.reportCsv(rep));
     }
+    if (req.query.format === 'hemis') {
+      // HEMIS'ga yuklash uchun taxminiy format (tasdiqlanmagan): HEMIS ID; F.I.Sh; davomat (0/1); joriy nazorat bali (0-100)
+      const cell = (v) => (/[";\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v);
+      const csv = '\uFEFF' + ['HEMIS ID;F.I.Sh;Davomat;Joriy nazorat bali', ...rep.students.map((x) => [x.hemisId || '', x.name, x.attendance ? 1 : 0, x.total].map(cell).join(';'))].join('\r\n');
+      res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="edufocus-${s.id}-hemis.csv"` });
+      return res.send(csv);
+    }
     res.json(rep);
   });
   r.post('/lock/requests/:rid/decision', auth, (req, res) => {

@@ -9,11 +9,15 @@ page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resourc
 const r = await (await fetch(BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'teacher@edufocus.uz', password: '123456' }) })).json();
 await page.goto(BASE + '/login.html');
 await page.evaluate((r) => { for (const k of ['token', 'edufocus_token']) localStorage.setItem(k, r.token); localStorage.setItem('teacher', JSON.stringify(r.teacher || {})); localStorage.setItem('edufocus_teacher', JSON.stringify(r.teacher || {})); }, r);
-await page.goto(BASE + '/dashboard.html');
+await page.goto(BASE + '/dashboard-legacy.html');
 await page.waitForTimeout(2500);
 const url = page.url();
 console.log('url:', url);
+// yangi /dashboard.html — yangi panelga yo'naltiradi (eski token almashtiriladi)
+await page.goto(BASE + '/dashboard.html'); await page.waitForTimeout(1500);
+const redirected = page.url().includes('/teacher/') && !page.url().includes('/login');
+console.log('redirect:', page.url());
 await page.screenshot({ path: 'tests/screenshots/dashboard.png' });
 console.log(errs.length ? 'XATOLAR: ' + errs.join(' | ') : 'konsolda xato yo\'q');
 await b.close();
-process.exit(url.includes('dashboard') && !errs.length ? 0 : 1);
+process.exit(url.includes('dashboard') && redirected && !errs.length ? 0 : 1);

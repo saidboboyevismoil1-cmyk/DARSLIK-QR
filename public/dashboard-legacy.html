@@ -1,0 +1,3322 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EduFocus - O'qituvchi boshqaruv paneli">
+  <title>Dashboard — EduFocus</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <span class="logo-text">EduFocus</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="dashboard" id="nav-dashboard">
+          <span class="nav-icon">🏠</span>
+          Dashboard
+        </button>
+        <button class="nav-item" data-page="sessions" id="nav-sessions">
+          <span class="nav-icon">📚</span>
+          Sessiyalar
+        </button>
+        <button class="nav-item" id="nav-lockmode" onclick="location.href='/lock.html'">
+          <span class="nav-icon">🔒</span>
+          Dars rejimi
+        </button>
+        <button class="nav-item" data-page="groups" id="nav-groups">
+          <span class="nav-icon">🏫</span>
+          Guruhlar
+        </button>
+        <button class="nav-item" data-page="testpacks" id="nav-testpacks">
+          <span class="nav-icon">📋</span>
+          Testlar To'plami
+        </button>
+        <button class="nav-item" data-page="students" id="nav-students">
+          <span class="nav-icon">👥</span>
+          O'quvchilar
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="nav-item" id="logout-btn">
+          <span class="nav-icon">🚪</span>
+          Chiqish
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div style="display:flex; align-items:center; gap:12px">
+          <button class="hamburger" id="hamburger-btn">
+            <span></span><span></span><span></span>
+          </button>
+          <h1 class="topbar-title" id="page-title">Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="user-info">
+            <div class="user-avatar" id="user-avatar">I</div>
+            <div>
+              <div class="user-name" id="user-name">Ismoil</div>
+              <div class="user-role">O'qituvchi</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+
+        <!-- ======================== -->
+        <!-- DASHBOARD PAGE -->
+        <!-- ======================== -->
+        <div id="page-dashboard">
+          <div class="welcome-section">
+            <h2 class="welcome-title" id="welcome-text">Xush kelibsiz! 👋</h2>
+            <p class="welcome-subtitle">Yangi dars sessiyasini boshlang yoki statistikalarni ko'ring</p>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue">📚</div>
+              <div>
+                <div class="stat-value" id="stat-sessions">0</div>
+                <div class="stat-label">Jami sessiyalar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">👥</div>
+              <div>
+                <div class="stat-value" id="stat-students">0</div>
+                <div class="stat-label">Jami o'quvchilar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple">🟢</div>
+              <div>
+                <div class="stat-value" id="stat-active">0</div>
+                <div class="stat-label">Faol sessiyalar</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="card" style="margin-bottom: 24px">
+            <div class="card-header">
+              <h3 class="card-title">Tezkor Harakatlar</h3>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+              <button class="btn btn-primary btn-lg" id="create-session-btn" onclick="openCreateModal()">
+                <span>➕</span> Yangi Sessiya Boshlash
+              </button>
+            </div>
+          </div>
+
+          <!-- Recent Sessions -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">So'nggi Sessiyalar</h3>
+            </div>
+            <div id="recent-sessions">
+              <div class="empty-state">
+                <div class="empty-icon">📚</div>
+                <h3 class="empty-title">Hali sessiya yo'q</h3>
+                <p class="empty-text">Birinchi dars sessiyangizni boshlang!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== -->
+        <!-- ACTIVE SESSION PAGE -->
+        <!-- ======================== -->
+        <div id="page-sessions" style="display:none">
+          <!-- No active session -->
+          <div id="no-session">
+            <div class="empty-state">
+              <div class="empty-icon">📷</div>
+              <h3 class="empty-title">Faol sessiya yo'q</h3>
+              <p class="empty-text">Yangi dars sessiyasi yarating va QR kodni o'quvchilarga ko'rsating</p>
+              <button class="btn btn-primary btn-lg" onclick="openCreateModal()">
+                <span>➕</span> Yangi Sessiya Boshlash
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Session View -->
+          <div id="active-session" style="display:none">
+            <div class="session-grid">
+              
+              <!-- LEFT COLUMN: QR Code, PIN Code & Controls -->
+              <div class="session-col-left">
+                <!-- Session QR & Info Card (Compact & Optimized) -->
+                <div class="card" style="padding: 16px 18px">
+                  <div class="qr-section">
+                    <!-- Subject & Name Header -->
+                    <div style="margin-bottom: 8px; text-align: center">
+                      <h2 class="session-name" id="session-name-display" style="font-size: 16px; font-weight: 800; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis" title="Dars nomi">—</h2>
+                      <p class="session-subject" id="session-subject-display" style="font-size: 12px; margin: 0; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">—</p>
+                    </div>
+
+                    <!-- QR Container (Optimal size, strictly bounded) -->
+                    <div class="qr-container" style="padding: 10px; margin: 0 auto 8px; background: #0F172A; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center">
+                      <img id="session-qr" src="" alt="QR Code" style="width: 160px; height: 160px; display: block; border-radius: 6px">
+                    </div>
+
+                    <!-- 6-digit Numeric Session Code with ONE-CLICK COPY -->
+                    <div class="session-pin-box" onclick="copySessionCode()" title="Nusxalash uchun bosing" style="background: rgba(212, 246, 55, 0.08); border: 1.5px solid rgba(212, 246, 55, 0.35); border-radius: 12px; padding: 6px 12px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; transition: all 0.2s" onmouseover="this.style.borderColor='#D4F637'" onmouseout="this.style.borderColor='rgba(212, 246, 55, 0.35)'">
+                      <div style="text-align: left">
+                        <div style="font-size: 9px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px">Dars Kodi (PIN)</div>
+                        <div id="session-code-display" style="font-size: 22px; font-weight: 900; letter-spacing: 4px; color: #D4F637; font-family: monospace; line-height: 1.1">------</div>
+                      </div>
+                      <button type="button" id="pin-copy-btn" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); copySessionCode()" style="padding: 4px 8px; font-size: 11px; font-weight: 700; border-color: rgba(212,246,55,0.4); color: #D4F637; display: flex; align-items: center; gap: 4px; white-space: nowrap">
+                        <span>📋</span> <span>Nusxalash</span>
+                      </button>
+                    </div>
+
+                    <!-- Timer and Status Row -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px">
+                      <div class="session-timer" id="session-timer" style="font-size: 26px; font-weight: 800; margin: 0; line-height: 1">00:00</div>
+                      <div id="session-status-badge" class="session-status status-locked" style="padding: 3px 10px; font-size: 11px">
+                        <span class="status-dot"></span>
+                        <span id="session-status-text">Bloklangan</span>
+                      </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="session-actions" style="margin-top: 0">
+                      <div class="session-actions-row">
+                        <button class="btn btn-success btn-sm" id="unlock-btn" onclick="toggleLock()" style="font-size: 12px; padding: 7px 8px">
+                          🔓 Ruxsat Berish
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="regenerateQR()" style="font-size: 12px; padding: 7px 8px">
+                          🔄 QR Yangilash
+                        </button>
+                      </div>
+                      <div class="session-actions-row">
+                        <button class="btn btn-primary btn-sm" onclick="openQuizModal()" style="font-size: 12px; padding: 7px 8px">
+                          📝 Test Yuborish
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="openDirectTestpackPicker()" style="border-color: rgba(212, 246, 55, 0.4); color: #D4F637; font-size: 12px; padding: 7px 8px">
+                          📋 To'plamdan Test
+                        </button>
+                      </div>
+                      <button class="btn btn-danger btn-sm" onclick="endSession()" style="width: 100%; font-size: 12px; padding: 7px 8px">
+                        ⏹ Darsni Tugatish
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- App & Tool Remote Control (Kalkulyator, Brauzer, Blok) -->
+                <div class="card" style="border: 1px solid rgba(212, 246, 55, 0.3)">
+                  <div class="card-header" style="padding-bottom: 8px">
+                    <div>
+                      <h3 class="card-title" style="margin: 0; font-size: 14px">📲 Masofaviy Boshqaruv</h3>
+                      <p style="font-size: 11px; color: var(--text-muted); margin: 2px 0 0">O'quvchi ilovasida ochiladigan vositalar</p>
+                    </div>
+                    <span id="active-tool-badge" class="badge" style="background: #1E293B; color: #94A3B8; font-size: 11px">Faqat Dars</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px">
+                    <button type="button" class="btn btn-outline" id="btn-ctrl-calc" onclick="teacherToggleCalculator()" style="display: flex; align-items: center; justify-content: space-between; font-size: 13px">
+                      <span>🧮 Kalkulyator</span>
+                      <span id="calc-status-tag" style="font-size: 11px; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 9999px">Yopiq</span>
+                    </button>
+                    <button type="button" class="btn btn-outline" id="btn-ctrl-browser" onclick="teacherOpenBrowserModal()" style="display: flex; align-items: center; justify-content: space-between; font-size: 13px">
+                      <span>🌐 Chrome / Dars Manbasi</span>
+                      <span id="browser-status-tag" style="font-size: 11px; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 9999px">Yopiq</span>
+                    </button>
+                    <button type="button" class="btn btn-outline" id="btn-ctrl-lockall" onclick="teacherLockAllTools()" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.3); font-size: 12px">
+                      🔒 Hamma Ilovalarni Yopish (Darsga Qaytish)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT COLUMN: Real-Time Live Stats, Quizzes, Materials & Students -->
+              <div class="session-col-right">
+                
+                <!-- 1. Real-Time Live KPI Stats Bar -->
+                <div class="live-kpi-grid">
+                  <!-- Live Students -->
+                  <div class="live-kpi-card">
+                    <div class="live-kpi-header">
+                      <span class="live-kpi-title">👥 Ulangan Talabalar</span>
+                      <span class="live-pulse-dot" title="Jonli aloqa faol"></span>
+                    </div>
+                    <div class="live-kpi-value-row">
+                      <span class="live-kpi-val" id="live-stat-students">0</span>
+                      <span class="live-kpi-sub" id="live-stat-students-sub">ta talaba</span>
+                    </div>
+                    <div class="live-kpi-progress-bar">
+                      <div class="live-kpi-progress-fill" id="live-students-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+
+                  <!-- Live Focus Score -->
+                  <div class="live-kpi-card">
+                    <div class="live-kpi-header">
+                      <span class="live-kpi-title">🎯 Jonli Diqqat</span>
+                      <span class="badge badge-green" id="live-focus-badge">A'lo</span>
+                    </div>
+                    <div class="live-kpi-value-row">
+                      <span class="live-kpi-val" id="live-stat-focus" style="color: var(--green-400)">100%</span>
+                      <span class="live-kpi-sub">intizom</span>
+                    </div>
+                    <div class="live-kpi-progress-bar">
+                      <div class="live-kpi-progress-fill" id="live-focus-bar" style="width: 100%; background: var(--green-400)"></div>
+                    </div>
+                  </div>
+
+                  <!-- Live Violations -->
+                  <div class="live-kpi-card">
+                    <div class="live-kpi-header">
+                      <span class="live-kpi-title">⚠️ Chiqishlar</span>
+                      <span class="badge badge-green" id="live-violations-badge">0 ta</span>
+                    </div>
+                    <div class="live-kpi-value-row">
+                      <span class="live-kpi-val" id="live-stat-violations" style="color: #FBBF24">0</span>
+                      <span class="live-kpi-sub">holat qayd etildi</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis" id="live-violations-detail">
+                      Hozircha hech kim chiqmadi
+                    </div>
+                  </div>
+
+                  <!-- Live Tool Mode -->
+                  <div class="live-kpi-card">
+                    <div class="live-kpi-header">
+                      <span class="live-kpi-title">📲 Ekran Rejimi</span>
+                      <span class="badge" id="live-tools-tag" style="background: rgba(255,255,255,0.08); font-size: 11px">Faqat Dars</span>
+                    </div>
+                    <div class="live-kpi-value-row">
+                      <span class="live-kpi-val" id="live-stat-tool" style="font-size: 17px; font-weight: 700; color: #94A3B8">Bloklangan</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis" id="live-tool-desc">
+                      Boshqa ilovalar bloklangan
+                    </div>
+                  </div>
+
+                  <!-- Live Teacher Rating KPI -->
+                  <div class="live-kpi-card" id="live-rating-kpi-card" style="border-color: rgba(245, 158, 11, 0.35)">
+                    <div class="live-kpi-header">
+                      <span class="live-kpi-title">⭐ Ustoz Bali</span>
+                      <span class="badge badge-yellow" id="live-stat-rating-badge">Jonli</span>
+                    </div>
+                    <div class="live-kpi-value-row">
+                      <span class="live-kpi-val" id="live-stat-rating" style="color: #F59E0B">—</span>
+                      <span class="live-kpi-sub" id="live-stat-rating-count">0 ta baho</span>
+                    </div>
+                    <div class="live-kpi-progress-bar">
+                      <div class="live-kpi-progress-fill" id="live-stat-rating-bar" style="width: 0%; background: #F59E0B"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Live Quiz Tracker (Shown when quiz is broadcast) -->
+                <div class="card" id="quiz-tracker-card" style="display: none; border: 1px solid rgba(59, 130, 246, 0.4)">
+                  <div class="card-header">
+                    <div>
+                      <h3 class="card-title" id="tracker-quiz-title" style="margin: 0; font-size: 15px">📝 Jonli Test Natijalari</h3>
+                      <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0" id="tracker-quiz-subtitle">O'quvchilar javoblari kutilmoqda...</p>
+                    </div>
+                    <span class="badge badge-blue" id="tracker-quiz-count">0/0 topshirdi</span>
+                  </div>
+                  <div style="overflow-x: auto; max-height: 200px; margin-top: 8px">
+                    <table class="students-table" style="font-size: 13px">
+                      <thead>
+                        <tr>
+                          <th>O'quvchi</th>
+                          <th>To'g'ri / Jami</th>
+                          <th>Natija</th>
+                          <th>Vaqt</th>
+                        </tr>
+                      </thead>
+                      <tbody id="quiz-submissions-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 3. Live Materials Tracker Card -->
+                <div class="card" id="materials-tracker-card" style="border: 1px solid rgba(16, 185, 129, 0.25)">
+                  <div class="card-header">
+                    <div>
+                      <h3 class="card-title" style="margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px">
+                        <span>📚 Dars Materiallari (PDF, Word, Fayllar)</span>
+                      </h3>
+                      <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0">O'quvchilarga yuborilgan dars manbalari</p>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="openQuizModal(); switchSendTab('material')">
+                      ➕ Fayl Yuborish
+                    </button>
+                  </div>
+                  <div id="materials-tracker-list" style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px">
+                    <div id="materials-tracker-empty" style="text-align: center; color: var(--text-muted); padding: 12px; font-size: 13px; background: rgba(255,255,255,0.02); border-radius: 10px">
+                      Hozircha darsga fayl yuborilmadi. <a href="javascript:void(0)" onclick="openQuizModal(); switchSendTab('material')" style="color: #D4F637; text-decoration: underline">Fayl yuborish</a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3b. Live Student Ratings Tracker Card -->
+                <div class="card" id="ratings-tracker-card" style="border: 1px solid rgba(245, 158, 11, 0.3)">
+                  <div class="card-header">
+                    <div>
+                      <h3 class="card-title" style="margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px">
+                        <span>⭐ O'quvchilar Bahosi va Fikrlari</span>
+                      </h3>
+                      <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0">3 daqiqa qolganda yuborilgan dars baholari va taassurotlar</p>
+                    </div>
+                    <span class="badge badge-yellow" id="ratings-tracker-summary">— / 5.0 (0 ta baho)</span>
+                  </div>
+                  <div id="ratings-tracker-list" style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto">
+                    <div id="ratings-tracker-empty" style="text-align: center; color: var(--text-muted); padding: 12px; font-size: 13px; background: rgba(255,255,255,0.02); border-radius: 10px">
+                      Hozircha baho berilmadi. Dars tugashiga 3 daqiqa qolganda o'quvchilar baholaydilar.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. Students Real-time Monitoring List -->
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <h3 class="card-title" style="margin: 0; font-size: 15px">👥 O'quvchilar Jonli Nazorat Ro'yxati</h3>
+                      <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0">Real-vaqt rejimida qatnashuv va intizom holati</p>
+                    </div>
+                    <span class="count-badge" id="student-count-badge">0</span>
+                  </div>
+                  <div style="overflow-x: auto; margin-top: 8px">
+                    <table class="students-table" id="students-table">
+                      <thead>
+                        <tr>
+                          <th>O'quvchi</th>
+                          <th>Qurilma</th>
+                          <th>Vaqt</th>
+                          <th>Chiqishlar</th>
+                          <th>Diqqat</th>
+                          <th>Jonli Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="students-tbody">
+                      </tbody>
+                    </table>
+                    <div id="no-students" class="empty-state" style="padding: 30px">
+                      <div class="empty-icon" style="font-size:36px">👥</div>
+                      <p class="empty-text">Hali hech kim QR kodni skanerlamagan</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. Activity Log -->
+                <div class="card">
+                  <div class="card-header">
+                    <h3 class="card-title" style="margin: 0; font-size: 14px">⚡ Jonli Faoliyat Jurnali</h3>
+                  </div>
+                  <div class="activity-log" id="activity-log" style="max-height: 160px; overflow-y: auto">
+                    <div class="activity-item">
+                      <span class="activity-icon">🟢</span>
+                      <span class="activity-text">Sessiya boshlandi</span>
+                      <span class="activity-time" id="session-start-time">—</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== -->
+        <!-- GROUPS MANAGEMENT PAGE -->
+        <!-- ======================== -->
+        <div id="page-groups" style="display:none">
+          <div class="card" style="margin-bottom: 24px">
+            <div class="card-header" style="flex-wrap: wrap; gap: 12px; align-items: center">
+              <div>
+                <h3 class="card-title" style="display: flex; align-items: center; gap: 8px">
+                  <span>🏫</span> Mening Guruhlarim
+                </h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0">
+                  Akademik guruhlarni boshqaring va ularga 1-bosishda dars sessiyasi boshlang
+                </p>
+              </div>
+              <button class="btn btn-primary" onclick="openGroupModal()">
+                <span>➕</span> Yangi Guruh Yaratish
+              </button>
+            </div>
+            
+            <!-- Search & Filter bar -->
+            <div style="display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap">
+              <input type="text" id="groups-search-input" class="form-input" placeholder="🔍 Guruh nomi yoki fan bo'yicha qidirish..." oninput="filterGroupsList(this.value)" style="flex: 1; min-width: 240px">
+            </div>
+          </div>
+
+          <!-- Groups Grid Container -->
+          <div id="groups-grid-container" class="groups-grid">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- ======================== -->
+        <!-- TEST PACKS (QUESTION BANK) PAGE -->
+        <!-- ======================== -->
+        <div id="page-testpacks" style="display:none">
+          <div class="card" style="margin-bottom: 24px">
+            <div class="card-header" style="flex-wrap: wrap; gap: 12px; align-items: center">
+              <div>
+                <h3 class="card-title" style="display: flex; align-items: center; gap: 8px">
+                  <span>📋</span> Testlar To'plami (Question Bank)
+                </h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0">
+                  Darslar uchun tayyor savollar to'plamlarini saqlang va darsda 1-bosishda yuboring
+                </p>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <button class="btn btn-primary" onclick="openTestpackModal()">
+                  <span>➕</span> Yangi Test To'plami
+                </button>
+              </div>
+            </div>
+
+            <!-- Templates quick-start chips -->
+            <div style="margin-top: 16px; padding: 12px 14px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06)">
+              <div style="font-size: 12px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px">
+                ⚡ Tayyor shablonlar (1-bosishda yaratish):
+              </div>
+              <div class="template-chips-wrap" style="display: flex; gap: 8px; flex-wrap: wrap">
+                <button type="button" class="btn btn-outline btn-sm template-chip-btn" onclick="useTemplateTestpack('cyber')">
+                  🔐 Kiberxavfsizlik (5 ta savol)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm template-chip-btn" onclick="useTemplateTestpack('python')">
+                  🐍 Python Dasturlash (5 ta savol)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm template-chip-btn" onclick="useTemplateTestpack('networks')">
+                  🌐 Kompyuter Tarmoqlari (5 ta savol)
+                </button>
+              </div>
+            </div>
+
+            <!-- Search bar -->
+            <div style="display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap">
+              <input type="text" id="testpacks-search-input" class="form-input" placeholder="🔍 To'plam nomi yoki fan bo'yicha qidirish..." oninput="filterTestpacksList(this.value)" style="flex: 1; min-width: 240px">
+            </div>
+          </div>
+
+          <!-- Testpacks Grid Container -->
+          <div id="testpacks-grid-container" class="testpacks-grid">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- ======================== -->
+        <!-- STUDENTS LIST PAGE -->
+        <!-- ======================== -->
+        <div id="page-students" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Barcha O'quvchilar Tarixi</h3>
+            </div>
+            <div id="all-students-list">
+              <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <h3 class="empty-title">O'quvchilar yo'q</h3>
+                <p class="empty-text">Sessiya boshlang va o'quvchilar QR kodni skanerlashini kuting</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Session Modal -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Yangi Sessiya</h2>
+        <button class="modal-close" onclick="closeCreateModal()">✕</button>
+      </div>
+
+      <form id="create-session-form">
+        <div class="form-group" style="background: rgba(212,246,55,0.06); border: 1px solid rgba(212,246,55,0.25); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px">
+          <label class="form-label" for="session-group-select" style="color: #D4F637; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between">
+            <span>🏫 Tayyor Guruhni Tanlash (Tezkor):</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: normal">Avto-to'ldirish</span>
+          </label>
+          <select id="session-group-select" class="form-input" onchange="onSessionGroupSelected(this.value)">
+            <option value="">-- Guruhni tanlang (yoki qo'lda kiriting) --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="session-name">Dars nomi</label>
+          <input type="text" id="session-name" class="form-input" placeholder="Masalan: Matematika - 3-kurs" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="session-subject">Fan (predmet)</label>
+          <input type="text" id="session-subject" class="form-input" placeholder="Masalan: Oliy matematika">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="session-duration">Dars davomiyligi (daqiqa)</label>
+          <input type="number" id="session-duration" class="form-input" value="45" min="5" max="180">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%">
+          <span>🚀</span> Sessiyani Boshlash
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Group Modal (Create / Edit) -->
+  <div class="modal-overlay" id="group-modal">
+    <div class="modal" style="max-width: 520px">
+      <div class="modal-header">
+        <h2 class="modal-title" id="group-modal-title">🏫 Yangi Guruh Yaratish</h2>
+        <button class="modal-close" onclick="closeGroupModal()">✕</button>
+      </div>
+
+      <form id="group-form" onsubmit="saveGroup(event)">
+        <input type="hidden" id="group-id-input" value="">
+        <div class="form-group">
+          <label class="form-label" for="group-name-input">Guruh nomi *</label>
+          <input type="text" id="group-name-input" class="form-input" placeholder="Masalan: 941-21 Guruh" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="group-subject-input">Fan / Yo'nalish *</label>
+          <input type="text" id="group-subject-input" class="form-input" placeholder="Masalan: Kiberxavfsizlik asoslari" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+          <div class="form-group">
+            <label class="form-label" for="group-students-input">Talabalar soni</label>
+            <input type="number" id="group-students-input" class="form-input" value="25" min="1" max="200">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="group-room-input">Auditoriya / Xona</label>
+            <input type="text" id="group-room-input" class="form-input" placeholder="Masalan: 304-xona">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="group-desc-input">Qo'shimcha izoh</label>
+          <textarea id="group-desc-input" class="form-input" rows="2" placeholder="Masalan: Haftada 2 marta ma'ruza va amaliyot darslari"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%">
+          <span>💾</span> Guruhni Saqlash
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Test Pack Builder Modal -->
+  <div class="modal-overlay" id="testpack-modal">
+    <div class="modal" style="max-width: 740px; max-height: 90vh; overflow-y: auto">
+      <div class="modal-header">
+        <h2 class="modal-title" id="testpack-modal-title">📋 Yangi Test To'plami Yaratish</h2>
+        <button class="modal-close" onclick="closeTestpackModal()">✕</button>
+      </div>
+
+      <form id="testpack-form" onsubmit="saveTestpack(event)">
+        <input type="hidden" id="testpack-id-input" value="">
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
+          <div class="form-group">
+            <label class="form-label" for="tp-title-input">To'plam Nomi *</label>
+            <input type="text" id="tp-title-input" class="form-input" placeholder="Masalan: Kiberxavfsizlik — 1-Nazorat" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="tp-subject-input">Fan *</label>
+            <input type="text" id="tp-subject-input" class="form-input" placeholder="Masalan: Kiberxavfsizlik asoslari" required>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px; background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06)">
+          <label class="form-label" style="margin: 0; white-space: nowrap">⏱️ Vaqt chegarasi (daqiqa):</label>
+          <input type="number" id="tp-timelimit-input" class="form-input" value="5" min="0" max="180" style="width: 90px">
+          <span style="font-size: 12px; color: var(--text-muted)">(0 = cheklovsiz)</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+          <label class="form-label" style="margin: 0; font-size: 15px; font-weight: 700">Savollar Ro'yxati</label>
+          <span id="tp-question-counter-badge" class="badge" style="background: rgba(212,246,55,0.15); color: #D4F637; font-weight: 700">0 ta savol</span>
+        </div>
+
+        <div id="tp-questions-list">
+          <!-- Dynamically inserted question builder blocks -->
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px">
+          <button type="button" class="btn btn-outline" onclick="addTpQuestionBlock()" style="flex: 1; border-style: dashed; padding: 12px">
+            ➕ Yangi Savol Qo'shish
+          </button>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%">
+          <span>💾</span> To'plamni Saqlash
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Direct Testpack Broadcast Modal (Quick Pick during live class) -->
+  <div class="modal-overlay" id="direct-testpack-modal">
+    <div class="modal" style="max-width: 560px">
+      <div class="modal-header">
+        <h2 class="modal-title">🚀 Test To'plamini Darsga Yuborish</h2>
+        <button class="modal-close" onclick="closeDirectTestpackPicker()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px">
+          Quyidagi to'plamlardan birini tanlang. U bir zumda barcha ulangan talabalarga yuboriladi!
+        </p>
+        <div id="direct-testpack-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz & Material Modal -->
+  <div class="modal-overlay" id="quiz-modal">
+    <div class="modal" style="max-width: 680px; max-height: 90vh; overflow-y: auto">
+      <div class="modal-header">
+        <h2 class="modal-title">📝 O'quvchilarga Test / Vazifa Yuborish</h2>
+        <button class="modal-close" onclick="closeQuizModal()">✕</button>
+      </div>
+
+      <!-- Tab switcher -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px">
+        <button type="button" class="btn btn-primary btn-sm" id="tab-btn-quiz" onclick="switchSendTab('quiz')">
+          📝 Tezkor Test (Quiz)
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="tab-btn-material" onclick="switchSendTab('material')">
+          📚 Dars Materiali / Havola
+        </button>
+      </div>
+
+      <!-- Tab 1: Quiz -->
+      <div id="tab-content-quiz">
+        <div style="background: rgba(212,246,55,0.06); border: 1px solid rgba(212,246,55,0.25); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+          <label class="form-label" style="color: #D4F637; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center">
+            <span>⚡ Saqlangan Testlar To'plamidan Tanlash:</span>
+            <span style="font-size: 11px; color: var(--text-muted)">1-bosingda to'ldiradi</span>
+          </label>
+          <select id="quiz-premade-pack-select" class="form-input" onchange="loadTestpackIntoQuizModal(this.value)">
+            <option value="">-- Tayyor to'plamni tanlang --</option>
+          </select>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+          <label class="form-label" style="margin: 0">Test Sarlavhasi</label>
+          <button type="button" class="btn btn-outline btn-sm" onclick="loadSampleQuiz()">
+            ✨ Namunaviy Test Yuklash
+          </button>
+        </div>
+        <div class="form-group">
+          <input type="text" id="quiz-title-input" class="form-input" placeholder="Masalan: 1-mavzu bo'yicha tezkor savollar" value="Mavzu bo'yicha tezkor test">
+        </div>
+
+        <div id="quiz-questions-list">
+          <!-- Question blocks inserted dynamically -->
+        </div>
+
+        <button type="button" class="btn btn-outline" onclick="addQuestionBlock()" style="width: 100%; margin-bottom: 20px; border-style: dashed">
+          ➕ Yangi Savol Qo'shish
+        </button>
+
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px">
+          <label class="form-label" style="margin: 0; white-space: nowrap">⏱️ Vaqt chegarasi (daqiqa):</label>
+          <input type="number" id="quiz-timelimit-input" class="form-input" value="3" min="0" max="60" style="width: 90px">
+          <span style="font-size: 12px; color: var(--text-muted)">(0 = cheklovsiz)</span>
+        </div>
+
+        <button type="button" class="btn btn-success btn-lg" onclick="broadcastQuiz()" style="width: 100%">
+          🚀 Testni Barcha O'quvchilarga Yuborish
+        </button>
+      </div>
+
+      <!-- Tab 2: Material & File Upload -->
+      <div id="tab-content-material" style="display: none">
+        <!-- File Upload Drag & Drop Area -->
+        <div class="form-group" style="margin-bottom: 16px">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center">
+            <span>📎 Dars Hujjati / Mavzu Fayli (PDF, Word, PPTX, Excel, Rasm)</span>
+            <span style="font-size: 11px; color: var(--text-muted)">Max 50MB</span>
+          </label>
+          <div id="material-dropzone" style="border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px; padding: 22px; text-align: center; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s ease" onclick="document.getElementById('material-file-input').click()">
+            <input type="file" id="material-file-input" style="display: none" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt,.zip" onchange="handleMaterialFileSelected(this.files[0])">
+            <div id="dropzone-idle">
+              <div style="font-size: 32px; margin-bottom: 6px">📂</div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFFFFF">Faylni shu yerga tashlang yoki tanlash uchun bosing</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px">PDF kitoblar, Word konspektlar (.docx), Taqdimotlar (.pptx), jadvallar</div>
+            </div>
+            <!-- File Selected Preview -->
+            <div id="dropzone-selected" style="display: none; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15)">
+              <div style="display: flex; align-items: center; gap: 12px; text-align: left; overflow: hidden">
+                <div id="dz-file-badge" style="width: 40px; height: 40px; border-radius: 10px; background: #EF4444; color: #fff; font-weight: 900; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">PDF</div>
+                <div style="overflow: hidden">
+                  <div id="dz-file-name" style="font-size: 14px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">fayl.pdf</div>
+                  <div id="dz-file-size" style="font-size: 12px; color: var(--text-muted)">2.4 MB</div>
+                </div>
+              </div>
+              <button type="button" onclick="event.stopPropagation(); removeSelectedMaterialFile()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #EF4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer">O'chirish</button>
+            </div>
+            <!-- Upload progress bar -->
+            <div id="dz-progress-bar" style="display: none; margin-top: 10px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden">
+              <div id="dz-progress-fill" style="width: 0%; height: 100%; background: #D4F637; transition: width 0.2s"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mavzu / Material Sarlavhasi</label>
+          <input type="text" id="material-title-input" class="form-input" placeholder="Masalan: 4-Mavzu: Nyutonning 2-qonuni (Konspekt va mashqlar)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ko'rsatma / Vazifa Matni (O'quvchilarga ko'rsatma)</label>
+          <textarea id="material-text-input" class="form-input" rows="3" placeholder="Masalan: Ushbu konspektni ko'rib chiqing va 12-betdagi savollarga daftaringizda javob bering..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Qo'shimcha Havola (Video darslik yoki veb-sayt URL) — Ixtiyoriy</label>
+          <input type="url" id="material-url-input" class="form-input" placeholder="https://youtube.com/... yoki https://darslik.uz/...">
+        </div>
+
+        <button type="button" id="btn-broadcast-material" class="btn btn-primary btn-lg" onclick="broadcastMaterial()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px">
+          📤 Materialni Barcha O'quvchilarga Yuborish
+        </button>
+      </div>
+    </div>
+  <!-- Modal: Teacher Send Web Resource / App -->
+  <div id="teacher-browser-modal" class="modal-overlay" style="display: none">
+    <div class="modal" style="max-width: 440px">
+      <div class="modal-header">
+        <h3 class="modal-title">🌐 Dars Manbasini Ochish</h3>
+        <button class="modal-close" onclick="closeTeacherBrowserModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px">
+          O'quvchilar telefonida darsga oid veb-sahifa yoki ma'lumotnomani ochishga ruxsat bering.
+        </p>
+        <div class="form-group" style="margin-bottom: 14px">
+          <label class="form-label">Manba Nomi</label>
+          <input type="text" id="teacher-browser-title" class="form-input" placeholder="Masalan: Fizika qonunlari jadvali" value="Dars manbasi">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px">
+          <label class="form-label">Havola (URL)</label>
+          <input type="url" id="teacher-browser-url" class="form-input" placeholder="https://uz.wikipedia.org/..." value="https://uz.wikipedia.org">
+        </div>
+        <button type="button" class="btn btn-success" style="width: 100%" onclick="teacherSendBrowserResource()">
+          🚀 O'quvchilarda Ochish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Statistics & Summary Modal -->
+  <div class="modal-overlay" id="stats-modal">
+    <div class="modal modal-stats">
+      <div class="stats-summary-header">
+        <div>
+          <h2 class="stats-session-title">
+            <span>📊</span> <span id="summary-title">Dars Statistikasi</span>
+          </h2>
+          <div class="stats-session-meta">
+            <span>📚 Fan: <strong id="summary-subject">—</strong></span>
+            <span>📅 Sana: <span id="summary-date">—</span></span>
+            <span>⏱️ Vaqt: <span id="summary-time">—</span></span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeStatsModal()">✕</button>
+      </div>
+
+      <!-- 5 KPI Cards -->
+      <div class="stats-kpi-grid">
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">Jami O'quvchilar</span>
+            <span class="stats-kpi-icon">👥</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-total-students">0</div>
+          <div class="stats-kpi-sub">Qatnashganlar</div>
+        </div>
+
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">Dars Vaqti</span>
+            <span class="stats-kpi-icon">⏱️</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-duration">0 daq</div>
+          <div class="stats-kpi-sub" id="summary-planned-duration">Reja: 45 daqiqa</div>
+        </div>
+
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">O'rtacha Diqqat</span>
+            <span class="stats-kpi-icon">🎯</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-focus-score" style="color: var(--green-400)">100%</div>
+          <div class="stats-kpi-sub">Intizom ko'rsatkichi</div>
+        </div>
+
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">Qoidabuzarliklar</span>
+            <span class="stats-kpi-icon">⚠️</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-violations" style="color: var(--yellow-400)">0</div>
+          <div class="stats-kpi-sub">Ekrandan chiqishlar</div>
+        </div>
+
+        <div class="stats-kpi-card" style="border-color: rgba(245, 158, 11, 0.35)">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">Ustoz Darsi Bahosi</span>
+            <span class="stats-kpi-icon">⭐</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-teacher-rating" style="color: #F59E0B">—</div>
+          <div class="stats-kpi-sub" id="summary-teacher-rating-count">0 ta baho</div>
+        </div>
+      </div>
+
+      <!-- Top Students (Perfect Focus) -->
+      <div class="stats-top-students" id="summary-top-section" style="display:none">
+        <div class="stats-top-title">
+          <span>🏆</span> 100% Diqqatli O'quvchilar (Sahifadan umuman chiqmaganlar)
+        </div>
+        <div class="top-students-chips" id="summary-top-chips"></div>
+      </div>
+
+      <!-- Teacher Lesson Rating & Student Feedback Card -->
+      <div id="summary-rating-card" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 14px; padding: 16px 18px; margin-top: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px">
+          <div>
+            <h4 style="font-size: 15px; font-weight: 800; color: #F59E0B; margin: 0; display: flex; align-items: center; gap: 6px">
+              <span>⭐</span> Ustoz Darsini Baholash & O'quvchilar Fikrlari
+            </h4>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0">
+              Dars yakunida o'quvchilar tomonidan berilgan baholar (1 dan 5 gacha)
+            </p>
+          </div>
+          <div id="summary-rating-badge" style="font-size: 18px; font-weight: 900; color: #F59E0B; background: rgba(245, 158, 11, 0.15); padding: 5px 14px; border-radius: 10px">
+            ⭐ — / 5.0
+          </div>
+        </div>
+
+        <!-- Star distribution (5, 4, 3, 2, 1) -->
+        <div id="summary-star-breakdown" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px"></div>
+
+        <!-- Student comments -->
+        <div id="summary-comments-section" style="margin-top: 10px">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px">💬 O'quvchilar Fikr va Taassurotlari:</div>
+          <div id="summary-comments-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto"></div>
+        </div>
+      </div>
+
+      <!-- Students Detailed Table -->
+      <div style="margin-top: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+          <h4 style="font-size: 16px; font-weight: 700; margin: 0">📋 O'quvchilar Hisoboti</h4>
+          <span style="font-size: 12px; color: var(--text-muted)" id="summary-table-count">0 ta o'quvchi</span>
+        </div>
+        <div style="overflow-x: auto; max-height: 280px">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th>O'quvchi</th>
+                <th>Qurilma</th>
+                <th>Kirgan Vaqti</th>
+                <th>Ekrandan Chiqish</th>
+                <th>Diqqat Ko'rsatkichi</th>
+                <th>Test</th>
+                <th>Ustozga Baho</th>
+                <th>Izoh / Fikr</th>
+              </tr>
+            </thead>
+            <tbody id="summary-students-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="stats-actions-bar">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button class="btn btn-outline" onclick="printStatsReport()">
+            🖨️ Chop Etish / PDF
+          </button>
+          <button class="btn btn-outline" onclick="exportStatsToCSV()">
+            📥 Excel (CSV) Yuklab Olish
+          </button>
+        </div>
+        <button class="btn btn-primary" onclick="closeStatsModal()">
+          Yopish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // ============================================
+    // AUTH CHECK
+    // ============================================
+    const token = localStorage.getItem('edufocus_token');
+    const teacherData = JSON.parse(localStorage.getItem('edufocus_teacher') || '{}');
+
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    // Set user info
+    document.getElementById('user-name').textContent = `${teacherData.name || ''} ${teacherData.surname || ''}`;
+    document.getElementById('user-avatar').textContent = (teacherData.name || 'U')[0].toUpperCase();
+    document.getElementById('welcome-text').textContent = `Xush kelibsiz, ${teacherData.name || 'Ustoz'}! 👋`;
+
+    // ============================================
+    // SOCKET CONNECTION
+    // ============================================
+    const socket = io({ auth: { token } });   // ustoz soketi JWT bilan autentifikatsiya qilinadi
+    let currentSession = null;
+    let timerInterval = null;
+    let sessionStartTime = null;
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    const navItems = document.querySelectorAll('.nav-item[data-page]');
+    const pages = {
+      dashboard: document.getElementById('page-dashboard'),
+      sessions: document.getElementById('page-sessions'),
+      groups: document.getElementById('page-groups'),
+      testpacks: document.getElementById('page-testpacks'),
+      students: document.getElementById('page-students')
+    };
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const page = item.dataset.page;
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+
+        Object.values(pages).forEach(p => {
+          if (p) p.style.display = 'none';
+        });
+        if (pages[page]) pages[page].style.display = 'block';
+
+        const titles = { 
+          dashboard: 'Dashboard', 
+          sessions: 'Sessiyalar', 
+          groups: 'Guruhlar',
+          testpacks: 'Testlar To\'plami',
+          students: 'O\'quvchilar' 
+        };
+        document.getElementById('page-title').textContent = titles[page] || 'Dashboard';
+
+        if (page === 'groups') {
+          loadGroupsList();
+        } else if (page === 'testpacks') {
+          loadTestpacksList();
+        }
+
+        // Close sidebar on mobile
+        document.getElementById('sidebar').classList.remove('open');
+      });
+    });
+
+    // Hamburger menu
+    document.getElementById('hamburger-btn').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('edufocus_token');
+      localStorage.removeItem('edufocus_teacher');
+      window.location.href = '/login.html';
+    });
+
+    // ============================================
+    // TOAST NOTIFICATIONS
+    // ============================================
+    function showToast(message, type = 'info', icon = 'ℹ️') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span class="toast-message">${message}</span>
+        <span class="toast-time">${timeStr}</span>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+
+    // ============================================
+    // CREATE SESSION
+    // ============================================
+    function openCreateModal(preselectedGroupId = null) {
+      populateSessionGroupSelect(preselectedGroupId);
+      document.getElementById('create-modal').classList.add('active');
+      // Pre-fill subject from teacher data if no group pre-selected
+      const subjectInput = document.getElementById('session-subject');
+      if (teacherData.subject && !subjectInput.value && !preselectedGroupId) {
+        subjectInput.value = teacherData.subject;
+      }
+    }
+
+    function closeCreateModal() {
+      document.getElementById('create-modal').classList.remove('active');
+    }
+
+    document.getElementById('create-session-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('session-name').value;
+      const subject = document.getElementById('session-subject').value;
+      const duration = parseInt(document.getElementById('session-duration').value);
+
+      try {
+        const res = await fetch('/api/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name, subject, duration })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          currentSession = data.session;
+          closeCreateModal();
+          showActiveSession(data.session);
+          showToast('Sessiya boshlandi! QR kodni doskada ko\'rsating', 'success', '🎉');
+
+          // Switch to sessions page
+          document.querySelector('[data-page="sessions"]').click();
+
+          // Join teacher monitoring room
+          socket.emit('teacher-monitor', { sessionId: data.session.id });
+
+          // Start timer
+          startTimer(duration);
+
+          // Reload stats
+          loadStats();
+        } else {
+          showToast(data.error || 'Xatolik yuz berdi', 'error', '❌');
+        }
+      } catch (err) {
+        showToast('Server bilan aloqa uzildi', 'error', '❌');
+      }
+    });
+
+    // ============================================
+    // SESSION DISPLAY
+    // ============================================
+    function showActiveSession(session) {
+      document.getElementById('no-session').style.display = 'none';
+      document.getElementById('active-session').style.display = 'block';
+
+      document.getElementById('session-qr').src = session.qrCode;
+      document.getElementById('session-name-display').textContent = session.name;
+      document.getElementById('session-subject-display').textContent = session.subject || session.name;
+      const codeDisplay = document.getElementById('session-code-display');
+      if (codeDisplay) codeDisplay.textContent = session.id;
+
+      const now = new Date();
+      document.getElementById('session-start-time').textContent = now.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+
+      updateLockUI(session.locked);
+      loadSessionMaterials(session.id);
+      updateLiveSessionStats();
+    }
+
+    // ============================================
+    // COPY SESSION CODE (PIN)
+    // ============================================
+    function copySessionCode() {
+      if (!currentSession || !currentSession.id) {
+        showToast('Sessiya kodi mavjud emas', 'warning', '⚠️');
+        return;
+      }
+      const code = String(currentSession.id);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+          onSessionCodeCopied(code);
+        }).catch(() => {
+          fallbackCopyCode(code);
+        });
+      } else {
+        fallbackCopyCode(code);
+      }
+    }
+
+    function fallbackCopyCode(code) {
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        onSessionCodeCopied(code);
+      } catch (err) {
+        showToast(`Sessiya kodi: ${code}`, 'info', '📋');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function onSessionCodeCopied(code) {
+      const btn = document.getElementById('pin-copy-btn');
+      if (btn) {
+        btn.innerHTML = '<span>✅</span> <span>Nusxalandi!</span>';
+        btn.style.color = '#10B981';
+        btn.style.borderColor = '#10B981';
+        setTimeout(() => {
+          btn.innerHTML = '<span>📋</span> <span>Nusxalash</span>';
+          btn.style.color = '#D4F637';
+          btn.style.borderColor = 'rgba(212, 246, 55, 0.4)';
+        }, 2200);
+      }
+      showToast(`Sessiya kodi nusxalandi: ${code}`, 'success', '📋');
+    }
+
+    function updateLockUI(locked) {
+      const badge = document.getElementById('session-status-badge');
+      const statusText = document.getElementById('session-status-text');
+      const unlockBtn = document.getElementById('unlock-btn');
+
+      if (locked) {
+        badge.className = 'session-status status-locked';
+        statusText.textContent = 'Bloklangan';
+        unlockBtn.innerHTML = '🔓 Ruxsat Berish';
+        unlockBtn.className = 'btn btn-success';
+      } else {
+        badge.className = 'session-status status-active';
+        statusText.textContent = 'Ruxsat berilgan';
+        unlockBtn.innerHTML = '🔒 Bloklash';
+        unlockBtn.className = 'btn btn-warning';
+      }
+    }
+
+    // ============================================
+    // TIMER
+    // ============================================
+    function startTimer(durationMinutes) {
+      let totalSeconds = durationMinutes * 60;
+      sessionStartTime = Date.now();
+
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+        const remaining = Math.max(0, totalSeconds - elapsed);
+
+        const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+        const secs = (remaining % 60).toString().padStart(2, '0');
+
+        document.getElementById('session-timer').textContent = `${mins}:${secs}`;
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          showToast('Dars vaqti tugadi!', 'warning', '⏰');
+        }
+      }, 1000);
+    }
+
+    // ============================================
+    // SESSION CONTROLS
+    // ============================================
+    async function toggleLock() {
+      if (!currentSession) return;
+
+      const endpoint = currentSession.locked ? 'unlock' : 'lock';
+
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          currentSession.locked = !currentSession.locked;
+          updateLockUI(currentSession.locked);
+
+          if (currentSession.locked) {
+            showToast('O\'quvchilar telefoni bloklandi', 'warning', '🔒');
+            addActivity('🔒', 'Telefonlar bloklandi');
+          } else {
+            showToast('O\'quvchilarga ruxsat berildi', 'success', '🔓');
+            addActivity('🔓', 'O\'quvchilarga ruxsat berildi');
+          }
+        }
+      } catch (err) {
+        showToast('Xatolik yuz berdi', 'error', '❌');
+      }
+    }
+
+    // ============================================
+    // TEACHER APP & TOOL REMOTE CONTROL
+    // ============================================
+    let activeTool = null; // null | 'calculator' | 'browser'
+
+    async function sendAppControl(tool, action, url, appName) {
+      if (!currentSession) return;
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/app-control`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ tool, action, url, appName })
+        });
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        showToast('Ilova buyrug\'ini yuborishda xatolik', 'error', '❌');
+      }
+    }
+
+    async function teacherToggleCalculator() {
+      if (!currentSession) {
+        showToast('Avval dars sessiyasini boshlang!', 'warning', '⚠️');
+        return;
+      }
+      if (activeTool === 'calculator') {
+        await sendAppControl('calculator', 'close');
+        activeTool = null;
+        updateToolUI();
+        showToast('Kalkulyator yopildi', 'info', '🧮');
+        addActivity('🧮', 'Kalkulyatordan foydalanish to\'xtatildi');
+      } else {
+        await sendAppControl('calculator', 'open', null, 'Kalkulyator');
+        activeTool = 'calculator';
+        updateToolUI();
+        showToast('Barcha o\'quvchilarda kalkulyator ochildi!', 'success', '🧮');
+        addActivity('🧮', 'Barcha o\'quvchilarga kalkulyator ochildi');
+      }
+    }
+
+    function teacherOpenBrowserModal() {
+      if (!currentSession) {
+        showToast('Avval dars sessiyasini boshlang!', 'warning', '⚠️');
+        return;
+      }
+      document.getElementById('teacher-browser-modal').style.display = 'flex';
+    }
+
+    function closeTeacherBrowserModal() {
+      document.getElementById('teacher-browser-modal').style.display = 'none';
+    }
+
+    async function teacherSendBrowserResource() {
+      const url = document.getElementById('teacher-browser-url').value.trim();
+      const title = document.getElementById('teacher-browser-title').value.trim() || 'Dars manbasi';
+      if (!url) {
+        showToast('Iltimos, manba havolasini kiriting', 'warning', '⚠️');
+        return;
+      }
+      closeTeacherBrowserModal();
+      await sendAppControl('browser', 'open', url, title);
+      activeTool = 'browser';
+      updateToolUI();
+      showToast(`O'quvchilarda "${title}" ochildi!`, 'success', '🌐');
+      addActivity('🌐', `O'quvchilarga "${title}" manbasi ochildi (${url})`);
+    }
+
+    async function teacherLockAllTools() {
+      if (!currentSession) return;
+      await sendAppControl('lock_all', 'close');
+      activeTool = null;
+      updateToolUI();
+      showToast('Barcha qo\'shimcha ilovalar yopildi. Diqqat darsda!', 'warning', '🔒');
+      addActivity('🔒', 'Hamma ilovalar yopildi, dars rejimiga qaytildi');
+    }
+
+    function updateToolUI() {
+      const badge = document.getElementById('active-tool-badge');
+      const calcTag = document.getElementById('calc-status-tag');
+      const browserTag = document.getElementById('browser-status-tag');
+      const btnCalc = document.getElementById('btn-ctrl-calc');
+      const btnBrowser = document.getElementById('btn-ctrl-browser');
+
+      if (activeTool === 'calculator') {
+        if (badge) { badge.textContent = '🧮 Kalkulyator Faol'; badge.style.background = '#059669'; badge.style.color = '#FFF'; }
+        if (calcTag) { calcTag.textContent = 'Ochiq'; calcTag.style.background = '#10B981'; calcTag.style.color = '#FFF'; }
+        if (browserTag) { browserTag.textContent = 'Yopiq'; browserTag.style.background = 'rgba(255,255,255,0.08)'; browserTag.style.color = 'inherit'; }
+        if (btnCalc) btnCalc.style.borderColor = '#10B981';
+        if (btnBrowser) btnBrowser.style.borderColor = 'var(--border-light)';
+      } else if (activeTool === 'browser') {
+        if (badge) { badge.textContent = '🌐 Brauzer Faol'; badge.style.background = '#2563EB'; badge.style.color = '#FFF'; }
+        if (calcTag) { calcTag.textContent = 'Yopiq'; calcTag.style.background = 'rgba(255,255,255,0.08)'; calcTag.style.color = 'inherit'; }
+        if (browserTag) { browserTag.textContent = 'Ochiq'; browserTag.style.background = '#3B82F6'; browserTag.style.color = '#FFF'; }
+        if (btnCalc) btnCalc.style.borderColor = 'var(--border-light)';
+        if (btnBrowser) btnBrowser.style.borderColor = '#3B82F6';
+      } else {
+        if (badge) { badge.textContent = 'Faqat Dars'; badge.style.background = '#1E293B'; badge.style.color = '#94A3B8'; }
+        if (calcTag) { calcTag.textContent = 'Yopiq'; calcTag.style.background = 'rgba(255,255,255,0.08)'; calcTag.style.color = 'inherit'; }
+        if (browserTag) { browserTag.textContent = 'Yopiq'; browserTag.style.background = 'rgba(255,255,255,0.08)'; browserTag.style.color = 'inherit'; }
+        if (btnCalc) btnCalc.style.borderColor = 'var(--border-light)';
+        if (btnBrowser) btnBrowser.style.borderColor = 'var(--border-light)';
+      }
+      if (currentSession) {
+        currentSession.allowedTool = activeTool;
+      }
+      updateLiveSessionStats();
+    }
+
+    async function regenerateQR() {
+      if (!currentSession) return;
+
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/regenerate-qr`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('session-qr').src = data.qrCode;
+          currentSession.qrCode = data.qrCode;
+          showToast('QR code yangilandi', 'info', '🔄');
+          addActivity('🔄', 'QR code yangilandi');
+        }
+      } catch (err) {
+        showToast('Xatolik yuz berdi', 'error', '❌');
+      }
+    }
+
+    // ============================================
+    // QUIZ & MATERIAL BROADCASTING
+    // ============================================
+    let questionCounter = 0;
+
+    function openQuizModal() {
+      if (!currentSession) {
+        showToast('Avval faol sessiya mavjud bo\'lishi kerak', 'warning', '⚠️');
+        return;
+      }
+      populatePremadeQuizSelect();
+      const list = document.getElementById('quiz-questions-list');
+      if (list.children.length === 0) {
+        loadSampleQuiz();
+      }
+      document.getElementById('quiz-modal').classList.add('active');
+    }
+
+    function closeQuizModal() {
+      document.getElementById('quiz-modal').classList.remove('active');
+    }
+
+    function switchSendTab(tab) {
+      const isQuiz = tab === 'quiz';
+      document.getElementById('tab-content-quiz').style.display = isQuiz ? 'block' : 'none';
+      document.getElementById('tab-content-material').style.display = isQuiz ? 'none' : 'block';
+
+      document.getElementById('tab-btn-quiz').className = isQuiz ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tab-btn-material').className = isQuiz ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm';
+    }
+
+    function addQuestionBlock(text = '', options = ['', '', '', ''], correctIdx = 0) {
+      questionCounter++;
+      const qId = questionCounter;
+      const list = document.getElementById('quiz-questions-list');
+
+      const card = document.createElement('div');
+      card.className = 'quiz-question-card';
+      card.id = `q-card-${qId}`;
+
+      const optionLetters = ['A', 'B', 'C', 'D'];
+      const optionsHtml = optionLetters.map((letter, idx) => `
+        <div class="quiz-option-input-row">
+          <input type="radio" name="q-correct-${qId}" value="${idx}" class="quiz-correct-radio" ${idx === correctIdx ? 'checked' : ''} title="To'g'ri javob deb belgilash">
+          <span style="font-weight: 700; width: 20px">${letter})</span>
+          <input type="text" class="form-input q-option-val" data-idx="${idx}" placeholder="${letter} varianti" value="${options[idx] || ''}" required>
+        </div>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="quiz-question-header">
+          <span class="quiz-question-num">Savol #${list.children.length + 1}</span>
+          <button type="button" class="btn btn-outline btn-sm" style="color: var(--red-400); padding: 2px 8px" onclick="removeQuestionBlock(${qId})">✕ O'chirish</button>
+        </div>
+        <input type="text" class="form-input q-text-input" placeholder="Savol matnini kiriting..." value="${text}" required style="margin-bottom: 8px">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px">To'g'ri javobni tanlash uchun chapdagi dumaloqchani belgilang:</div>
+        <div class="quiz-options-grid">
+          ${optionsHtml}
+        </div>
+      `;
+
+      list.appendChild(card);
+    }
+
+    function removeQuestionBlock(qId) {
+      const card = document.getElementById(`q-card-${qId}`);
+      if (card) {
+        card.remove();
+        const list = document.getElementById('quiz-questions-list');
+        Array.from(list.children).forEach((c, index) => {
+          const numSpan = c.querySelector('.quiz-question-num');
+          if (numSpan) numSpan.textContent = `Savol #${index + 1}`;
+        });
+      }
+    }
+
+    function loadSampleQuiz() {
+      const list = document.getElementById('quiz-questions-list');
+      list.innerHTML = '';
+      questionCounter = 0;
+
+      addQuestionBlock('1. Kompyuterning miyasi hisoblangan asosiy qurilma nima?', [
+        'Protsessor (CPU)',
+        'Qattiq disk (HDD)',
+        'Monitor',
+        'Klaviatura'
+      ], 0);
+
+      addQuestionBlock('2. Dasturlashda o\'zgaruvchi nima uchun ishlatiladi?', [
+        'Faqat rang berish uchun',
+        'Ma\'lumotlarni saqlash va ular ustida amallar bajarish uchun',
+        'Kompyuterni o\'chirish uchun',
+        'Internet tezligini oshirish uchun'
+      ], 1);
+
+      addQuestionBlock('3. Qaysi biri veb-sahifaning asosiy tuzilmasini yaratadi?', [
+        'CSS',
+        'Python',
+        'HTML',
+        'SQL'
+      ], 2);
+
+      document.getElementById('quiz-title-input').value = 'Informatika — Tezkor test';
+    }
+
+    function broadcastQuiz() {
+      if (!currentSession) return;
+
+      const title = document.getElementById('quiz-title-input').value.trim() || 'Tezkor Test';
+      const timeLimit = parseInt(document.getElementById('quiz-timelimit-input').value) || 0;
+      const list = document.getElementById('quiz-questions-list');
+      const cards = list.querySelectorAll('.quiz-question-card');
+
+      if (cards.length === 0) {
+        showToast('Kamida bitta savol qo\'shing!', 'warning', '⚠️');
+        return;
+      }
+
+      const questions = [];
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        const text = card.querySelector('.q-text-input').value.trim();
+        if (!text) {
+          showToast(`Savol #${i + 1} matni bo'sh!`, 'warning', '⚠️');
+          return;
+        }
+
+        const optionInputs = card.querySelectorAll('.q-option-val');
+        const options = Array.from(optionInputs).map(inp => inp.value.trim());
+        if (options.some(opt => !opt)) {
+          showToast(`Savol #${i + 1} barcha variantlarini to'ldiring!`, 'warning', '⚠️');
+          return;
+        }
+
+        const checkedRadio = card.querySelector('input[type="radio"]:checked');
+        const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+        questions.push({
+          id: `q_${i + 1}`,
+          text,
+          options,
+          correctIndex
+        });
+      }
+
+      socket.emit('teacher-send-quiz', {
+        sessionId: currentSession.id,
+        quiz: {
+          title,
+          questions,
+          timeLimit
+        }
+      });
+
+      closeQuizModal();
+      showToast('Test barcha o\'quvchilarga yuborildi! 🚀', 'success', '📝');
+      addActivity('📝', `Test yuborildi: "${title}" (${questions.length} ta savol)`);
+
+      // Show live tracker
+      document.getElementById('quiz-tracker-card').style.display = 'block';
+      document.getElementById('tracker-quiz-title').textContent = `📝 ${title}`;
+      document.getElementById('tracker-quiz-subtitle').textContent = `${questions.length} ta savol · O'quvchilar javob bermoqda...`;
+      document.getElementById('tracker-quiz-count').textContent = '0 topshirdi';
+      document.getElementById('quiz-submissions-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 16px">Javoblar kutilmoqda...</td></tr>';
+    }
+
+    // ============================================
+    // RICH FILE & MATERIAL BROADCASTING LOGIC
+    // ============================================
+    let selectedMaterialFile = null;
+
+    function initMaterialDropzone() {
+      const dropzone = document.getElementById('material-dropzone');
+      if (!dropzone) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.style.borderColor = '#D4F637';
+          dropzone.style.background = 'rgba(212, 246, 55, 0.08)';
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.style.borderColor = 'rgba(255,255,255,0.2)';
+          dropzone.style.background = 'rgba(255,255,255,0.02)';
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          handleMaterialFileSelected(files[0]);
+        }
+      });
+    }
+
+    function handleMaterialFileSelected(file) {
+      if (!file) return;
+      selectedMaterialFile = file;
+
+      document.getElementById('dropzone-idle').style.display = 'none';
+      const selBox = document.getElementById('dropzone-selected');
+      selBox.style.display = 'flex';
+
+      document.getElementById('dz-file-name').textContent = file.name;
+      const sizeStr = formatFileSizeJS(file.size);
+      document.getElementById('dz-file-size').textContent = sizeStr;
+
+      // Detect type
+      const ext = file.name.split('.').pop().toLowerCase();
+      const badge = document.getElementById('dz-file-badge');
+      if (ext === 'pdf') {
+        badge.textContent = 'PDF';
+        badge.style.background = '#EF4444';
+      } else if (['doc', 'docx'].includes(ext)) {
+        badge.textContent = 'DOC';
+        badge.style.background = '#2563EB';
+      } else if (['ppt', 'pptx'].includes(ext)) {
+        badge.textContent = 'PPT';
+        badge.style.background = '#F97316';
+      } else if (['xls', 'xlsx'].includes(ext)) {
+        badge.textContent = 'XLS';
+        badge.style.background = '#10B981';
+      } else if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
+        badge.textContent = 'IMG';
+        badge.style.background = '#8B5CF6';
+      } else {
+        badge.textContent = ext.toUpperCase().substring(0, 3) || 'DOC';
+        badge.style.background = '#475569';
+      }
+
+      // Autofill title if empty
+      const titleInput = document.getElementById('material-title-input');
+      if (!titleInput.value.trim()) {
+        const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+        titleInput.value = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+      }
+    }
+
+    function removeSelectedMaterialFile() {
+      selectedMaterialFile = null;
+      document.getElementById('material-file-input').value = '';
+      document.getElementById('dropzone-idle').style.display = 'block';
+      document.getElementById('dropzone-selected').style.display = 'none';
+      document.getElementById('dz-progress-bar').style.display = 'none';
+    }
+
+    function formatFileSizeJS(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    async function broadcastMaterial() {
+      if (!currentSession) {
+        showToast('Faol sessiya mavjud emas', 'warning', '⚠️');
+        return;
+      }
+
+      const title = document.getElementById('material-title-input').value.trim() || 'Dars Materiali';
+      const text = document.getElementById('material-text-input').value.trim();
+      const url = document.getElementById('material-url-input').value.trim();
+
+      if (!selectedMaterialFile && !text && !url) {
+        showToast('Iltimos, fayl tanlang yoki ko\'rsatma matni kiriting!', 'warning', '⚠️');
+        return;
+      }
+
+      const btn = document.getElementById('btn-broadcast-material');
+      const origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = 'Yuklanmoqda... ⏳';
+
+      let filePayload = null;
+
+      try {
+        if (selectedMaterialFile) {
+          const progBar = document.getElementById('dz-progress-bar');
+          const progFill = document.getElementById('dz-progress-fill');
+          progBar.style.display = 'block';
+          progFill.style.width = '30%';
+
+          const formData = new FormData();
+          formData.append('file', selectedMaterialFile);
+
+          progFill.style.width = '60%';
+          const uploadRes = await fetch('/api/upload-material', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          const uploadData = await uploadRes.json();
+          progFill.style.width = '100%';
+
+          if (!uploadData.success || !uploadData.file) {
+            throw new Error(uploadData.error || 'Fayl yuklashda xatolik yuz berdi');
+          }
+          filePayload = uploadData.file;
+        }
+
+        const materialData = {
+          title,
+          text,
+          url,
+          fileUrl: filePayload ? filePayload.url : '',
+          fileName: filePayload ? filePayload.name : '',
+          fileSize: filePayload ? filePayload.size : '',
+          fileType: filePayload ? filePayload.type : (url ? 'link' : 'text'),
+          fileLabel: filePayload ? filePayload.label : (url ? 'Havola' : 'Mavzu'),
+          fileColor: filePayload ? filePayload.color : '#3B82F6'
+        };
+
+        socket.emit('teacher-send-material', {
+          sessionId: currentSession.id,
+          material: materialData
+        });
+
+        // Add to teacher's materials list
+        renderTeacherMaterialItem(materialData);
+
+        closeQuizModal();
+        removeSelectedMaterialFile();
+        document.getElementById('material-title-input').value = '';
+        document.getElementById('material-text-input').value = '';
+        document.getElementById('material-url-input').value = '';
+
+        showToast('Dars materiali o\'quvchilarga yuborildi! 📤', 'success', '📚');
+        addActivity('📚', `Material yuborildi: "${title}" ${filePayload ? `(${filePayload.name})` : ''}`);
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Xatolik yuz berdi', 'error', '❌');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    }
+
+    function renderTeacherMaterialItem(mat) {
+      const emptyEl = document.getElementById('materials-tracker-empty');
+      if (emptyEl) emptyEl.style.display = 'none';
+
+      const container = document.getElementById('materials-tracker-list');
+      const item = document.createElement('div');
+      item.style.cssText = 'background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px';
+
+      const typeColors = {
+        pdf: '#EF4444',
+        word: '#2563EB',
+        ppt: '#F97316',
+        excel: '#10B981',
+        image: '#8B5CF6'
+      };
+      const badgeColor = typeColors[mat.fileType] || '#3B82F6';
+      const badgeText = (mat.fileType || 'DOC').toUpperCase().substring(0, 4);
+
+      item.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; overflow: hidden">
+          <span style="background: ${badgeColor}; color: #fff; font-size: 10px; font-weight: 800; padding: 4px 6px; border-radius: 6px; flex-shrink: 0">${badgeText}</span>
+          <div style="overflow: hidden">
+            <div style="font-size: 13px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${mat.title}</div>
+            <div style="font-size: 11px; color: var(--text-muted)">${mat.fileName ? `${mat.fileName} • ${mat.fileSize}` : (mat.url ? 'Havola mavjud' : 'Matn')}</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0">
+          ${mat.fileUrl ? `<a href="${mat.fileUrl}" target="_blank" class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 11px">Ko'rish / Yuklash</a>` : ''}
+          ${mat.url ? `<a href="${mat.url}" target="_blank" class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 11px">Havola</a>` : ''}
+        </div>
+      `;
+      container.prepend(item);
+    }
+
+    async function loadSessionMaterials(sessionId) {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/materials`);
+        const data = await res.json();
+        const container = document.getElementById('materials-tracker-list');
+        const emptyEl = document.getElementById('materials-tracker-empty');
+        if (data.materials && data.materials.length > 0) {
+          if (emptyEl) emptyEl.style.display = 'none';
+          container.querySelectorAll('div:not(#materials-tracker-empty)').forEach(el => el.remove());
+          data.materials.forEach(mat => renderTeacherMaterialItem(mat));
+        } else {
+          if (emptyEl) emptyEl.style.display = 'block';
+        }
+      } catch (e) {
+        console.log('Materials load error', e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initMaterialDropzone();
+    });
+
+    let currentModalStats = null;
+    let cachedRecentSessions = [];
+
+    async function endSession() {
+      if (!currentSession) return;
+      if (!confirm('Sessiyani tugatmoqchimisiz?')) return;
+
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/end`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          if (timerInterval) clearInterval(timerInterval);
+
+          document.getElementById('active-session').style.display = 'none';
+          document.getElementById('no-session').style.display = 'block';
+
+          showToast('Sessiya tugatildi va hisobot tayyorlandi!', 'success', '✅');
+
+          // Reset active session state
+          document.getElementById('students-tbody').innerHTML = '';
+          document.getElementById('no-students').style.display = 'block';
+          document.getElementById('activity-log').innerHTML = '';
+          currentSession = null;
+
+          loadStats();
+
+          // Open detailed statistics modal
+          if (data.statistics) {
+            openStatsModal(data.statistics);
+          }
+        }
+      } catch (err) {
+        showToast('Xatolik yuz berdi', 'error', '❌');
+      }
+    }
+
+    // ============================================
+    // SESSION STATISTICS MODAL & REPORTING
+    // ============================================
+    function openStatsModal(stats) {
+      if (!stats) return;
+      currentModalStats = stats;
+
+      document.getElementById('summary-title').textContent = stats.sessionName || 'Dars Statistikasi';
+      document.getElementById('summary-subject').textContent = stats.subject || 'Umumiy';
+
+      const created = new Date(stats.createdAt);
+      document.getElementById('summary-date').textContent = created.toLocaleDateString('uz', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+
+      const startTimeStr = created.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+      const endTimeStr = stats.endedAt ? new Date(stats.endedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' }) : '—';
+      document.getElementById('summary-time').textContent = `${startTimeStr} — ${endTimeStr}`;
+
+      // KPIs
+      document.getElementById('summary-total-students').textContent = stats.totalStudents || 0;
+      document.getElementById('summary-duration').textContent = `${stats.actualDuration || stats.plannedDuration || 0} daq`;
+      document.getElementById('summary-planned-duration').textContent = `Reja: ${stats.plannedDuration || 45} daqiqa`;
+
+      const scoreEl = document.getElementById('summary-focus-score');
+      const score = stats.averageFocusScore !== undefined ? stats.averageFocusScore : 100;
+      scoreEl.textContent = `${score}%`;
+      if (score >= 90) scoreEl.style.color = 'var(--green-400)';
+      else if (score >= 70) scoreEl.style.color = 'var(--yellow-400)';
+      else scoreEl.style.color = 'var(--red-400)';
+
+      document.getElementById('summary-violations').textContent = `${stats.totalViolations || 0} ta`;
+
+      // Teacher ratings display
+      const ratingsData = stats.ratings || {};
+      const avgRating = ratingsData.averageRating !== undefined && ratingsData.averageRating !== null ? ratingsData.averageRating : null;
+      const totalRatings = ratingsData.totalRatings || (ratingsData.list ? ratingsData.list.length : 0);
+      
+      const teacherRatingEl = document.getElementById('summary-teacher-rating');
+      const teacherRatingCountEl = document.getElementById('summary-teacher-rating-count');
+      const ratingBadgeEl = document.getElementById('summary-rating-badge');
+
+      if (teacherRatingEl) {
+        teacherRatingEl.textContent = avgRating !== null ? `${avgRating} ⭐` : '—';
+      }
+      if (teacherRatingCountEl) {
+        teacherRatingCountEl.textContent = `${totalRatings} ta baho`;
+      }
+      if (ratingBadgeEl) {
+        ratingBadgeEl.textContent = avgRating !== null ? `⭐ ${avgRating} / 5.0` : '⭐ — / 5.0';
+      }
+
+      // Star distribution breakdown
+      const breakdown = ratingsData.breakdown || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+      const breakdownEl = document.getElementById('summary-star-breakdown');
+      if (breakdownEl) {
+        const starLabels = [5, 4, 3, 2, 1];
+        breakdownEl.innerHTML = starLabels.map(s => {
+          const count = breakdown[s] || 0;
+          const pct = totalRatings > 0 ? Math.round((count / totalRatings) * 100) : 0;
+          return `
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px 10px; flex: 1; min-width: 90px; text-align: center">
+              <div style="font-size: 11px; font-weight: 700; color: #F59E0B">${'⭐'.repeat(s)}</div>
+              <div style="font-size: 14px; font-weight: 800; color: var(--text-primary); margin: 2px 0">${count} ta</div>
+              <div style="font-size: 10px; color: var(--text-muted)">${pct}%</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Comments list
+      const commentsListEl = document.getElementById('summary-comments-list');
+      const commentsList = (ratingsData.list || []).filter(r => r.comment && r.comment.trim().length > 0);
+      if (commentsListEl) {
+        if (commentsList.length === 0) {
+          commentsListEl.innerHTML = `
+            <div style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 6px 0">
+              Talabalar tomonidan yozma fikrlar qoldirilmagan.
+            </div>
+          `;
+        } else {
+          commentsListEl.innerHTML = commentsList.map(r => `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 3px">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <strong style="font-size: 12px; color: var(--text-primary)">${r.studentName}</strong>
+                <span style="font-size: 11px; color: #F59E0B; font-weight: 700">${'⭐'.repeat(r.score)} (${r.score}/5)</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4">"${r.comment}"</div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Top students (0 violations)
+      const topSection = document.getElementById('summary-top-section');
+      const topChips = document.getElementById('summary-top-chips');
+      const perfectStudents = (stats.students || []).filter(s => (s.violationsCount || 0) === 0);
+
+      if (perfectStudents.length > 0) {
+        topSection.style.display = 'block';
+        topChips.innerHTML = perfectStudents.map(st => {
+          const initials = st.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+          return `
+            <div class="student-chip">
+              <span class="student-chip-avatar">${initials}</span>
+              <span>${st.name}</span>
+              <span style="font-size: 11px; color: var(--green-400); margin-left: 4px">100%</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        topSection.style.display = 'none';
+        topChips.innerHTML = '';
+      }
+
+      // Students table
+      const tbody = document.getElementById('summary-students-tbody');
+      document.getElementById('summary-table-count').textContent = `${stats.students ? stats.students.length : 0} ta o'quvchi`;
+
+      if (!stats.students || stats.students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px">O'quvchilar qo'shilmagan</td></tr>`;
+      } else {
+        tbody.innerHTML = stats.students.map(st => {
+          const initials = st.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+          const time = new Date(st.joinedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+          const violations = st.violationsCount || 0;
+          const violationsText = violations === 0
+            ? '<span style="color: var(--green-400); font-weight: 600">0 marta ✅</span>'
+            : `<span style="color: var(--yellow-400); font-weight: 600">${violations} marta ⚠️</span>`;
+
+          const studentScore = st.focusScore !== undefined ? st.focusScore : Math.max(0, 100 - (violations * 15));
+          const barClass = studentScore >= 90 ? 'bar-green' : (studentScore >= 70 ? 'bar-yellow' : 'bar-red');
+          const badgeClass = st.badgeClass || (studentScore >= 90 ? 'badge-green' : (studentScore >= 70 ? 'badge-yellow' : 'badge-red'));
+          const rating = st.rating || (studentScore >= 90 ? "A'lo" : (studentScore >= 70 ? 'Yaxshi' : 'Diqqatsiz'));
+
+          const studentRating = st.teacherRating 
+            ? `<span style="color: #F59E0B; font-weight: 800">${'⭐'.repeat(st.teacherRating)} (${st.teacherRating})</span>`
+            : '<span style="color: var(--text-muted); font-size: 12px">—</span>';
+
+          const studentFeedback = st.teacherFeedback
+            ? `<span title="${st.teacherFeedback}" style="font-size: 12px; color: var(--text-secondary); max-width: 140px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">"${st.teacherFeedback}"</span>`
+            : '<span style="color: var(--text-muted); font-size: 12px">—</span>';
+
+          const quizText = st.quizScore || '—';
+
+          return `
+            <tr>
+              <td>
+                <div class="student-name-cell">
+                  <div class="student-avatar">${initials}</div>
+                  <strong style="color: var(--text-primary)">${st.name}</strong>
+                </div>
+              </td>
+              <td style="color: var(--text-secondary); font-size: 13px">${st.device || 'Noma\'lum'}</td>
+              <td style="color: var(--text-secondary); font-size: 13px">${time}</td>
+              <td style="font-size: 13px">${violationsText}</td>
+              <td>
+                <div class="focus-score-cell">
+                  <div class="focus-score-bar-bg">
+                    <div class="focus-score-bar-fill ${barClass}" style="width: ${studentScore}%"></div>
+                  </div>
+                  <span class="focus-score-num">${studentScore}%</span>
+                </div>
+              </td>
+              <td style="font-size: 12px; color: var(--text-secondary)">${quizText}</td>
+              <td>${studentRating}</td>
+              <td>${studentFeedback}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('stats-modal').classList.add('active');
+    }
+
+    function closeStatsModal() {
+      document.getElementById('stats-modal').classList.remove('active');
+    }
+
+    async function viewSessionStats(sessionId) {
+      const cached = cachedRecentSessions.find(s => s.id === sessionId);
+      if (cached && cached.statistics) {
+        openStatsModal(cached.statistics);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.statistics) {
+          openStatsModal(data.statistics);
+        } else {
+          showToast('Statistika topilmadi', 'error', '❌');
+        }
+      } catch (err) {
+        showToast('Statistika yuklanmadi', 'error', '❌');
+      }
+    }
+
+    function printStatsReport() {
+      window.print();
+    }
+
+    function exportStatsToCSV() {
+      if (!currentModalStats) return;
+
+      const stats = currentModalStats;
+      let csv = 'Ism,Qurilma,Qoshilgan Vaqt,Qoidabuzarliklar (Chiqishlar),Diqqat Bali (%),Test Natijasi,Ustozga Bahosi,Fikr va Izoh\n';
+
+      (stats.students || []).forEach(st => {
+        const time = new Date(st.joinedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+        const name = `"${st.name.replace(/"/g, '""')}"`;
+        const device = `"${(st.device || '').replace(/"/g, '""')}"`;
+        const score = st.focusScore !== undefined ? st.focusScore : Math.max(0, 100 - ((st.violationsCount || 0) * 15));
+        const quiz = `"${(st.quizScore || '—').replace(/"/g, '""')}"`;
+        const rating = st.teacherRating ? `${st.teacherRating} ball` : '—';
+        const feedback = `"${(st.teacherFeedback || '').replace(/"/g, '""')}"`;
+
+        csv += `${name},${device},${time},${st.violationsCount || 0},${score}%,${quiz},${rating},${feedback}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `EduFocus_Hisobot_${(stats.sessionName || 'Dars').replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // ============================================
+    // STUDENTS TABLE
+    // ============================================
+    function addStudentToTable(student) {
+      const noStudents = document.getElementById('no-students');
+      if (noStudents) noStudents.style.display = 'none';
+
+      const tbody = document.getElementById('students-tbody');
+      const time = new Date(student.joinedAt || Date.now()).toLocaleTimeString('uz', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+
+      const initials = (student.name || 'T').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+      const violations = student.violationsCount || 0;
+      const focusScore = Math.max(0, 100 - (violations * 15));
+      const focusBadgeClass = focusScore >= 85 ? 'badge-green' : (focusScore >= 65 ? 'badge-yellow' : 'badge-red');
+      const isActive = student.isActive !== false;
+      const statusHtml = isActive 
+        ? `<span class="badge badge-green" id="student-status-${student.id}">🟢 Darsda</span>`
+        : `<span class="badge badge-red live-pulse-badge" id="student-status-${student.id}">⚠️ Chiqib ketdi</span>`;
+
+      // Check if existing row exists
+      let row = document.getElementById(`student-row-${student.id}`);
+      if (!row) {
+        row = document.createElement('tr');
+        row.id = `student-row-${student.id}`;
+        tbody.insertBefore(row, tbody.firstChild);
+      }
+
+      row.innerHTML = `
+        <td>
+          <div class="student-name-cell">
+            <div class="student-avatar">${initials}</div>
+            <span style="font-weight: 600">${student.name}</span>
+          </div>
+        </td>
+        <td style="color: var(--text-secondary); font-size: 13px">${student.device || 'Android'}</td>
+        <td style="color: var(--text-secondary); font-size: 13px">${time}</td>
+        <td id="student-violations-${student.id}">
+          ${violations > 0 ? `<span style="color: #EF4444; font-weight: 700">⚠️ ${violations} marta</span>` : '<span style="color: var(--text-muted)">0</span>'}
+        </td>
+        <td id="student-focus-${student.id}">
+          <span class="badge ${focusBadgeClass}">${focusScore}%</span>
+        </td>
+        <td>${statusHtml}</td>
+      `;
+
+      updateStudentCount();
+      updateLiveSessionStats();
+    }
+
+    function updateStudentCount() {
+      if (!currentSession) return;
+      const count = currentSession.students ? currentSession.students.length : 0;
+      const countBadge = document.getElementById('student-count-badge');
+      if (countBadge) countBadge.textContent = count;
+      updateLiveSessionStats();
+    }
+
+    function updateLiveSessionStats() {
+      if (!currentSession) return;
+      const students = currentSession.students || [];
+      const total = students.length;
+
+      // 1. Live Students count
+      const elStudents = document.getElementById('live-stat-students');
+      if (elStudents) elStudents.textContent = total;
+
+      const elStudentsSub = document.getElementById('live-stat-students-sub');
+      if (elStudentsSub) {
+        elStudentsSub.textContent = `ta ulangan`;
+      }
+
+      const elBar = document.getElementById('live-students-bar');
+      if (elBar) {
+        const pct = Math.min(100, Math.round((total / 25) * 100));
+        elBar.style.width = `${pct}%`;
+      }
+
+      // 2. Violations & Focus Score
+      let totalViolations = 0;
+      let leftCount = 0;
+
+      students.forEach(st => {
+        const vCount = st.violationsCount || 0;
+        totalViolations += vCount;
+        if (st.isActive === false) {
+          leftCount++;
+        }
+      });
+
+      let focusPct = 100;
+      if (total > 0) {
+        let sumScore = 0;
+        students.forEach(st => {
+          const v = st.violationsCount || 0;
+          const s = Math.max(0, 100 - (v * 15));
+          sumScore += s;
+        });
+        focusPct = Math.round(sumScore / total);
+      }
+
+      const elFocus = document.getElementById('live-stat-focus');
+      const elFocusBadge = document.getElementById('live-focus-badge');
+      const elFocusBar = document.getElementById('live-focus-bar');
+
+      if (elFocus) {
+        elFocus.textContent = `${focusPct}%`;
+        if (focusPct >= 85) {
+          elFocus.style.color = 'var(--green-400)';
+          if (elFocusBadge) { elFocusBadge.className = 'badge badge-green'; elFocusBadge.textContent = "A'lo"; }
+          if (elFocusBar) { elFocusBar.style.background = 'var(--green-400)'; }
+        } else if (focusPct >= 65) {
+          elFocus.style.color = 'var(--yellow-400)';
+          if (elFocusBadge) { elFocusBadge.className = 'badge badge-yellow'; elFocusBadge.textContent = "O'rtacha"; }
+          if (elFocusBar) { elFocusBar.style.background = 'var(--yellow-400)'; }
+        } else {
+          elFocus.style.color = 'var(--red-400)';
+          if (elFocusBadge) { elFocusBadge.className = 'badge badge-red'; elFocusBadge.textContent = "Past"; }
+          if (elFocusBar) { elFocusBar.style.background = 'var(--red-400)'; }
+        }
+        if (elFocusBar) elFocusBar.style.width = `${focusPct}%`;
+      }
+
+      // 3. Violations count
+      const elViolations = document.getElementById('live-stat-violations');
+      const elViolationsBadge = document.getElementById('live-violations-badge');
+      const elViolationsDetail = document.getElementById('live-violations-detail');
+
+      if (elViolations) {
+        elViolations.textContent = totalViolations;
+        if (elViolationsBadge) {
+          elViolationsBadge.textContent = `${totalViolations} ta`;
+          elViolationsBadge.className = totalViolations === 0 ? 'badge badge-green' : 'badge badge-yellow';
+        }
+        if (elViolationsDetail) {
+          if (totalViolations === 0) {
+            elViolationsDetail.textContent = "Hozircha hech kim ilovadan chiqmadi";
+            elViolationsDetail.style.color = "var(--text-muted)";
+          } else {
+            elViolationsDetail.textContent = leftCount > 0 
+              ? `⚠️ ${leftCount} ta o'quvchi hozir ilovadan chiqqan!` 
+              : `Barcha o'quvchilar hozir darsga qaytgan`;
+            elViolationsDetail.style.color = leftCount > 0 ? "#EF4444" : "#FBBF24";
+          }
+        }
+      }
+
+      // 4. Remote Tool mode
+      const elToolStatus = document.getElementById('live-stat-tool');
+      const elToolTag = document.getElementById('live-tools-tag');
+      const elToolDesc = document.getElementById('live-tool-desc');
+      if (elToolStatus && currentSession) {
+        if (currentSession.allowedTool === 'calculator') {
+          elToolStatus.textContent = "🧮 Kalkulyator";
+          elToolStatus.style.color = "#D4F637";
+          if (elToolTag) { elToolTag.textContent = "Ruxsat etilgan"; elToolTag.className = "badge badge-green"; }
+          if (elToolDesc) elToolDesc.textContent = "O'quvchilar kalkulyatordan foydalanishi mumkin";
+        } else if (currentSession.allowedTool === 'browser') {
+          elToolStatus.textContent = "🌐 Chrome / Manba";
+          elToolStatus.style.color = "#38BDF8";
+          if (elToolTag) { elToolTag.textContent = "Ochiq"; elToolTag.className = "badge badge-blue"; }
+          if (elToolDesc) elToolDesc.textContent = currentSession.allowedToolUrl || "Dars manbasi ochiq";
+        } else {
+          elToolStatus.textContent = "🔒 Faqat Dars";
+          elToolStatus.style.color = "#94A3B8";
+          if (elToolTag) { elToolTag.textContent = "Bloklangan"; elToolTag.className = "badge"; }
+          if (elToolDesc) elToolDesc.textContent = "Boshqa ilovalar bloklangan";
+        }
+      }
+    }
+
+    // ============================================
+    // ACTIVITY LOG
+    // ============================================
+    function addActivity(icon, text) {
+      const log = document.getElementById('activity-log');
+      const time = new Date().toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = `
+        <span class="activity-icon">${icon}</span>
+        <span class="activity-text">${text}</span>
+        <span class="activity-time">${time}</span>
+      `;
+
+      log.insertBefore(item, log.firstChild);
+
+      // Keep max 50 items
+      while (log.children.length > 50) {
+        log.removeChild(log.lastChild);
+      }
+    }
+
+    // ============================================
+    // SOCKET EVENTS
+    // ============================================
+    socket.on('student-joined', (data) => {
+      if (currentSession) {
+        if (!currentSession.students) currentSession.students = [];
+        const existingIdx = currentSession.students.findIndex(s => s.id === data.student.id);
+        if (existingIdx >= 0) {
+          currentSession.students[existingIdx] = data.student;
+        } else {
+          currentSession.students.push(data.student);
+        }
+        addStudentToTable(data.student);
+        updateLiveSessionStats();
+        addActivity('📱', `${data.student.name} darsga qo'shildi (${data.student.device})`);
+        showToast(`${data.student.name} darsga qo'shildi!`, 'success', '📱');
+      }
+    });
+
+    socket.on('student-violation', (data) => {
+      if (currentSession && currentSession.students) {
+        const st = currentSession.students.find(s => s.id === data.student.id);
+        if (st) {
+          st.violationsCount = data.violationsCount;
+          st.isActive = false;
+        }
+      }
+
+      const statusEl = document.getElementById(`student-status-${data.student.id}`);
+      if (statusEl) {
+        statusEl.className = 'badge badge-red live-pulse-badge';
+        statusEl.textContent = '⚠️ Chiqib ketdi';
+      }
+
+      const violEl = document.getElementById(`student-violations-${data.student.id}`);
+      if (violEl) {
+        violEl.innerHTML = `<span style="color: #EF4444; font-weight: 700">⚠️ ${data.violationsCount} marta</span>`;
+      }
+
+      const focusEl = document.getElementById(`student-focus-${data.student.id}`);
+      if (focusEl) {
+        const score = Math.max(0, 100 - (data.violationsCount * 15));
+        const badgeClass = score >= 85 ? 'badge-green' : (score >= 65 ? 'badge-yellow' : 'badge-red');
+        focusEl.innerHTML = `<span class="badge ${badgeClass}">${score}%</span>`;
+      }
+
+      updateLiveSessionStats();
+      addActivity('⚠️', data.message);
+      showToast(data.message, 'warning', '⚠️');
+    });
+
+    socket.on('student-returned', (data) => {
+      if (currentSession && currentSession.students) {
+        const st = currentSession.students.find(s => s.id === data.student.id);
+        if (st) {
+          st.isActive = true;
+        }
+      }
+
+      const statusEl = document.getElementById(`student-status-${data.student.id}`);
+      if (statusEl) {
+        statusEl.className = 'badge badge-green';
+        statusEl.textContent = '🟢 Darsda';
+      }
+
+      updateLiveSessionStats();
+      addActivity('✅', data.message);
+    });
+
+    socket.on('quiz-submission-update', (data) => {
+      const { submission, totalSubmissions, totalStudents, submissions } = data;
+      const countEl = document.getElementById('tracker-quiz-count');
+      if (countEl) {
+        countEl.textContent = `${totalSubmissions}/${totalStudents || totalSubmissions} topshirdi`;
+        countEl.className = 'badge badge-green';
+      }
+
+      showToast(`📝 ${submission.studentName} test topshirdi: ${submission.correctCount}/${submission.totalQuestions} (${submission.percentage}%)`, 'info', '📝');
+      addActivity('📝', `${submission.studentName} test topshirdi: ${submission.correctCount}/${submission.totalQuestions} (${submission.percentage}%)`);
+
+      const tbody = document.getElementById('quiz-submissions-tbody');
+      if (tbody && submissions && submissions.length > 0) {
+        tbody.innerHTML = submissions.map(sub => {
+          const time = new Date(sub.submittedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+          const badgeClass = sub.percentage >= 80 ? 'badge-green' : (sub.percentage >= 50 ? 'badge-yellow' : 'badge-red');
+          return `
+            <tr>
+              <td><strong style="color: var(--text-primary)">${sub.studentName}</strong></td>
+              <td>${sub.correctCount} / ${sub.totalQuestions} ta to'g'ri</td>
+              <td><span class="badge ${badgeClass}">${sub.percentage}%</span></td>
+              <td style="color: var(--text-secondary)">${time}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    });
+
+    // Jonli o'quvchilar baholari kelganda
+    socket.on('session-rating-update', (data) => {
+      const { ratings, averageRating, totalRatings, newRating } = data;
+
+      // Update live KPI card
+      const ratingValEl = document.getElementById('live-stat-rating');
+      const ratingCountEl = document.getElementById('live-stat-rating-count');
+      const ratingBarEl = document.getElementById('live-stat-rating-bar');
+      const trackerSummaryEl = document.getElementById('ratings-tracker-summary');
+
+      if (ratingValEl) {
+        ratingValEl.textContent = averageRating ? `${averageRating} ⭐` : '—';
+      }
+      if (ratingCountEl) {
+        ratingCountEl.textContent = `${totalRatings || 0} ta baho`;
+      }
+      if (ratingBarEl) {
+        const pct = averageRating ? Math.round((averageRating / 5) * 100) : 0;
+        ratingBarEl.style.width = `${pct}%`;
+      }
+      if (trackerSummaryEl) {
+        trackerSummaryEl.textContent = averageRating ? `⭐ ${averageRating} / 5.0 (${totalRatings} ta baho)` : '— / 5.0 (0 ta baho)';
+      }
+
+      // Update live tracker feed
+      const listEl = document.getElementById('ratings-tracker-list');
+      if (listEl && ratings && ratings.length > 0) {
+        listEl.innerHTML = ratings.slice().reverse().map(r => {
+          const time = new Date(r.createdAt || Date.now()).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div style="background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px">
+              <div style="flex: 1">
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <strong style="color: var(--text-primary); font-size: 13px">${r.studentName}</strong>
+                  <span style="color: #F59E0B; font-weight: 800; font-size: 13px">${'⭐'.repeat(r.score)} (${r.score} ball)</span>
+                </div>
+                ${r.comment ? `<p style="margin: 4px 0 0; font-size: 12px; color: var(--text-secondary); line-height: 1.4">"${r.comment}"</p>` : ''}
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted); white-space: nowrap">${time}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (newRating) {
+        showToast(`⭐ ${newRating.studentName} darsni ${newRating.score} ballga baholadi!`, 'info', '⭐');
+        addActivity('⭐', `${newRating.studentName} darsga ${newRating.score} yulduz berdi: "${newRating.comment || 'Izohsiz'}"`);
+      }
+    });
+
+    // ============================================
+    // LOAD STATS
+    // ============================================
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        document.getElementById('stat-sessions').textContent = data.totalSessions;
+        document.getElementById('stat-students').textContent = data.totalStudents;
+        document.getElementById('stat-active').textContent = data.activeSessions;
+
+        // Recent sessions
+        if (data.recentSessions && data.recentSessions.length > 0) {
+          cachedRecentSessions = data.recentSessions;
+          const container = document.getElementById('recent-sessions');
+          container.innerHTML = '<div class="history-list">' +
+            data.recentSessions.map(s => {
+              const date = new Date(s.createdAt).toLocaleDateString('uz', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+              });
+              const time = new Date(s.createdAt).toLocaleTimeString('uz', {
+                hour: '2-digit', minute: '2-digit'
+              });
+              const statusClass = s.status === 'active' ? 'badge-green' : 'badge-blue';
+              const statusText = s.status === 'active' ? 'Faol' : 'Tugagan';
+              const focusScore = s.statistics ? s.statistics.averageFocusScore : null;
+              const ratingVal = (s.statistics && s.statistics.ratings && s.statistics.ratings.averageRating)
+                ? s.statistics.ratings.averageRating
+                : (s.averageRating || null);
+              const ratingCount = (s.statistics && s.statistics.ratings && s.statistics.ratings.totalRatings)
+                ? s.statistics.ratings.totalRatings
+                : (s.ratings ? s.ratings.length : 0);
+
+              return `
+                <div class="history-item" onclick="viewSessionStats('${s.id}')" style="cursor: pointer" title="Statistikani ko'rish uchun bosing">
+                  <div class="history-info">
+                    <div class="history-icon">📚</div>
+                    <div>
+                      <div class="history-name">${s.name}</div>
+                      <div class="history-meta">
+                        ${s.subject || s.name} · <span class="badge ${statusClass}">${statusText}</span>
+                        ${focusScore !== null ? `· <span style="color: var(--green-400); font-weight: 600">🎯 ${focusScore}% diqqat</span>` : ''}
+                        ${ratingVal ? `· <span style="color: #F59E0B; font-weight: 700">⭐ ${ratingVal} (${ratingCount} ta baho)</span>` : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="history-stats" style="display: flex; align-items: center; gap: 14px">
+                    <div style="text-align: right">
+                      <div class="history-student-count">👥 ${s.students ? s.students.length : 0} o'quvchi</div>
+                      <div class="history-date">${date} ${time}</div>
+                    </div>
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px" onclick="event.stopPropagation(); viewSessionStats('${s.id}')">
+                      📊 Hisobot
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('') +
+            '</div>';
+        }
+
+        // Build all students list
+        buildAllStudentsList(data.recentSessions);
+
+      } catch (err) {
+        console.error('Stats yuklanmadi:', err);
+      }
+    }
+
+    function buildAllStudentsList(sessions) {
+      if (!sessions || sessions.length === 0) return;
+
+      const allStudents = [];
+      sessions.forEach(s => {
+        if (s.students) {
+          s.students.forEach(st => {
+            allStudents.push({ ...st, sessionName: s.name });
+          });
+        }
+      });
+
+      if (allStudents.length === 0) return;
+
+      const container = document.getElementById('all-students-list');
+      container.innerHTML = `
+        <div style="overflow-x: auto">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th>Ism</th>
+                <th>Qurilma</th>
+                <th>Sessiya</th>
+                <th>Vaqt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${allStudents.map(st => {
+                const time = new Date(st.joinedAt).toLocaleString('uz', {
+                  day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
+                const initials = st.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                return `
+                  <tr>
+                    <td>
+                      <div class="student-name-cell">
+                        <div class="student-avatar">${initials}</div>
+                        <span>${st.name}</span>
+                      </div>
+                    </td>
+                    <td style="color:var(--text-secondary);font-size:13px">${st.device}</td>
+                    <td style="font-size:13px">${st.sessionName}</td>
+                    <td style="color:var(--text-secondary);font-size:13px">${time}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // LOAD ACTIVE SESSION
+    // ============================================
+    async function loadActiveSessions() {
+      try {
+        const res = await fetch('/api/sessions', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const sessions = await res.json();
+        const active = sessions.find(s => s.status === 'active');
+
+        if (active) {
+          currentSession = active;
+          showActiveSession(active);
+
+          // Rejoin teacher monitoring
+          socket.emit('teacher-monitor', { sessionId: active.id });
+
+          // Show existing students
+          if (active.students) {
+            active.students.forEach(st => addStudentToTable(st));
+          }
+
+          // Calculate remaining time
+          const elapsed = Math.floor((Date.now() - new Date(active.createdAt).getTime()) / 1000 / 60);
+          const remaining = Math.max(1, active.duration - elapsed);
+          startTimer(remaining);
+        }
+      } catch (err) {
+        console.error('Sessiyalar yuklanmadi:', err);
+      }
+    }
+
+    // ============================================
+    // GROUPS MANAGEMENT
+    // ============================================
+    let cachedGroups = [];
+
+    async function loadGroupsList() {
+      try {
+        const res = await fetch('/api/groups', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        cachedGroups = Array.isArray(data) ? data : (data.groups || []);
+        renderGroups(cachedGroups);
+        populateSessionGroupSelect();
+      } catch (err) {
+        console.error('Guruhlar yuklanmadi:', err);
+      }
+    }
+
+    function renderGroups(groups) {
+      const container = document.getElementById('groups-grid-container');
+      if (!container) return;
+
+      if (!groups || groups.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1; padding: 48px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1)">
+            <div class="empty-icon" style="font-size: 48px; margin-bottom: 12px">🏫</div>
+            <h3 class="empty-title" style="font-size: 18px">Hozircha guruhlar yo'q</h3>
+            <p class="empty-text" style="color: var(--text-muted); max-width: 400px; margin: 6px auto 18px">Yangi guruh qo'shing va bir bosishda dars sessiyasini boshlang</p>
+            <button class="btn btn-primary" onclick="openGroupModal()">
+              <span>➕</span> Guruh Yaratish
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = groups.map(g => `
+        <div class="group-card">
+          <div class="group-card-header">
+            <div>
+              <h3 class="group-title">${g.name}</h3>
+              <div class="group-subject">${g.subject}</div>
+            </div>
+            <span class="group-badge">🏫 Guruh</span>
+          </div>
+
+          <div class="group-meta-row">
+            <span class="group-meta-item">👥 <strong>${g.studentCount || 25}</strong> ta talaba</span>
+            ${g.room ? `<span class="group-meta-item">📍 <strong>${g.room}</strong></span>` : ''}
+          </div>
+
+          ${g.description ? `<p style="font-size: 12px; color: var(--text-muted); margin: 0 0 16px; line-height: 1.4">${g.description}</p>` : '<div style="margin-bottom: 16px"></div>'}
+
+          <div class="group-actions">
+            <button type="button" class="btn btn-primary" style="flex: 1; font-weight: 700; font-size: 13px" onclick="startSessionForGroup('${g.id}')">
+              <span>🚀</span> Dars Boshlash
+            </button>
+            <button type="button" class="btn btn-outline" style="padding: 6px 10px; font-size: 13px" onclick="openGroupModal('${g.id}')" title="Tahrirlash">
+              ✏️
+            </button>
+            <button type="button" class="btn btn-outline" style="padding: 6px 10px; font-size: 13px; color: #EF4444; border-color: rgba(239,68,68,0.3)" onclick="deleteGroup('${g.id}')" title="O'chirish">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterGroupsList(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) {
+        renderGroups(cachedGroups);
+        return;
+      }
+      const filtered = cachedGroups.filter(g => 
+        (g.name && g.name.toLowerCase().includes(q)) ||
+        (g.subject && g.subject.toLowerCase().includes(q)) ||
+        (g.room && g.room.toLowerCase().includes(q))
+      );
+      renderGroups(filtered);
+    }
+
+    function openGroupModal(groupId = null) {
+      const modal = document.getElementById('group-modal');
+      const title = document.getElementById('group-modal-title');
+      const idInput = document.getElementById('group-id-input');
+      const nameInput = document.getElementById('group-name-input');
+      const subInput = document.getElementById('group-subject-input');
+      const stuInput = document.getElementById('group-students-input');
+      const roomInput = document.getElementById('group-room-input');
+      const descInput = document.getElementById('group-desc-input');
+
+      if (groupId) {
+        const grp = cachedGroups.find(g => g.id === groupId);
+        if (grp) {
+          title.textContent = '✏️ Guruhni Tahrirlash';
+          idInput.value = grp.id;
+          nameInput.value = grp.name || '';
+          subInput.value = grp.subject || '';
+          stuInput.value = grp.studentCount || 25;
+          roomInput.value = grp.room || '';
+          descInput.value = grp.description || '';
+        }
+      } else {
+        title.textContent = '🏫 Yangi Guruh Yaratish';
+        idInput.value = '';
+        nameInput.value = '';
+        subInput.value = teacherData.subject || '';
+        stuInput.value = 25;
+        roomInput.value = '';
+        descInput.value = '';
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeGroupModal() {
+      document.getElementById('group-modal').classList.remove('active');
+    }
+
+    async function saveGroup(event) {
+      if (event) event.preventDefault();
+      const id = document.getElementById('group-id-input').value;
+      const name = document.getElementById('group-name-input').value.trim();
+      const subject = document.getElementById('group-subject-input').value.trim();
+      const studentCount = parseInt(document.getElementById('group-students-input').value) || 25;
+      const room = document.getElementById('group-room-input').value.trim();
+      const description = document.getElementById('group-desc-input').value.trim();
+
+      if (!name || !subject) {
+        showToast('Guruh nomi va fanni kiriting', 'warning', '⚠️');
+        return;
+      }
+
+      try {
+        const url = id ? `/api/groups/${id}` : '/api/groups';
+        const method = id ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name, subject, studentCount, room, description })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(id ? 'Guruh muvaffaqiyatli yangilandi' : 'Yangi guruh yaratildi!', 'success', '✅');
+          closeGroupModal();
+          await loadGroupsList();
+        } else {
+          showToast(data.message || 'Xatolik yuz berdi', 'error', '❌');
+        }
+      } catch (err) {
+        console.error('Guruh saqlash xatosi:', err);
+        showToast('Server bilan bog\'lanishda xatolik', 'error', '❌');
+      }
+    }
+
+    async function deleteGroup(id) {
+      if (!confirm('Haqiqatan ham bu guruhni o\'chirmoqchimisiz?')) return;
+      try {
+        const res = await fetch(`/api/groups/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Guruh o\'chirildi', 'info', '🗑️');
+          await loadGroupsList();
+        }
+      } catch (err) {
+        console.error('Guruh o\'chirish xatosi:', err);
+      }
+    }
+
+    function populateSessionGroupSelect(preselectedId = null) {
+      const select = document.getElementById('session-group-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Guruhni tanlang (yoki qo\'lda kiriting) --</option>';
+      cachedGroups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = `${g.name} (${g.subject}) · ${g.studentCount || 25} talaba`;
+        if (preselectedId && g.id === preselectedId) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+    }
+
+    function onSessionGroupSelected(groupId) {
+      if (!groupId) return;
+      const grp = cachedGroups.find(g => g.id === groupId);
+      if (grp) {
+        document.getElementById('session-name').value = `${grp.name} - ${grp.subject}`;
+        document.getElementById('session-subject').value = grp.subject || '';
+      }
+    }
+
+    function startSessionForGroup(groupId) {
+      openCreateModal(groupId);
+      onSessionGroupSelected(groupId);
+    }
+
+    // ============================================
+    // TEST PACKS (QUESTION BANK)
+    // ============================================
+    let cachedTestpacks = [];
+    let tpQuestionCounter = 0;
+
+    async function loadTestpacksList() {
+      try {
+        const res = await fetch('/api/testpacks', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        cachedTestpacks = Array.isArray(data) ? data : (data.testpacks || []);
+        renderTestpacks(cachedTestpacks);
+        populatePremadeQuizSelect();
+      } catch (err) {
+        console.error('Test to\'plamlari yuklanmadi:', err);
+      }
+    }
+
+    function renderTestpacks(packs) {
+      const container = document.getElementById('testpacks-grid-container');
+      if (!container) return;
+
+      if (!packs || packs.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1; padding: 48px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1)">
+            <div class="empty-icon" style="font-size: 48px; margin-bottom: 12px">📋</div>
+            <h3 class="empty-title" style="font-size: 18px">Testlar to'plami yo'q</h3>
+            <p class="empty-text" style="color: var(--text-muted); max-width: 400px; margin: 6px auto 18px">Yuqoridagi tayyor shablonlardan birini bosing yoki yangi to'plam yarating</p>
+            <button class="btn btn-primary" onclick="openTestpackModal()">
+              <span>➕</span> Yangi To'plam Yaratish
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = packs.map(tp => `
+        <div class="testpack-card">
+          <div class="testpack-header">
+            <div>
+              <h3 class="testpack-title">${tp.title}</h3>
+              <div class="testpack-subject">${tp.subject || 'Umumiy'}</div>
+            </div>
+            <span class="testpack-badge">📋 To'plam</span>
+          </div>
+
+          <div class="testpack-meta-row">
+            <span class="testpack-meta-item">❓ <strong>${tp.questions ? tp.questions.length : 0}</strong> ta savol</span>
+            <span class="testpack-meta-item">⏱️ <strong>${tp.timeLimit || 0}</strong> daqiqa</span>
+          </div>
+
+          <!-- Questions mini preview -->
+          <div style="margin-bottom: 16px; background: rgba(0,0,0,0.25); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--text-secondary); max-height: 70px; overflow: hidden; text-overflow: ellipsis">
+            ${(tp.questions || []).slice(0, 2).map((q, i) => `<div>${i+1}. ${q.text}</div>`).join('')}
+            ${(tp.questions && tp.questions.length > 2) ? `<div style="color: #94A3B8; font-style: italic; margin-top: 2px">+ yana ${tp.questions.length - 2} ta savol...</div>` : ''}
+          </div>
+
+          <div class="testpack-actions">
+            <button type="button" class="btn btn-primary" style="flex: 1; font-weight: 700; font-size: 13px" onclick="broadcastSavedTestpack('${tp.id}')">
+              <span>🚀</span> Darsga Yuborish
+            </button>
+            <button type="button" class="btn btn-outline" style="padding: 6px 10px; font-size: 13px" onclick="openTestpackModal('${tp.id}')" title="Tahrirlash">
+              ✏️
+            </button>
+            <button type="button" class="btn btn-outline" style="padding: 6px 10px; font-size: 13px; color: #EF4444; border-color: rgba(239,68,68,0.3)" onclick="deleteTestpack('${tp.id}')" title="O'chirish">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterTestpacksList(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) {
+        renderTestpacks(cachedTestpacks);
+        return;
+      }
+      const filtered = cachedTestpacks.filter(tp => 
+        (tp.title && tp.title.toLowerCase().includes(q)) ||
+        (tp.subject && tp.subject.toLowerCase().includes(q))
+      );
+      renderTestpacks(filtered);
+    }
+
+    function openTestpackModal(packId = null) {
+      const modal = document.getElementById('testpack-modal');
+      const title = document.getElementById('testpack-modal-title');
+      const idInput = document.getElementById('testpack-id-input');
+      const titleInput = document.getElementById('tp-title-input');
+      const subInput = document.getElementById('tp-subject-input');
+      const timeInput = document.getElementById('tp-timelimit-input');
+      const list = document.getElementById('tp-questions-list');
+
+      list.innerHTML = '';
+      tpQuestionCounter = 0;
+
+      if (packId) {
+        const tp = cachedTestpacks.find(p => p.id === packId);
+        if (tp) {
+          title.textContent = '✏️ Test To\'plamini Tahrirlash';
+          idInput.value = tp.id;
+          titleInput.value = tp.title || '';
+          subInput.value = tp.subject || '';
+          timeInput.value = tp.timeLimit || 5;
+
+          if (tp.questions && tp.questions.length > 0) {
+            tp.questions.forEach(q => {
+              addTpQuestionBlock(q.text, q.options, q.correct);
+            });
+          } else {
+            addTpQuestionBlock();
+          }
+        }
+      } else {
+        title.textContent = '📋 Yangi Test To\'plami Yaratish';
+        idInput.value = '';
+        titleInput.value = '';
+        subInput.value = teacherData.subject || '';
+        timeInput.value = 5;
+        addTpQuestionBlock();
+      }
+
+      updateTpQuestionCounter();
+      modal.classList.add('active');
+    }
+
+    function closeTestpackModal() {
+      document.getElementById('testpack-modal').classList.remove('active');
+    }
+
+    function addTpQuestionBlock(text = '', options = ['', '', '', ''], correctIdx = 0) {
+      tpQuestionCounter++;
+      const qId = tpQuestionCounter;
+      const list = document.getElementById('tp-questions-list');
+
+      const card = document.createElement('div');
+      card.className = 'builder-q-card';
+      card.id = `tp-q-card-${qId}`;
+
+      const optionLetters = ['A', 'B', 'C', 'D'];
+      const optionsHtml = optionLetters.map((letter, idx) => `
+        <div class="builder-opt-row">
+          <input type="radio" name="tp-q-correct-${qId}" value="${idx}" class="tp-correct-radio" ${idx === correctIdx ? 'checked' : ''} title="To'g'ri javob">
+          <span style="font-weight: 700; width: 20px; color: ${idx === correctIdx ? '#D4F637' : '#94A3B8'}">${letter})</span>
+          <input type="text" class="form-input tp-opt-val" data-idx="${idx}" placeholder="${letter} varianti" value="${options[idx] || ''}" required>
+        </div>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="builder-q-header">
+          <span class="builder-q-num">Savol #${list.children.length + 1}</span>
+          <button type="button" class="btn btn-outline btn-sm" style="color: #EF4444; border-color: rgba(239,68,68,0.3); padding: 2px 8px; font-size: 11px" onclick="removeTpQuestionBlock(${qId})">✕ O'chirish</button>
+        </div>
+        <div class="form-group" style="margin-bottom: 8px">
+          <input type="text" class="form-input tp-q-text" placeholder="Savol matnini kiriting..." value="${text}" required>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px">To'g'ri javobni tanlash uchun chapdagi dumaloqchani belgilang:</div>
+        <div class="builder-opt-grid">
+          ${optionsHtml}
+        </div>
+      `;
+
+      list.appendChild(card);
+      updateTpQuestionCounter();
+    }
+
+    function removeTpQuestionBlock(qId) {
+      const card = document.getElementById(`tp-q-card-${qId}`);
+      if (card) {
+        card.remove();
+        const list = document.getElementById('tp-questions-list');
+        Array.from(list.children).forEach((c, index) => {
+          const numSpan = c.querySelector('.builder-q-num');
+          if (numSpan) numSpan.textContent = `Savol #${index + 1}`;
+        });
+        updateTpQuestionCounter();
+      }
+    }
+
+    function updateTpQuestionCounter() {
+      const list = document.getElementById('tp-questions-list');
+      const count = list ? list.children.length : 0;
+      const badge = document.getElementById('tp-question-counter-badge');
+      if (badge) badge.textContent = `${count} ta savol`;
+    }
+
+    async function saveTestpack(event) {
+      if (event) event.preventDefault();
+      const id = document.getElementById('testpack-id-input').value;
+      const title = document.getElementById('tp-title-input').value.trim();
+      const subject = document.getElementById('tp-subject-input').value.trim();
+      const timeLimit = parseInt(document.getElementById('tp-timelimit-input').value) || 0;
+
+      const list = document.getElementById('tp-questions-list');
+      const cards = list.querySelectorAll('.builder-q-card');
+
+      if (cards.length === 0) {
+        showToast('Kamida 1 ta savol qo\'shing', 'warning', '⚠️');
+        return;
+      }
+
+      const questions = [];
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        const text = card.querySelector('.tp-q-text').value.trim();
+        if (!text) {
+          showToast(`Savol #${i + 1} matni kiritilmagan`, 'warning', '⚠️');
+          return;
+        }
+
+        const optInputs = card.querySelectorAll('.tp-opt-val');
+        const options = [];
+        for (let j = 0; j < optInputs.length; j++) {
+          const optVal = optInputs[j].value.trim();
+          if (!optVal) {
+            showToast(`Savol #${i + 1} uchun hamma 4 ta variantni to'ldiring`, 'warning', '⚠️');
+            return;
+          }
+          options.push(optVal);
+        }
+
+        const checkedRadio = card.querySelector('.tp-correct-radio:checked');
+        const correct = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+        questions.push({ text, options, correct });
+      }
+
+      try {
+        const url = id ? `/api/testpacks/${id}` : '/api/testpacks';
+        const method = id ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ title, subject, timeLimit, questions })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(id ? 'Test to\'plami yangilandi!' : 'Yangi test to\'plami saqlandi!', 'success', '✅');
+          closeTestpackModal();
+          await loadTestpacksList();
+        } else {
+          showToast(data.message || 'Xatolik yuz berdi', 'error', '❌');
+        }
+      } catch (err) {
+        console.error('Test to\'plamini saqlash xatosi:', err);
+        showToast('Server bilan bog\'lanishda xatolik', 'error', '❌');
+      }
+    }
+
+    async function deleteTestpack(id) {
+      if (!confirm('Haqiqatan ham bu test to\'plamini o\'chirmoqchimisiz?')) return;
+      try {
+        const res = await fetch(`/api/testpacks/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Test to\'plami o\'chirildi', 'info', '🗑️');
+          await loadTestpacksList();
+        }
+      } catch (err) {
+        console.error('Testpack o\'chirish xatosi:', err);
+      }
+    }
+
+    function populatePremadeQuizSelect() {
+      const select = document.getElementById('quiz-premade-pack-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Saqlangan test to\'plamlaridan tanlang --</option>';
+      cachedTestpacks.forEach(tp => {
+        const opt = document.createElement('option');
+        opt.value = tp.id;
+        opt.textContent = `${tp.title} (${tp.questions ? tp.questions.length : 0} savol, ${tp.timeLimit || 0} daq)`;
+        select.appendChild(opt);
+      });
+    }
+
+    function loadTestpackIntoQuizModal(packId) {
+      if (!packId) return;
+      const tp = cachedTestpacks.find(p => p.id === packId);
+      if (!tp) return;
+
+      document.getElementById('quiz-title-input').value = tp.title;
+      document.getElementById('quiz-timelimit-input').value = tp.timeLimit || 3;
+
+      const list = document.getElementById('quiz-questions-list');
+      list.innerHTML = '';
+      questionCounter = 0;
+
+      if (tp.questions && tp.questions.length > 0) {
+        tp.questions.forEach(q => {
+          addQuestionBlock(q.text, q.options, q.correct);
+        });
+      }
+
+      showToast(`"${tp.title}" to'plami test paneliga yuklandi`, 'info', '📋');
+    }
+
+    async function broadcastSavedTestpack(packId) {
+      if (!currentSession) {
+        showToast('Avval dars sessiyasini boshlang!', 'warning', '⚠️');
+        openCreateModal();
+        return;
+      }
+
+      const tp = cachedTestpacks.find(p => p.id === packId);
+      if (!tp) return;
+
+      if (!confirm(`"${tp.title}" test to'plamini darsdagi barcha o'quvchilarga yubormoqchimisiz?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/testpacks/${packId}/broadcast`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ sessionId: currentSession.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🚀 "${tp.title}" test to'plami barcha talabalarga yuborildi!`, 'success', '🎉');
+          // Switch to dashboard view to see live quiz tracker
+          const dashNavItem = document.getElementById('nav-dashboard');
+          if (dashNavItem) dashNavItem.click();
+        } else {
+          showToast(data.message || 'Yuborishda xatolik', 'error', '❌');
+        }
+      } catch (err) {
+        console.error('Broadcast xatosi:', err);
+        showToast('Server bilan bog\'lanishda xatolik', 'error', '❌');
+      }
+    }
+
+    function openDirectTestpackPicker() {
+      if (!currentSession) {
+        showToast('Avval sessiya boshlang', 'warning', '⚠️');
+        return;
+      }
+      const listContainer = document.getElementById('direct-testpack-list');
+      if (!listContainer) return;
+
+      if (cachedTestpacks.length === 0) {
+        listContainer.innerHTML = `
+          <div style="text-align: center; padding: 24px; color: var(--text-muted)">
+            Hozircha saqlangan test to'plamlari yo'q.<br>
+            <a href="javascript:void(0)" onclick="closeDirectTestpackPicker(); document.getElementById('nav-testpacks').click();" style="color: #D4F637; text-decoration: underline; margin-top: 8px; display: inline-block">Testlar To'plamiga o'tish</a>
+          </div>
+        `;
+      } else {
+        listContainer.innerHTML = cachedTestpacks.map(tp => `
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s" onmouseover="this.style.borderColor='#D4F637'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+            <div>
+              <div style="font-weight: 700; color: #FFFFFF; font-size: 14px">${tp.title}</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px">
+                📚 ${tp.subject || 'Umumiy'} · ❓ ${tp.questions ? tp.questions.length : 0} ta savol · ⏱️ ${tp.timeLimit || 0} daq
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="closeDirectTestpackPicker(); broadcastSavedTestpack('${tp.id}')" style="white-space: nowrap">
+              🚀 Yuborish
+            </button>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('direct-testpack-modal').classList.add('active');
+    }
+
+    function closeDirectTestpackPicker() {
+      document.getElementById('direct-testpack-modal').classList.remove('active');
+    }
+
+    async function useTemplateTestpack(type) {
+      let packData = null;
+      if (type === 'cyber') {
+        packData = {
+          title: "Kiberxavfsizlik asoslari — 1-Oraliq Nazorat",
+          subject: "Kiberxavfsizlik asoslari",
+          timeLimit: 5,
+          questions: [
+            {
+              text: "Quyidagilardan qaysi biri parollarni xavfsiz saqlashning eng yaxshi usuli hisoblanadi?",
+              options: ["Matnli faylda (.txt)", "Brauzer avtotoldirishida", "Kriptografik xesh (bcrypt/argon2)", "Elektron pochtada"],
+              correct: 2
+            },
+            {
+              text: "Foydalanuvchini aldab, soxta sahifa orqali uning parolini o'g'irlash hujumi qanday ataladi?",
+              options: ["DDoS hujumi", "Fishing (Phishing)", "Brute-force", "SQL Injection"],
+              correct: 1
+            },
+            {
+              text: "Ikki bosqichli autentifikatsiya (2FA) nima uchun kerak?",
+              options: ["Internet tezligini oshirish uchun", "Faqat paroldan tashqari qo'shimcha kod bilan himoyani kuchaytirish uchun", "Telefon xotirasini tejash uchun", "Saytlarni avtomatik yuklash uchun"],
+              correct: 1
+            },
+            {
+              text: "Quyidagi shifrlash protokollaridan qaysi biri veb-saytlar trafigini shifrlaydi?",
+              options: ["HTTP", "HTTPS / TLS", "FTP", "Telnet"],
+              correct: 1
+            },
+            {
+              text: "Zararli dasturlardan himoyalanishda birinchi qoida nima?",
+              options: ["Noma'lum manbalardan fayl va ilovalarni yuklamaslik", "Kompyuterni har doim o'chiq saqlash", "Parollarni 123456 qilish", "Antivirusni o'chirib qo'yish"],
+              correct: 0
+            }
+          ]
+        };
+      } else if (type === 'python') {
+        packData = {
+          title: "Python Dasturlash — Tezkor Nazorat Testi",
+          subject: "Dasturlash (Python)",
+          timeLimit: 5,
+          questions: [
+            {
+              text: "Python dasturlash tilida konsolga ma'lumot chiqarish uchun qaysi funksiya ishlatiladi?",
+              options: ["echo()", "console.log()", "print()", "write()"],
+              correct: 2
+            },
+            {
+              text: "Python'da o'zgarmas (immutable) ma'lumotlar to'plami qaysi?",
+              options: ["List (ro'yxat)", "Tuple (kortej)", "Dictionary (lug'at)", "Set (to'plam)"],
+              correct: 1
+            },
+            {
+              text: "len([1, 2, 3, 4, 5]) ifodasining natijasi qanday bo'ladi?",
+              options: ["4", "5", "6", "Error"],
+              correct: 1
+            },
+            {
+              text: "Python'da funksiya e'lon qilish qaysi kalit so'z bilan boshlanadi?",
+              options: ["function", "def", "func", "define"],
+              correct: 1
+            },
+            {
+              text: "Python'da qaysi operator darajaga ko'tarish amalini bajaradi?",
+              options: ["^", "**", "//", "%"],
+              correct: 1
+            }
+          ]
+        };
+      } else if (type === 'networks') {
+        packData = {
+          title: "Kompyuter Tarmoqlari — Asosiy Tushunchalar",
+          subject: "Kompyuter Tarmoqlari",
+          timeLimit: 5,
+          questions: [
+            {
+              text: "OSI modeli necha qatlamdan (layers) iborat?",
+              options: ["4 ta", "5 ta", "7 ta", "9 ta"],
+              correct: 2
+            },
+            {
+              text: "IP manzillarni domen nomlariga aylantirib beruvchi tizim nima?",
+              options: ["DHCP", "DNS", "FTP", "SNMP"],
+              correct: 1
+            },
+            {
+              text: "IPv4 manzili necha bitdan iborat?",
+              options: ["16 bit", "32 bit", "64 bit", "128 bit"],
+              correct: 1
+            },
+            {
+              text: "Ishonchli va kafolatlangan ma'lumot uzatuvchi transport protokoli qaysi?",
+              options: ["UDP", "TCP", "ICMP", "ARP"],
+              correct: 1
+            },
+            {
+              text: "Mahalliy kompyuter tarmog'ining qisqartma nomi nima?",
+              options: ["LAN", "WAN", "MAN", "VPN"],
+              correct: 0
+            }
+          ]
+        };
+      }
+
+      if (!packData) return;
+
+      try {
+        const res = await fetch('/api/testpacks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(packData)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`"${packData.title}" shabloni muvaffaqiyatli saqlandi!`, 'success', '✨');
+          await loadTestpacksList();
+        }
+      } catch (err) {
+        console.error('Shablon qo\'shishda xatolik:', err);
+      }
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    loadStats();
+    loadActiveSessions();
+    loadGroupsList();
+    loadTestpacksList();
+  </script>
+</body>
+</html>

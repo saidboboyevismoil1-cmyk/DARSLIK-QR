@@ -12,7 +12,7 @@ const b = await chromium.launch();
 const page = await (await b.newContext()).newPage();
 await page.goto(BASE + '/login.html');
 await page.evaluate((r) => { localStorage.setItem('edufocus_token', r.token); localStorage.setItem('edufocus_teacher', JSON.stringify(r.teacher)); }, other);
-await page.goto(BASE + '/dashboard.html');
+await page.goto(BASE + '/dashboard-legacy.html');
 await page.waitForFunction(() => typeof socket !== 'undefined' && socket.connected);
 const out = await page.evaluate(async ({ mine, foreign }) => {
   const events = [];

@@ -57,6 +57,24 @@ const create = (db, uuid) => ({
     });
     return id;
   },
+  /** Mavjud guruhga talabalar qo'shadi. Takroriy ismlar o'tkazib yuboriladi. → { added, skipped } */
+  addStudents(groupId, students) {
+    let added = 0;
+    db.transaction(() => {
+      for (const s of students) {
+        const r = db.run('INSERT INTO roster_students (id, group_id, full_name, hemis_id, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (group_id, full_name) DO NOTHING', [uuid(), groupId, s.fullName, s.hemisId, Date.now()]);
+        added += r.changes;
+      }
+    });
+    return { added, skipped: students.length - added };
+  },
+  clearStudents(groupId) { db.run('DELETE FROM roster_students WHERE group_id = ?', [groupId]); },
+  updateGroup(id, { name, subject }) { db.run('UPDATE roster_groups SET name = ?, subject = ? WHERE id = ?', [name, subject, id]); },
+  createEmptyGroup({ teacherId, facultyId, name, subject }) {
+    const id = uuid();
+    db.run('INSERT INTO roster_groups (id, teacher_id, faculty_id, name, subject, created_at) VALUES (?, ?, ?, ?, ?, ?)', [id, teacherId, facultyId || null, name, subject || '', Date.now()]);
+    return id;
+  },
   groupsFor(teacherId, isAdmin) {
     const sql = `SELECT g.*, (SELECT COUNT(*) FROM roster_students s WHERE s.group_id = g.id) AS students,
                  (SELECT COUNT(*) FROM device_bindings b JOIN roster_students s ON s.id = b.roster_student_id WHERE s.group_id = g.id) AS bound

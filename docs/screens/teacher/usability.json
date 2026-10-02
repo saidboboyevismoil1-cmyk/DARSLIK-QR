@@ -1,0 +1,10 @@
+{
+  "phone": {
+    "startClicks": 2,
+    "startMs": 1239,
+    "approveClicks": 1,
+    "sendTestClicks": 2,
+    "openAllClicks": 2,
+    "endClicks": 2
+  }
+}

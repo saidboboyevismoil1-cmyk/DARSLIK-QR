@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- FAQAT DEBUG: emulyatordan lokal serverga (10.0.2.2:3000) ulanish. Release artefaktlariga kirmaydi. -->
+<!-- FAQAT DEBUG: lokal serverga (emulyator 10.0.2.2, LAN IP) HTTP orqali ulanish. Release artefaktlariga kirmaydi. -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false">
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

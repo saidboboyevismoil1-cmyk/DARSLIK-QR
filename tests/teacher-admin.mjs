@@ -1,0 +1,25 @@
+// Admin bo'limi (web): fakultet, ustoz fakulteti, sozlama, haftalik hisobot, o'chirish so'rovi.
+import { chromium } from 'playwright';
+import { startServer, makeApi, teacherLogin } from './server/helpers.mjs';
+const srv = await startServer({ PUSH_MODE: 'mock' }); const api = makeApi(srv.base);
+const adm = await api('POST', '/api/login', { email: 'teacher@edufocus.uz', password: '123456' });
+await api('POST', '/api/data-deletion-requests', { fullName: 'Ali Valiyev', contact: 'a@b.uz', sessionCode: '123456' });
+const browser = await chromium.launch(); const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'uz-UZ', serviceWorkers: 'block' });
+await ctx.addInitScript((r) => { localStorage.setItem('ef_t_token', r.token); localStorage.setItem('ef_t_refresh', r.refreshToken); localStorage.setItem('ef_t_teacher', JSON.stringify(r.teacher)); localStorage.setItem('ef_t_tour_' + r.teacher.id, 'true'); }, adm);
+const page = await ctx.newPage(); const errs = [];
+page.on('pageerror', (e) => errs.push(e.message)); page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load/.test(m.text())) errs.push(m.text()); });
+let failed = 0; const ok = (c, m) => { if (c) console.log('  ✓', m); else { failed++; console.error('  ✗ FAIL:', m); } };
+await page.goto(srv.base + '/teacher/#/admin'); await page.waitForSelector('#fa');
+ok(await page.isVisible('.side a[href="#/admin"]'), 'admin menyusi ko\'rinadi');
+await page.fill('#fn', 'Fizika fakulteti'); await page.click('#fa'); await page.waitForFunction(() => document.body.textContent.includes('Fizika fakulteti'));
+ok((await api('GET', '/api/admin/faculties', undefined, adm.token)).faculties.length === 1, 'fakultet qo\'shildi');
+await page.fill('[data-k="heartbeat.intervalSec"]', '12'); await page.click('#ssave'); await page.waitForTimeout(700);
+ok((await api('GET', '/api/admin/settings', undefined, adm.token)).effective['heartbeat.intervalSec'] === 12, 'sozlama saqlandi');
+await page.fill('[data-k="heartbeat.intervalSec"]', '1'); await page.click('#ssave'); await page.waitForTimeout(500);
+ok(/5|60|interval|noto/i.test(await page.textContent('#smsg')) || (await api('GET', '/api/admin/settings', undefined, adm.token)).effective['heartbeat.intervalSec'] === 12, 'noto\'g\'ri qiymat rad etildi');
+await page.click('[data-dr]'); await page.waitForTimeout(600);
+const dels = (await api('GET', '/api/admin/deletion-requests', undefined, adm.token)).requests;
+ok(dels[0] && dels[0].status === 'done', 'o\'chirish so\'rovi bajarildi deb belgilandi');
+await page.screenshot({ path: 'docs/screens/teacher/desktop-light-admin.png', fullPage: true });
+ok(!errs.length, 'konsolda xato yo\'q' + (errs.length ? ': ' + errs.join(' | ') : ''));
+await browser.close(); await srv.stop(); process.exit(failed ? 1 : 0);

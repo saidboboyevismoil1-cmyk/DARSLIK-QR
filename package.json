@@ -19,6 +19,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "axe-core": "^4.13.0",
     "playwright": "^1.63.0",
     "socket.io-client": "^4.8.4"
   }

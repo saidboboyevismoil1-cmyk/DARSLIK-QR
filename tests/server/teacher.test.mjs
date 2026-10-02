@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { startServer, makeApi, teacherLogin, connect, joinStudent, sleep } from './helpers.mjs';
 
 let srv, api, T;
-before(async () => { srv = await startServer({ PUSH_MODE: 'mock' }); api = makeApi(srv.base); ({ token: T } = await teacherLogin(api)); });
+before(async () => { srv = await startServer({ PUSH_MODE: 'mock', RATE_REGISTER_PER_HOUR: '200' }); api = makeApi(srv.base); ({ token: T } = await teacherLogin(api)); });
 after(async () => { await srv.stop(); });
 const register = (email, password = 'secret123') => api('POST', '/api/register', { name: 'Test', surname: 'Ustoz', email, phone: '', school: 'X', subject: 'Y', password });
 
@@ -147,4 +147,59 @@ test('profil yangilash va parolni almashtirish', async () => {
   assert.equal(c._status, 200); assert.ok(c.refreshToken);
   assert.equal((await api('POST', '/api/auth/refresh', { refreshToken: t.refreshToken }))._status, 401);   // eski seanslar bekor
   assert.equal((await api('POST', '/api/login', { email: 'prof@example.uz', password: 'newpass123' }))._status, 200);
+});
+
+test('guruhlar (CSV): xatolar qator raqami bilan, qo\'shish/almashtirish, egalik; bosh sahifa va QR', async () => {
+  const a = await register('grp@example.uz'); const b = await register('grp2@example.uz');
+  const bad = await api('POST', '/api/teacher/groups', { name: 'X', csv: 'ab\nc' }, a.token);
+  assert.equal(bad._status, 400); assert.ok(bad.errors.length >= 1 && /qator/.test(bad.errors[0]));
+  const g = await api('POST', '/api/teacher/groups', { name: '101-guruh', subject: 'Fizika', csv: 'FISH,HEMIS ID\nAliyev Vali,111\nKarimova Madina,222\nab,3\nAliyev Vali,444' }, a.token);
+  assert.equal(g._status, 200); assert.equal(g.added, 2); assert.equal(g.errors.length, 2);
+  const list = await api('GET', '/api/teacher/groups', undefined, a.token);
+  assert.equal(list.groups[0].students, 2); assert.equal(list.groups[0].subject, 'Fizika');
+  assert.equal((await api('GET', '/api/teacher/groups', undefined, b.token)).groups.length, 0);
+  // qo'shish: takroriy o'tkazib yuboriladi; almashtirish: eskilari o'chadi
+  const add = await api('POST', `/api/teacher/groups/${g.id}/students`, { csv: 'Aliyev Vali\nToshmatov Jasur,333', mode: 'append' }, a.token);
+  assert.equal(add.added, 1); assert.equal(add.skipped, 1);
+  const rep = await api('POST', `/api/teacher/groups/${g.id}/students`, { csv: 'Yangi Talaba', mode: 'replace' }, a.token);
+  assert.equal(rep.added, 1);
+  assert.equal((await api('GET', `/api/rosters/${g.id}`, undefined, a.token)).students.length, 1);
+  assert.equal((await api('POST', `/api/teacher/groups/${g.id}/students`, { csv: 'Hujum Qilish' }, b.token))._status, 404);
+  assert.equal((await api('PUT', `/api/teacher/groups/${g.id}`, { name: 'Hujum' }, b.token))._status, 404);
+  assert.equal((await api('PUT', `/api/teacher/groups/${g.id}`, { name: '102-guruh' }, a.token))._status, 200);
+  // dars: guruh bilan boshlash, bosh sahifa, QR (faqat egasi)
+  const s = (await api('POST', '/api/sessions', { name: '102-guruh', duration: 45, rosterGroupId: g.id }, a.token)).session;
+  const home = await api('GET', '/api/teacher/home', undefined, a.token);
+  assert.equal(home.active.id, s.id); assert.equal(home.active.groupName, '102-guruh'); assert.equal(home.groups, 1);
+  const qr = await api('GET', `/api/teacher/sessions/${s.id}/qr`, undefined, a.token);
+  assert.match(qr.qr, /^data:image\/png/); assert.match(qr.url, new RegExp(`session=${s.id}$`)); assert.equal(qr.code, s.id);
+  assert.equal((await api('GET', `/api/teacher/sessions/${s.id}/qr`, undefined, b.token))._status, 403);
+  assert.equal((await api('GET', '/api/teacher/home', undefined, b.token)).active, null);
+  // hisobot: HEMIS formati va haftalik
+  await api('POST', `/api/sessions/${s.id}/end`, {}, a.token);
+  const hemis = await api('GET', `/api/lock/sessions/${s.id}/report?format=hemis`, undefined, a.token, true);
+  const hb = Buffer.from(await hemis.arrayBuffer());
+  assert.deepEqual([...hb.subarray(0, 3)], [0xEF, 0xBB, 0xBF]);       // UTF-8 BOM (Excel uchun)
+  assert.match(hb.toString('utf8'), /HEMIS ID;F\.I\.Sh;Davomat/);
+  const wk = await api('GET', '/api/teacher/reports/weekly', undefined, a.token);
+  assert.equal(wk.lessons.length, 1); assert.equal(wk.groups[0].group, '102-guruh');
+  const wcsv = await api('GET', '/api/teacher/reports/weekly?format=csv', undefined, a.token, true);
+  assert.match(await wcsv.text(), /102-guruh/);
+  assert.equal((await api('GET', '/api/teacher/reports/weekly', undefined, b.token)).lessons.length, 0);
+});
+
+test('materiallar kutubxonasi: havola/fayl, tekshiruv, egalik; eski panel tokenini almashtirish', async () => {
+  const a = await register('mat@example.uz'); const b = await register('mat2@example.uz');
+  assert.equal((await api('POST', '/api/teacher/materials', { kind: 'link', title: 'X', url: 'javascript:alert(1)' }, a.token))._status, 400);
+  assert.equal((await api('POST', '/api/teacher/materials', { kind: 'file', title: 'X', url: '/uploads/../server.js' }, a.token))._status, 400);
+  const m = await api('POST', '/api/teacher/materials', { kind: 'link', title: 'Slaydlar', url: 'https://example.uz/s' }, a.token);
+  assert.equal(m._status, 200);
+  assert.equal((await api('GET', '/api/teacher/materials', undefined, a.token)).materials.length, 1);
+  assert.equal((await api('GET', '/api/teacher/materials', undefined, b.token)).materials.length, 0);
+  assert.equal((await api('DELETE', `/api/teacher/materials/${m.id}`, undefined, b.token))._status, 404);
+  assert.equal((await api('DELETE', `/api/teacher/materials/${m.id}`, undefined, a.token))._status, 200);
+  const ex = await api('POST', '/api/auth/exchange', {}, a.token);
+  assert.ok(ex.refreshToken && ex.teacher.email === 'mat@example.uz');
+  assert.equal((await api('POST', '/api/auth/refresh', { refreshToken: ex.refreshToken }))._status, 200);
+  assert.equal((await api('POST', '/api/auth/exchange', {}, 'bad'))._status, 401);
 });
