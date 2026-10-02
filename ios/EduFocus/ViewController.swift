@@ -239,6 +239,7 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
             window.__efNative.resolve = function (i, j) { if (i === id) { window.__efNative.resolve = prev; const r = JSON.parse(j); r.ok ? res(r.data) : rej(r.error); } else prev(i, j); };
             window.__efNativeHost.invoke(id, m, JSON.stringify(a || {}));
           });
+          for (let i = 0; i < 50 && !(window.__efNative && window.__efNative.resolve); i++) await new Promise(r => setTimeout(r, 100));
           const r = {};
           try {
             r.info = await call('info');
