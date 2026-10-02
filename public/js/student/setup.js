@@ -147,7 +147,7 @@ function detailFor(it) {
   if (it.id === 'server') return it.ok ? t('ready.server.ok', { ms: it.detail }) : t('ready.server.fail');
   if (it.id === 'permissions') return it.ok ? t('ready.permissions.ok') : t('ready.permissions.fail', { list: String(it.detail || '').split(',').filter(Boolean).map((x) => t('perm.' + x + '.t')).join(', ') });
   if (it.id === 'protection') return it.ok ? t('ready.protection.ok') : t('ready.protection.fail.' + (it.detail || 'unknown'));
-  if (it.id === 'attestation') return it.ok ? t('ready.attestation.ok') : t('ready.attestation.fail');
+  if (it.id === 'attestation') return it.ok ? (it.detail ? t('ready.attestation.skipped') : t('ready.attestation.ok')) : t('ready.attestation.fail');
   return '';
 }
 let running = false;

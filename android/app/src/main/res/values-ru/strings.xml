@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scan_hint">Наведите камеру на QR-код преподавателя</string>
+    <string name="scan_close">Закрыть</string>
+    <string name="scan_torch">Фонарик</string>
+    <string name="a11y_title">Разрешение Accessibility</string>
+    <string name="a11y_disclosure">EduFocus использует службу Accessibility, чтобы определить переход в другое приложение во время занятия и вернуть вас к занятию.\n\n• Содержимое экрана, тексты и пароли не читаются и не сохраняются.\n• Какое приложение открыто, на сервер не отправляется — только отметка «приложение не на переднем плане».\n• Служба работает только во время занятия и отключается в Настройках в любой момент.</string>
+    <string name="a11y_allow">Продолжить</string>
+    <string name="a11y_cancel">Отмена</string>
+    <string name="a11y_service_label">Защита занятия EduFocus</string>
+    <string name="a11y_service_description">Возвращает EduFocus, если во время занятия открыто другое приложение. Содержимое экрана не читается.</string>
+    <string name="back_toast">Нажмите ещё раз, чтобы выйти</string>
+    <string name="locked_toast">🔒 Во время занятия выход из приложения запрещён</string>
+    <string name="pin_hint">Когда появится запрос на закрепление экрана, нажмите «Начать»</string>
+</resources>

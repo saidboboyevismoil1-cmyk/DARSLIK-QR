@@ -22,6 +22,7 @@ Veb tomoni: `public/js/student/native.js`, `protection.js`. Test uchun mock: `te
 | `attest` | `{nonce}` | `{token, keyId?}` yoki `{error}` (Play Integrity / App Attest) |
 | `protection.dryRun` | `{level}` | `{ok, reason?}` — qisqa sinov: yoqadi, tekshiradi, o'chiradi |
 | `protection.start` | `{level, endsInSec, offlineReleaseSec, preJoin}` | `{ok, level, reason?}` |
+| `protection.update` | `{endsInSec, offlineReleaseSec}` | `{ok}` — qo'shilgach dars siyosati ma'lum bo'lganda taymerlarni yangilash |
 | `protection.state` | — | `{active, reasons[], checks{}, fg, level}` |
 | `protection.stop` | `{reason}` | `{ok}` |
 | `serverContact` | `{remainingSeconds}` | `{ok}` — har heartbeat-ack da (o'lik odam taymeri uchun) |

@@ -137,7 +137,8 @@ export async function readiness({ dry = true } = {}) {
   if (native.present && P.server.attestationMode !== 'off') {
     const ch = await fetch('/api/lock/attest/challenge', { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
     const a = ch && (await native.safe('attest', { nonce: ch.nonce }, null, 30000));
-    items.push({ id: 'attestation', ok: !!(a && a.token), detail: (a && a.error) || '' });
+    // 'enforce' rejimida token majburiy; 'log' rejimida server rad etmaydi — natija ma'lumot uchun
+    items.push({ id: 'attestation', ok: !!(a && a.token) || P.server.attestationMode !== 'enforce', detail: (a && a.error) || '' });
   }
   const required = P.server.requiredLevels || [];
   const ok = serverOk && native.present && required.includes(level) && items.every((i) => i.ok);
@@ -196,10 +197,17 @@ export async function startLesson({ level = P.level, endsInSec, preJoin = false 
   if (!native.present || !isStrong(level)) { P.lessonActive = false; return { ok: true, local: true }; }
   if (P.lessonActive) return { ok: true };
   try {
-    const r = await native.invoke('protection.start', { level, endsInSec: endsInSec || 0, offlineReleaseSec: (P.server.releaseOfflineMinutes || 15) * 60, preJoin }, 90000);
+    const r = await native.invoke('protection.start', { level, endsInSec: endsInSec || 0, offlineReleaseSec: ((S.policy && S.policy.releaseOfflineMinutes) || P.server.releaseOfflineMinutes || 15) * 60, preJoin }, 90000);
     P.lessonActive = !!(r && r.ok);
     return r || { ok: false, reason: 'no_reply' };
   } catch (e) { return { ok: false, reason: e.code || 'error' }; }
+}
+
+/** Himoya qo'shilishdan oldin yoqilgan bo'lsa, dars siyosati (taymer, aloqa uzilish muddati) ma'lum bo'lgach yangilanadi. */
+export function updateLesson() {
+  if (!native.present || !P.lessonActive) return;
+  const rem = Math.max(0, Math.round((S.endsAt - Date.now()) / 1000));
+  native.fire('protection.update', { endsInSec: rem, offlineReleaseSec: ((S.policy && S.policy.releaseOfflineMinutes) || P.server.releaseOfflineMinutes || 15) * 60 });
 }
 
 export async function stopLesson(reason = 'teacher') {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EduFocus</string>
+    <string name="scan_hint">Kamerani ustozning QR kodiga qarating</string>
+    <string name="scan_close">Yopish</string>
+    <string name="scan_torch">Chiroq</string>
+    <string name="a11y_title">Accessibility ruxsati</string>
+    <string name="a11y_disclosure">EduFocus dars paytida boshqa ilovaga o\'tilganini aniqlab, sizni darsga qaytarish uchun Accessibility xizmatidan foydalanadi.\n\n• Ekran mazmuni, matnlar, parollar o\'qilmaydi va saqlanmaydi.\n• Qaysi ilova ochilgani serverga yuborilmaydi — faqat \"ilova oldinda emas\" belgisi.\n• Xizmat faqat dars davom etayotganda ishlaydi va istalgan vaqt Sozlamalardan o\'chiriladi.</string>
+    <string name="a11y_allow">Davom etish</string>
+    <string name="a11y_cancel">Bekor qilish</string>
+    <string name="a11y_service_label">EduFocus dars himoyasi</string>
+    <string name="a11y_service_description">Dars paytida boshqa ilovaga o\'tilsa, EduFocus ilovasini qaytaradi. Ekran mazmuni o\'qilmaydi.</string>
+    <string name="back_toast">Chiqish uchun yana bir marta bosing</string>
+    <string name="locked_toast">🔒 Dars vaqtida ilovadan chiqish taqiqlangan</string>
+    <string name="pin_hint">Ekranni mahkamlash so\'ralganda «Boshlash» ni bosing</string>
+</resources>

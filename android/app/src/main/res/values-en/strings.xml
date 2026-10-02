@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scan_hint">Point the camera at your teacher\'s QR code</string>
+    <string name="scan_close">Close</string>
+    <string name="scan_torch">Flashlight</string>
+    <string name="a11y_title">Accessibility permission</string>
+    <string name="a11y_disclosure">EduFocus uses the Accessibility service to detect that you switched to another app during class and to bring you back to the class.\n\n• Screen content, text and passwords are not read or stored.\n• Which app is open is not sent to the server — only a \"app is not in the foreground\" flag.\n• The service works only while a class is running and can be turned off in Settings at any time.</string>
+    <string name="a11y_allow">Continue</string>
+    <string name="a11y_cancel">Cancel</string>
+    <string name="a11y_service_label">EduFocus class protection</string>
+    <string name="a11y_service_description">Brings EduFocus back if another app is opened during class. Screen content is not read.</string>
+    <string name="back_toast">Press again to exit</string>
+    <string name="locked_toast">🔒 Leaving the app is not allowed during class</string>
+    <string name="pin_hint">When asked to pin the screen, tap \"Start\"</string>
+</resources>

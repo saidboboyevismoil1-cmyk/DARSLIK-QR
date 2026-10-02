@@ -13,7 +13,7 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const freePort = () => new Promise((res) => { const s = net.createServer().listen(0, () => { const p = s.address().port; s.close(() => res(p)); }); });
 
 export async function startServer(env = {}) {
-  const port = await freePort();
+  const port = env.PORT ? Number(env.PORT) : await freePort();
   const dataDir = env.DATA_DIR || mkdtempSync(path.join(tmpdir(), 'edufocus-test-'));
   let log = '';
   let child;

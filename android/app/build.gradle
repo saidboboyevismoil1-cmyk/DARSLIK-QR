@@ -4,31 +4,56 @@ plugins {
     id 'com.android.application'
 }
 
-// Server manzili bitta joyda: ../config/app-config.json  (yoki -PserverUrl=https://... bilan almashtiriladi)
+// ---- Yagona manbalar: ../../config/app-config.json (server URL), ../../version.properties (versiya) ----
 def appConfig = new JsonSlurper().parse(file('../../config/app-config.json'))
+def versionProps = new Properties()
+file('../../version.properties').withInputStream { versionProps.load(it) }
 def prodUrl = project.findProperty('serverUrl') ?: appConfig.productionUrl
 def devUrl  = project.findProperty('serverUrl') ?: appConfig.androidEmulatorUrl
 
-// Imzolash: android/keystore.properties bo'lsa — release kaliti, bo'lmasa debug kaliti ishlatiladi
+// versionCode avtomatik: BUILD_OFFSET + git commit soni (har yangi commit — yangi versionCode)
+def gitCount = 0
+try {
+    gitCount = providers.exec { commandLine('git', 'rev-list', '--count', 'HEAD'); workingDir = rootDir }.standardOutput.asText.get().trim().toInteger()
+} catch (Exception ignored) { }
+def computedVersionCode = versionProps['BUILD_OFFSET'].toInteger() + gitCount
+
+// Imzolash: android/keystore.properties bo'lsa — upload kaliti, bo'lmasa debug kaliti (faqat sinov uchun)
 def keystoreProps = new Properties()
 def keystoreFile = rootProject.file('keystore.properties')
 if (keystoreFile.exists()) keystoreFile.withInputStream { keystoreProps.load(it) }
 
 android {
     namespace = 'com.edufocus.app'
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.edufocus.app"
-        minSdk = 21
-        targetSdk = 34
-        versionCode = 40
-        versionName = "4.0.0"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = computedVersionCode
+        versionName = versionProps['VERSION_NAME']
         buildConfigField 'String', 'START_PATH', "\"${appConfig.startPath}\""
+        buildConfigField 'long', 'GOOGLE_CLOUD_PROJECT_NUMBER', "${appConfig.googleCloudProjectNumber ?: 0}L"
     }
 
     buildFeatures {
         buildConfig = true
+    }
+
+    // store  — Google Play: Accessibility xizmatisiz (pinning + DND)
+    // direct — to'g'ridan-to'g'ri APK: pinning + DND + Accessibility (to'liq himoya)
+    flavorDimensions += 'dist'
+    productFlavors {
+        store {
+            dimension 'dist'
+            buildConfigField 'boolean', 'ACCESSIBILITY', 'false'
+        }
+        direct {
+            dimension 'dist'
+            buildConfigField 'boolean', 'ACCESSIBILITY', 'true'
+            versionNameSuffix '-direct'
+        }
     }
 
     signingConfigs {
@@ -61,11 +86,29 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false   // 16 KB sahifa o'lchami uchun: .so fayllar siqilmaydi va tekislanadi
+        }
+    }
+
+    lint {
+        abortOnError = false
+    }
 }
 
 dependencies {
-    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.core:core:1.13.1'
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.9.24')
+    implementation 'androidx.core:core:1.15.0'
+    implementation 'androidx.activity:activity:1.9.3'
     implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation 'androidx.browser:browser:1.8.0'
+    // Native QR skaner: CameraX + ML Kit (model ilova ichida — Google Play xizmatlariga bog'liq emas)
+    implementation 'androidx.camera:camera-camera2:1.4.1'
+    implementation 'androidx.camera:camera-lifecycle:1.4.1'
+    implementation 'androidx.camera:camera-view:1.4.1'
+    implementation 'com.google.mlkit:barcode-scanning:17.3.0'
+    // Ilova haqiqiyligi (attestatsiya)
+    implementation 'com.google.android.play:integrity:1.4.0'
 }

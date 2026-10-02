@@ -3,5 +3,8 @@
   "productionUrl": "https://edufocus.agrosmart24.uz",
   "developmentUrl": "http://localhost:3000",
   "androidEmulatorUrl": "http://10.0.2.2:3000",
-  "startPath": "/student.html"
+  "startPath": "/student.html",
+  "googleCloudProjectNumber": 0,
+  "_googleCloudProjectNumber": "Play Integrity uchun Google Cloud loyiha raqami (0 = sozlanmagan). docs/RELEASE-LOCK-MODE.md ga qarang.",
+  "privacyPolicyPath": "/privacy-policy"
 }

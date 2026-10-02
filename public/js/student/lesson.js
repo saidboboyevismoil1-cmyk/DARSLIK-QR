@@ -82,6 +82,8 @@ async function syncProtection() {
         const r = await prot.startLesson({ level, endsInSec: rem });
         if (!r.ok) { lastStartFail = r.reason || 'unknown'; renderProtection(); }
         else lastStartFail = '';
+      } else if (prot.P.lessonActive) {
+        prot.updateLesson();            // qo'shilishdan oldin yoqilgan himoyaga dars siyosatini qo'llash
       }
     } else {
       lastStartFail = '';

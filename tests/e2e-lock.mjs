@@ -42,6 +42,7 @@ const mockScript = ({ platform, brand, key }) => `
     deviceKey: () => ({ key: ${JSON.stringify(key)} }),
     'protection.dryRun': () => ({ ok: true }),
     'protection.start': ({ level }) => { M.level = level; M.started = true; M.pinned = true; M.calls.push('start:' + level); return { ok: true, level }; },
+    'protection.update': () => { M.calls.push('update'); return { ok: true }; },
     'protection.state': () => state(),
     'protection.stop': ({ reason }) => { M.started = false; M.pinned = false; M.calls.push('stop:' + reason); return { ok: true }; },
     serverContact: () => { M.contacts = (M.contacts || 0) + 1; return { ok: true }; },
