@@ -7,6 +7,8 @@ const create = (db) => ({
               school = excluded.school, subject = excluded.subject, password_hash = excluded.password_hash`,
       [t.id, t.email, t.name || '', t.surname || '', t.phone || '', t.school || '', t.subject || '', t.password, t.role || role, t.facultyId || null, Date.parse(t.createdAt) || Date.now()]);
   },
+  remove(id) { db.run('DELETE FROM users WHERE id = ?', [id]); },
+  setPassword(id, hash) { return db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, id]).changes > 0; },
   all() { return db.all('SELECT * FROM users ORDER BY created_at'); },
   byId(id) { return db.get('SELECT * FROM users WHERE id = ?', [id]); },
   countAdmins() { return db.get("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'").n; },

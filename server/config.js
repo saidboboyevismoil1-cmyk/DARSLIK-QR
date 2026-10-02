@@ -62,8 +62,12 @@ function load(envFile) {
     push: {
       apnsKeyId: str('APNS_KEY_ID'), apnsKeyPath: str('APNS_KEY_PATH'),
       firebaseServiceAccountPath: str('FIREBASE_SERVICE_ACCOUNT_PATH'),
+      mode: ['off', 'mock', 'real'].includes(raw('PUSH_MODE', 'real')) ? raw('PUSH_MODE', 'real') : 'real',   // real: kalit bor provayderlarga yuboradi; mock: testlar
+      apnsTopic: str('APNS_TOPIC', 'com.edufocus.teacher') || 'com.edufocus.teacher', apnsProduction: raw('APNS_ENV', 'production') !== 'development',
       vapidPublic: str('VAPID_PUBLIC_KEY'), vapidPrivate: str('VAPID_PRIVATE_KEY'), vapidSubject: str('VAPID_SUBJECT'),
     },
+    accessTokenTtl: str('ACCESS_TOKEN_TTL', '12h') || '12h',
+    refreshTokenDays: int('REFRESH_TOKEN_DAYS', 30),
     smtp: { host: str('SMTP_HOST'), port: int('SMTP_PORT', 587), user: str('SMTP_USER'), password: str('SMTP_PASSWORD'), from: str('SMTP_FROM') },
     demo: { enabled: bool('DEMO_ENABLED', true), code: str('DEMO_SESSION_CODE', '123456') || '123456' },
   };

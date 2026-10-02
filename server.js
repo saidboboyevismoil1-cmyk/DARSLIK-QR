@@ -10,6 +10,8 @@ const fs = require('fs');
 const multer = require('multer');
 const { config, validate: validateConfig } = require('./server/config');
 const lockModule = require('./server/lock');
+const quizLib = require('./server/quiz');
+const teacherModule = require('./server/teacher');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -158,10 +160,13 @@ function getSessionTimeDetails(session) {
 // ============================================
 
 // Register
-app.post('/api/register', async (req, res) => {
+const limitWrap = (name) => (req, res, next) => (teacherAuth ? teacherAuth.limits[name](req, res, next) : next());
+app.post('/api/register', limitWrap('register'), async (req, res) => {
   if (!config.registrationOpen) return res.status(403).json({ error: "Ro'yxatdan o'tish yopiq. Administratorga murojaat qiling" });
   try {
     const { name, surname, email, phone, school, subject, password } = req.body;
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''))) return res.status(400).json({ error: "Ism va to'g'ri email kiriting" });
+    if (typeof password !== 'string' || password.length < 6) return res.status(400).json({ error: "Parol kamida 6 belgi bo'lsin" });
 
     // Check if email already exists
     const existing = db.teachers.find(t => t.email === email);
@@ -186,11 +191,11 @@ app.post('/api/register', async (req, res) => {
     db.teachers.push(teacher);
     lock.persistTeacher(teacher);
 
-    const token = jwt.sign({ id: teacher.id, email: teacher.email }, JWT_SECRET, { expiresIn: '7d' });
+    const tokens = teacherAuth.login(teacher, req);
 
     res.json({
       success: true,
-      token,
+      ...tokens,
       teacher: { id: teacher.id, name: teacher.name, surname: teacher.surname, email: teacher.email, school: teacher.school, subject: teacher.subject, role: teacher.role || 'teacher', facultyId: teacher.facultyId || null }
     });
   } catch (err) {
@@ -199,7 +204,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Login
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', limitWrap('loginIp'), limitWrap('login'), async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -213,11 +218,12 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Email yoki parol noto\'g\'ri' });
     }
 
-    const token = jwt.sign({ id: teacher.id, email: teacher.email }, JWT_SECRET, { expiresIn: '7d' });
+    teacherAuth.limits.login.reset(req);
+    const tokens = teacherAuth.login(teacher, req);
 
     res.json({
       success: true,
-      token,
+      ...tokens,
       teacher: { id: teacher.id, name: teacher.name, surname: teacher.surname, email: teacher.email, school: teacher.school, subject: teacher.subject, role: teacher.role || 'teacher', facultyId: teacher.facultyId || null }
     });
   } catch (err) {
@@ -836,9 +842,11 @@ function saveTestpacks(data) {
   } catch (e) {}
 }
 
-// Groups API
+// Groups API — har bir guruh o'z egasiga tegishli (teacherId); admin hammasini boshqara oladi
+const canTouch = (item, req) => !!item && (item.teacherId === req.teacherId || req.role === 'admin');
 app.get('/api/groups', authMiddleware, (req, res) => {
-  res.json({ success: true, groups: loadGroups() });
+  const all = req.role === 'admin' && req.query.scope === 'all';
+  res.json({ success: true, groups: loadGroups().filter(g => all || g.teacherId === req.teacherId) });
 });
 
 app.post('/api/groups', authMiddleware, (req, res) => {
@@ -846,8 +854,9 @@ app.post('/api/groups', authMiddleware, (req, res) => {
   if (!name) return res.status(400).json({ error: 'Guruh nomi kiritilishi shart' });
   const groups = loadGroups();
   const newGroup = {
-    id: 'grp-' + Date.now(),
-    name: name.trim(),
+    id: 'grp-' + Date.now() + '-' + Math.round(Math.random() * 1e4),
+    teacherId: req.teacherId,
+    name: String(name).trim().slice(0, 80),
     subject: (subject || '').trim(),
     studentCount: parseInt(studentCount) || 0,
     room: (room || '').trim(),
@@ -861,34 +870,40 @@ app.post('/api/groups', authMiddleware, (req, res) => {
 app.put('/api/groups/:id', authMiddleware, (req, res) => {
   const groups = loadGroups();
   const idx = groups.findIndex(g => g.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Guruh topilmadi' });
-  groups[idx] = { ...groups[idx], ...req.body, id: groups[idx].id };
+  if (idx === -1 || !canTouch(groups[idx], req)) return res.status(404).json({ error: 'Guruh topilmadi' });
+  const { id, teacherId, createdAt, ...patch } = req.body || {};
+  groups[idx] = { ...groups[idx], ...patch, id: groups[idx].id, teacherId: groups[idx].teacherId };
   saveGroups(groups);
   res.json({ success: true, group: groups[idx] });
 });
 
 app.delete('/api/groups/:id', authMiddleware, (req, res) => {
-  let groups = loadGroups();
-  groups = groups.filter(g => g.id !== req.params.id);
-  saveGroups(groups);
+  const groups = loadGroups();
+  const g = groups.find(x => x.id === req.params.id);
+  if (!g || !canTouch(g, req)) return res.status(404).json({ error: 'Guruh topilmadi' });
+  saveGroups(groups.filter(x => x.id !== g.id));
   res.json({ success: true });
 });
 
-// Test Packs API
+// Test Packs API — egalik filtri + savol turlari (single/multi/tf/short), qarang server/quiz.js
 app.get('/api/testpacks', authMiddleware, (req, res) => {
-  res.json({ success: true, testpacks: loadTestpacks() });
+  const all = req.role === 'admin' && req.query.scope === 'all';
+  res.json({ success: true, testpacks: loadTestpacks().filter(tp => all || tp.teacherId === req.teacherId).map(tp => ({ ...tp, questions: quizLib.normalizeQuestions(tp.questions) })) });
 });
 
 app.post('/api/testpacks', authMiddleware, (req, res) => {
   const { title, subject, timeLimit, questions } = req.body;
-  if (!title) return res.status(400).json({ error: 'Test to\'plami nomi kiritilishi shart' });
+  if (!title || !String(title).trim()) return res.status(400).json({ error: 'Test to\'plami nomi kiritilishi shart' });
+  const errs = quizLib.validateQuestions(questions);
+  if (errs.length) return res.status(400).json({ error: errs[0], errors: errs });
   const testpacks = loadTestpacks();
   const newPack = {
-    id: 'tp-' + Date.now(),
-    title: title.trim(),
+    id: 'tp-' + Date.now() + '-' + Math.round(Math.random() * 1e4),
+    teacherId: req.teacherId,
+    title: String(title).trim().slice(0, 120),
     subject: (subject || '').trim(),
     timeLimit: parseInt(timeLimit) || 3,
-    questions: Array.isArray(questions) ? questions : [],
+    questions: quizLib.normalizeQuestions(questions),
     createdAt: new Date().toISOString()
   };
   testpacks.unshift(newPack);
@@ -899,16 +914,33 @@ app.post('/api/testpacks', authMiddleware, (req, res) => {
 app.put('/api/testpacks/:id', authMiddleware, (req, res) => {
   const testpacks = loadTestpacks();
   const idx = testpacks.findIndex(tp => tp.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Test to\'plami topilmadi' });
-  testpacks[idx] = { ...testpacks[idx], ...req.body, id: testpacks[idx].id };
+  if (idx === -1 || !canTouch(testpacks[idx], req)) return res.status(404).json({ error: 'Test to\'plami topilmadi' });
+  const { id, teacherId, createdAt, ...patch } = req.body || {};
+  if (patch.questions !== undefined) {
+    const errs = quizLib.validateQuestions(patch.questions);
+    if (errs.length) return res.status(400).json({ error: errs[0], errors: errs });
+    patch.questions = quizLib.normalizeQuestions(patch.questions);
+  }
+  testpacks[idx] = { ...testpacks[idx], ...patch, id: testpacks[idx].id, teacherId: testpacks[idx].teacherId };
   saveTestpacks(testpacks);
   res.json({ success: true, testpack: testpacks[idx] });
 });
 
-app.delete('/api/testpacks/:id', authMiddleware, (req, res) => {
-  let testpacks = loadTestpacks();
-  testpacks = testpacks.filter(tp => tp.id !== req.params.id);
+app.post('/api/testpacks/:id/copy', authMiddleware, (req, res) => {
+  const testpacks = loadTestpacks();
+  const src = testpacks.find(tp => tp.id === req.params.id);
+  if (!src || !canTouch(src, req)) return res.status(404).json({ error: 'Test to\'plami topilmadi' });
+  const copy = { ...JSON.parse(JSON.stringify(src)), id: 'tp-' + Date.now() + '-' + Math.round(Math.random() * 1e4), teacherId: req.teacherId, title: String(req.body && req.body.title || (src.title + ' (nusxa)')).slice(0, 120), createdAt: new Date().toISOString() };
+  testpacks.unshift(copy);
   saveTestpacks(testpacks);
+  res.json({ success: true, testpack: copy });
+});
+
+app.delete('/api/testpacks/:id', authMiddleware, (req, res) => {
+  const testpacks = loadTestpacks();
+  const tp = testpacks.find(x => x.id === req.params.id);
+  if (!tp || !canTouch(tp, req)) return res.status(404).json({ error: 'Test to\'plami topilmadi' });
+  saveTestpacks(testpacks.filter(x => x.id !== tp.id));
   res.json({ success: true });
 });
 
@@ -917,28 +949,25 @@ app.post('/api/testpacks/:id/broadcast', authMiddleware, (req, res) => {
   const { sessionId } = req.body;
   const testpacks = loadTestpacks();
   const pack = testpacks.find(tp => tp.id === req.params.id);
-  if (!pack) return res.status(404).json({ error: 'Test to\'plami topilmadi' });
+  if (!pack || !canTouch(pack, req)) return res.status(404).json({ error: 'Test to\'plami topilmadi' });
 
   const session = db.sessions.find(s => (sessionId ? s.id === sessionId : (s.teacherId === req.teacherId && s.status === 'active')));
   if (!session) {
     return res.status(400).json({ error: 'Faol dars sessiyasi topilmadi. Avval darsni boshlang!' });
   }
+  if (!lock.svc.canManage(req.teacher, session)) return res.status(403).json({ error: 'Bu sessiya sizniki emas' });
 
   session.activeQuiz = {
     id: uuidv4().substring(0, 8),
     title: pack.title,
-    questions: pack.questions || [],
+    questions: quizLib.normalizeQuestions(pack.questions),
     timeLimit: pack.timeLimit || 0,
     createdAt: new Date().toISOString()
   };
   session.quizSubmissions = [];
   lock.svc.onQuizSent(session, session.activeQuiz);
 
-  const sanitizedQuestions = session.activeQuiz.questions.map(q => ({
-    id: q.id,
-    text: q.text,
-    options: q.options
-  }));
+  const sanitizedQuestions = session.activeQuiz.questions.map(quizLib.publicQuestion);
 
   io.to(`session-${session.id}`).emit('new-quiz', {
     quizId: session.activeQuiz.id,
@@ -1042,7 +1071,7 @@ io.on('connection', (socket) => {
       activeQuiz: session.activeQuiz ? {
         quizId: session.activeQuiz.id,
         title: session.activeQuiz.title,
-        questions: session.activeQuiz.questions.map(q => ({ id: q.id, text: q.text, options: q.options })),
+        questions: session.activeQuiz.questions.map(quizLib.publicQuestion),
         timeLimit: session.activeQuiz.timeLimit
       } : null,
       activeMaterial: session.activeMaterial || null,
@@ -1103,7 +1132,7 @@ io.on('connection', (socket) => {
         activeQuiz: session.activeQuiz ? {
           quizId: session.activeQuiz.id,
           title: session.activeQuiz.title,
-          questions: session.activeQuiz.questions.map(q => ({ id: q.id, text: q.text, options: q.options })),
+          questions: session.activeQuiz.questions.map(quizLib.publicQuestion),
           timeLimit: session.activeQuiz.timeLimit
         } : null,
         activeMaterial: session.activeMaterial || null,
@@ -1123,18 +1152,14 @@ io.on('connection', (socket) => {
     session.activeQuiz = {
       id: uuidv4().substring(0, 8),
       title: quiz.title || 'Tezkor Test',
-      questions: quiz.questions || [],
+      questions: quizLib.normalizeQuestions(quiz.questions),
       timeLimit: quiz.timeLimit || 0,
       createdAt: new Date().toISOString()
     };
     session.quizSubmissions = [];
     lock.svc.onQuizSent(session, session.activeQuiz);
 
-    const sanitizedQuestions = session.activeQuiz.questions.map(q => ({
-      id: q.id,
-      text: q.text,
-      options: q.options
-    }));
+    const sanitizedQuestions = session.activeQuiz.questions.map(quizLib.publicQuestion);
 
     io.to(`session-${sessionId}`).emit('new-quiz', {
       quizId: session.activeQuiz.id,
@@ -1164,15 +1189,9 @@ io.on('connection', (socket) => {
     let correctCount = 0;
     const questions = session.activeQuiz.questions;
     const results = questions.map(q => {
-      const selected = answers[q.id];
-      const isCorrect = selected !== undefined && Number(selected) === Number(q.correctIndex);
-      if (isCorrect) correctCount++;
-      return {
-        questionId: q.id,
-        selected,
-        correctIndex: q.correctIndex,
-        isCorrect
-      };
+      const g = quizLib.grade(q, answers && answers[q.id]);
+      if (g.isCorrect) correctCount++;
+      return { questionId: q.id, type: q.type || 'single', selected: g.selected, correct: g.correct, correctIndex: Array.isArray(g.correct) || typeof g.correct !== 'number' ? undefined : g.correct, isCorrect: g.isCorrect };
     });
 
     const totalQuestions = questions.length;
@@ -1469,8 +1488,40 @@ const lock = lockModule.init({
   app, io, legacy: db, config, authMiddleware,
   helpers: { uuid: uuidv4, getSessionTimeDetails, saveSessions: saveSessionsToFile }
 });
+
+// ============================================
+// O'QITUVCHI MODULI (refresh token, parol tiklash, hisobni o'chirish, push)
+// ============================================
+const teacherAuth = teacherModule.init({
+  app, config, legacy: db, sql: lock.sql, authMiddleware, helpers: { uuid: uuidv4 }, users: lock.svc.users, rosters: lock.svc.rosters,
+  // Hisob o'chirilganda: guruhlar, testlar, ro'yxatlar va darslar ham o'chadi
+  onDeleteData: (teacherId) => {
+    const groups = loadGroups(), packs = loadTestpacks();
+    saveGroups(groups.filter(g => g.teacherId !== teacherId));
+    saveTestpacks(packs.filter(t => t.teacherId !== teacherId));
+    const rosterGroups = lock.svc.rosters.groupsFor(teacherId, false);
+    rosterGroups.forEach(g => lock.svc.rosters.deleteGroup(g.id));
+    const mine = db.sessions.filter(s => s.teacherId === teacherId && !s.demo);
+    mine.forEach(s => { try { lock.svc.lockdata.purgeSession(s.id); } catch (e) { /* */ } });
+    db.sessions = db.sessions.filter(s => !mine.includes(s));
+    saveSessionsToFile();
+    return { groups: groups.length - groups.filter(g => g.teacherId !== teacherId).length, testpacks: packs.length - packs.filter(t => t.teacherId !== teacherId).length, sessions: mine.length };
+  },
+});
+lock.svc.setNotifier((sessionId, kind, data) => {
+  const s = db.sessions.find(x => x.id === sessionId);
+  if (s && s.teacherId && !s.demo) teacherAuth.push.notify(s.teacherId, kind, { ...data, sessionId, sessionName: s.name }).catch(() => {});
+});
+// Egasiz (eski) guruh va testlarni demo ustozga yoki birinchi adminga biriktiramiz
+(() => {
+  const owner = db.teachers.find(t => t.id === 'teacher-demo-01') || db.teachers.find(t => t.role === 'admin');
+  if (!owner) return;
+  const g = loadGroups(); let n = 0; g.forEach(x => { if (!x.teacherId) { x.teacherId = owner.id; n++; } }); if (n) saveGroups(g);
+  const t = loadTestpacks(); let m = 0; t.forEach(x => { if (!x.teacherId) { x.teacherId = owner.id; m++; } }); if (m) saveTestpacks(t);
+  if (n || m) console.log(`🔧 Egasiz ${n} guruh va ${m} test ${owner.email} ga biriktirildi`);
+})();
 for (const sig of ['SIGINT', 'SIGTERM']) {
-  process.on(sig, () => { try { saveSessionsToFile(); lock.close(); } finally { process.exit(0); } });
+  process.on(sig, () => { try { saveSessionsToFile(); teacherAuth.close(); lock.close(); } finally { process.exit(0); } });
 }
 
 server.listen(PORT, () => {

@@ -32,21 +32,42 @@ function render() {
   startTimer(q);
 }
 
+const qType = (qq) => qq.type || 'single';
+const optsOf = (qq) => (qType(qq) === 'tf' ? [t('quiz.tf.true'), t('quiz.tf.false')] : (qq.options || []));
+const hintOf = (qq) => (qType(qq) === 'multi' ? `<div class="muted small">${esc(t('quiz.multiHint'))}</div>` : '');
+
 function buildForm(q) {
   const draft = (S.sess && S.sess.draft && S.sess.draft[q.quizId]) || {};
   $('#quiz-body').innerHTML = q.questions.map((qq, i) => {
-    const opts = (qq.options || []).map((o, oi) => `
-      <label class="opt"><input type="radio" name="q_${esc(qq.id)}" value="${oi}" ${String(draft[qq.id]) === String(oi) ? 'checked' : ''}>
-        <span class="lt">${letter(oi)}</span><span class="ot">${esc(o)}</span></label>`).join('');
-    return `<div class="glass q-card fade-in" data-q="${esc(qq.id)}"><div class="qt">${i + 1}. ${esc(qq.text)}</div><div class="stack" style="gap:8px">${opts}</div></div>`;
+    const type = qType(qq), name = `q_${esc(qq.id)}`;
+    let body;
+    if (type === 'short') {
+      body = `<input class="field" type="text" name="${name}" maxlength="120" autocomplete="off" autocapitalize="off" placeholder="${esc(t('quiz.shortPlaceholder'))}" value="${esc(draft[qq.id] || '')}">`;
+    } else {
+      const multi = type === 'multi', chosen = (multi ? String(draft[qq.id] == null ? '' : draft[qq.id]).split(',') : [String(draft[qq.id])]);
+      body = optsOf(qq).map((o, oi) => `
+        <label class="opt"><input type="${multi ? 'checkbox' : 'radio'}" name="${name}" value="${oi}" ${chosen.includes(String(oi)) ? 'checked' : ''}>
+          <span class="lt">${letter(oi)}</span><span class="ot">${esc(o)}</span></label>`).join('');
+    }
+    return `<div class="glass q-card fade-in" data-q="${esc(qq.id)}"><div class="qt">${i + 1}. ${esc(qq.text)}</div>${hintOf(qq)}<div class="stack" style="gap:8px">${body}</div></div>`;
   }).join('');
 }
 
 function collect() {
   const answers = {};
   (S.quiz ? S.quiz.questions : []).forEach((qq) => {
-    const el = document.querySelector(`#quiz-body input[name="q_${CSS.escape(String(qq.id))}"]:checked`);
-    if (el) answers[qq.id] = el.value;
+    const sel = `#quiz-body [name="q_${CSS.escape(String(qq.id))}"]`;
+    const type = qType(qq);
+    if (type === 'short') {
+      const el = document.querySelector(sel);
+      if (el && el.value.trim()) answers[qq.id] = el.value.trim();
+    } else if (type === 'multi') {
+      const v = [...document.querySelectorAll(`${sel}:checked`)].map((e) => e.value);
+      if (v.length) answers[qq.id] = v.join(',');
+    } else {
+      const el = document.querySelector(`${sel}:checked`);
+      if (el) answers[qq.id] = el.value;
+    }
   });
   return answers;
 }
@@ -65,15 +86,17 @@ function syncSubmitButton() {
   btn.innerHTML = pend ? `<span class="spinner" style="width:20px;height:20px;border-width:3px"></span>${esc(net.connected() ? t('quiz.sending') : t('quiz.queued'))}` : `${icon('check')}${esc(t('quiz.submit'))}`;
 }
 
-$('#quiz-body').addEventListener('change', (e) => {
-  if (!S.quiz || !S.sess || !e.target.matches('input[type=radio]')) return;
+const onAnswer = (e) => {
+  if (!S.quiz || !S.sess || !e.target.matches('input')) return;
   const id = S.quiz.quizId;
   S.sess.draft = S.sess.draft || {};
   S.sess.draft[id] = collect();
   net.persist();
   updateProgress();
-  haptic(8);
-});
+  if (e.type === 'change') haptic(8);
+};
+$('#quiz-body').addEventListener('change', onAnswer);
+$('#quiz-body').addEventListener('input', onAnswer);
 
 // ---------- Taymer ----------
 function startTimer(q) {
@@ -127,12 +150,20 @@ function renderResult(q, res) {
   (res.results || []).forEach((r) => { byId[r.questionId] = r; });
   const review = q.questions.map((qq, i) => {
     const r = byId[qq.id] || {};
-    const opts = (qq.options || []).map((o, oi) => {
-      const isRight = Number(r.correctIndex) === oi;
-      const isSel = r.selected !== undefined && Number(r.selected) === oi;
-      const cls = isRight ? 'right' : isSel ? 'wrong' : '';
-      return `<div class="opt ${cls}" style="cursor:default"><span class="lt">${letter(oi)}</span><span class="ot">${esc(o)}</span>${isRight ? icon('check', 'sm') : isSel ? icon('x', 'sm') : ''}</div>`;
-    }).join('');
+    let opts;
+    if (qType(qq) === 'short') {
+      const mine = r.selected == null || r.selected === '' ? '—' : String(r.selected);
+      opts = `<div class="opt ${r.isCorrect ? 'right' : 'wrong'}" style="cursor:default"><span class="ot">${esc(t('quiz.yourAnswer'))}: ${esc(mine)}</span>${r.isCorrect ? icon('check', 'sm') : icon('x', 'sm')}</div>`
+        + (r.isCorrect ? '' : `<div class="opt right" style="cursor:default"><span class="ot">${esc(t('quiz.rightAnswer'))}: ${esc([].concat(r.correct || []).join(' / '))}</span></div>`);
+    } else {
+      const rightSet = new Set([].concat(r.correct !== undefined ? r.correct : (r.correctIndex !== undefined ? r.correctIndex : [])).map(Number));
+      const selSet = new Set([].concat(r.selected == null ? [] : r.selected).map(Number));
+      opts = optsOf(qq).map((o, oi) => {
+        const isRight = rightSet.has(oi), isSel = selSet.has(oi);
+        const cls = isRight ? 'right' : isSel ? 'wrong' : '';
+        return `<div class="opt ${cls}" style="cursor:default"><span class="lt">${letter(oi)}</span><span class="ot">${esc(o)}</span>${isRight ? icon('check', 'sm') : isSel ? icon('x', 'sm') : ''}</div>`;
+      }).join('');
+    }
     return `<div class="glass q-card"><div class="qt">${i + 1}. ${esc(qq.text)}</div><div class="stack" style="gap:8px">${opts}</div></div>`;
   }).join('');
   $('#quiz-result').innerHTML = `

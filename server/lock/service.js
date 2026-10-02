@@ -39,6 +39,9 @@ function createService({ io, legacy, sql, config, helpers }) {
   const effectiveLocked = (session, student) => session.locked === true && !(student && student.released);
 
   // ---------------------------------------------------------------- hodisalar
+  // Push bildirishnoma (faqat muhim hodisalar). server.js o'rnatadi.
+  let notifier = null;
+  const notify = (sessionId, kind, data) => { if (notifier) { try { notifier(sessionId, kind, data); } catch (e) { /* push xatosi darsga ta'sir qilmasin */ } } };
   function logEvent(session, student, type, data) {
     const def = levels.EVENTS[type] || { sev: 'info' };
     const L = student && live.get(key(session.id, student.id));
@@ -46,6 +49,7 @@ function createService({ io, legacy, sql, config, helpers }) {
     if (session.demo) { ev.id = 0; } else ev.id = lockdata.addEvent(ev);
     if (def.bypass && L) { L.bypassCount++; L.lastBypassAt = ev.ts; telemetry.inc('bypass', type, ev.level || ''); }
     io.to(teacherRoom(session.id)).emit('lock-event', { ...ev, studentName: student ? student.name : '' });
+    if (def.bypass && L && student && !session.demo && (!L.lastPushAt || ev.ts - L.lastPushAt > 60000)) { L.lastPushAt = ev.ts; notify(session.id, 'bypass', { studentName: student.name, type }); }
     return ev;
   }
 
@@ -363,6 +367,7 @@ function createService({ io, legacy, sql, config, helpers }) {
     const r = requests.create({ sessionId: session.id, kind: 'exemption', studentName: name, reason, device: String(device || '').slice(0, 60) });
     io.to(teacherRoom(session.id)).emit('access-request', { id: r.id, kind: 'exemption', studentName: name, reason, device, sessionId: session.id, ts: Date.now() });
     telemetry.inc('exemption_requests', reason);
+    notify(session.id, 'exemption', { studentName: name, requestId: r.id });
     return r;
   }
 
@@ -379,6 +384,7 @@ function createService({ io, legacy, sql, config, helpers }) {
     logEvent(session, student, 'emergency_requested', { reason });
     io.to(teacherRoom(session.id)).emit('access-request', { id: r.id, kind: 'emergency_exit', studentId: student.id, studentName: student.name, reason, sessionId: session.id, ts: Date.now() });
     socket.emit('emergency-exit-pending', { id: r.id });
+    notify(session.id, 'emergency_exit', { studentName: student.name, requestId: r.id });
     emitOverview(session);
   }
 
@@ -556,6 +562,7 @@ function createService({ io, legacy, sql, config, helpers }) {
     releaseStudents, relockStudents, onGlobalUnlock, onGlobalLock, extend, overview, emitOverview,
     onQuizSent, onQuizSubmitted, buildReport, reportCsv, onSessionEnded, anonymizeStudent, canManage,
     settingsFor, sessionById, facultyOf, endsAtMs, tick, flushAll, start, stop, logEvent,
+    setNotifier: (fn) => { notifier = fn; },
   };
 }
 
