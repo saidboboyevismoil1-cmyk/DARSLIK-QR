@@ -1,0 +1,37 @@
+# L1/L2 (Apple entitlement tasdiqlangandan keyin): ekran vaqti qalqoni + imtihon rejimi + kengaytmalar.
+include:
+  - project.yml
+settings:
+  base:
+    IOS_L1_ENABLED: "YES"
+    IOS_L2_ENABLED: "YES"
+targets:
+  EduFocus:
+    settings:
+      base:
+        CODE_SIGN_ENTITLEMENTS: EduFocus/EduFocus-L2.entitlements
+    dependencies:
+      - target: ShieldConfiguration
+      - target: ActivityMonitor
+  ShieldConfiguration:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources: [ShieldConfiguration]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.edufocus.app.ShieldConfiguration
+        INFOPLIST_FILE: ShieldConfiguration/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: ShieldConfiguration/ext.entitlements
+  ActivityMonitor:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources: [ActivityMonitor]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.edufocus.app.ActivityMonitor
+        INFOPLIST_FILE: ActivityMonitor/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: ActivityMonitor/ext.entitlements

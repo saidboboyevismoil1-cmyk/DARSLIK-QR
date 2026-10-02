@@ -1,0 +1,36 @@
+# XcodeGen: `cd ios && xcodegen generate` (EduFocus.xcodeproj ni qayta yaratadi).
+# L2 kengaytmalari bilan: `xcodegen generate --spec project-l2.yml` (Apple entitlement tasdiqlangandan keyin).
+name: EduFocus
+options:
+  bundleIdPrefix: com.edufocus
+  deploymentTarget: { iOS: "15.0" }
+  developmentLanguage: uz
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "5.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    IOS_L1_ENABLED: "NO"
+    IOS_L2_ENABLED: "NO"
+    ENABLE_DEBUG_DYLIB: NO       # dylib rejimida simulyatorda oyna qora chiqadi (Xcode 26)
+    DEVELOPMENT_TEAM: ""        # Apple Team ID (docs/RELEASE-LOCK-MODE.md)
+targets:
+  EduFocus:
+    type: application
+    platform: iOS
+    sources:
+      - path: EduFocus
+        excludes: ["*.entitlements"]
+      - path: ../config/app-config.json
+        buildPhase: resources
+      - path: ../android/app/src/main/assets/offline.html
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.edufocus.app
+        INFOPLIST_FILE: EduFocus/Info.plist
+        CODE_SIGN_ENTITLEMENTS: EduFocus/EduFocus.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: NO

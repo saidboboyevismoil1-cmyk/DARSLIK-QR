@@ -38,6 +38,7 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
     private var splashView: UIView?
     private var isShowingOffline = false
     private var kioskActive = false
+    private var bridge: NativeBridge!
     private let launchBackground = UIColor(named: "LaunchBackground") ?? .systemBackground
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .default }
@@ -63,29 +64,22 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
         let controller = WKUserContentController()
         controller.add(self, name: "nativeBridge")
 
-        // Web tomoni window.AndroidBridge / window.iOSBridge orqali native funksiyalarni chaqiradi.
-        let bridge = """
+        // Web tomoni window.__efNativeHost.invoke(id, method, argsJson) orqali chaqiradi (docs/lock-mode/native-bridge.md).
+        // window.AndroidBridge.retry — offline.html (Android bilan umumiy) uchun.
+        let bridgeJS = """
         (function () {
-          function post(action, value) { window.webkit.messageHandlers.nativeBridge.postMessage({ action: action, value: value }); }
-          window.iOSBridge = {
-            isNativeApp: function () { return true; },
-            startKioskMode: function () { post('startKiosk'); },
-            stopKioskMode: function () { post('stopKiosk'); },
-            setSystemBarsDark: function (dark) { post('setDark', !!dark); },
-            setPullToRefresh: function (on) { post('pullToRefresh', !!on); },
-            retry: function () { post('retry'); },
-            getServerUrl: function () { return location.origin; }
-          };
-          if (!window.AndroidBridge) { window.AndroidBridge = window.iOSBridge; }   // offline.html shu nom bilan chaqiradi
+          function post(m) { window.webkit.messageHandlers.nativeBridge.postMessage(m); }
+          window.__efNativeHost = { platform: 'ios', invoke: function (id, method, args) { post({ id: id, method: method, args: args }); } };
+          window.AndroidBridge = { retry: function () { post({ action: 'retry' }); }, getServerUrl: function () { return location.origin; } };
         })();
         """
-        controller.addUserScript(WKUserScript(source: bridge, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        controller.addUserScript(WKUserScript(source: bridgeJS, injectionTime: .atDocumentStart, forMainFrameOnly: true))
 
         let cfg = WKWebViewConfiguration()
         cfg.userContentController = controller
         cfg.allowsInlineMediaPlayback = true
         cfg.mediaTypesRequiringUserActionForPlayback = []
-        cfg.applicationNameForUserAgent = "EduFocusApp/4.0"
+        cfg.applicationNameForUserAgent = "EduFocusApp/5.0"
         cfg.websiteDataStore = .default()   // localStorage va service worker keshi saqlanadi
 
         webView = WKWebView(frame: view.bounds, configuration: cfg)
@@ -107,6 +101,7 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
         setPullToRefresh(false)
 
         view.addSubview(webView)
+        bridge = NativeBridge(vc: self, webView: webView)
     }
 
     private func load() {
@@ -120,7 +115,7 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
     }
 
     /// Pull-to-refresh faqat xavfsiz ekranlarda (bosh sahifa, profil) yoqiladi — dars vaqtida emas.
-    private func setPullToRefresh(_ enabled: Bool) {
+    func setPullToRefresh(_ enabled: Bool) {
         refreshControl.isEnabled = enabled
         webView.scrollView.bounces = enabled
         if !enabled { refreshControl.endRefreshing() }
@@ -157,12 +152,8 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
         }
         // Tashqi havola (masalan, ustoz ruxsat bergan dars manbasi) — Safari'da ochiladi
         if scheme == "http" || scheme == "https" {
-            if kioskActive {
-                decisionHandler(.cancel)
-            } else {
-                decisionHandler(.cancel)
-                UIApplication.shared.open(url)
-            }
+            decisionHandler(.cancel)
+            UIApplication.shared.open(url)
             return
         }
         decisionHandler(.cancel)
@@ -170,6 +161,10 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         refreshControl.endRefreshing()
+        #if DEBUG
+        NSLog("EF didFinish %@", webView.url?.absoluteString ?? "-")
+        runSelfTestIfRequested()
+        #endif
         if !isShowingOffline { hideSplash() }
     }
 
@@ -177,6 +172,9 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { handleLoadError(error) }
 
     private func handleLoadError(_ error: Error) {
+        #if DEBUG
+        NSLog("EF load error: \(error)")
+        #endif
         let code = (error as NSError).code
         if code == NSURLErrorCancelled { return }
         refreshControl.endRefreshing()
@@ -217,30 +215,52 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
     }
 
     // MARK: - Web → native xabarlar
+    func setDark(_ dark: Bool) { view.window?.overrideUserInterfaceStyle = dark ? .dark : .light }
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard message.name == "nativeBridge", let body = message.body as? [String: Any], let action = body["action"] as? String else { return }
+        guard message.name == "nativeBridge", let body = message.body as? [String: Any] else { return }
         // Faqat o'z serverimiz yoki offline sahifadan keladigan xabarlar qabul qilinadi
         if let host = message.frameInfo.request.url?.host, host != serverHost { return }
+        if body["method"] != nil { bridge.handle(body); return }
+        if (body["action"] as? String) == "retry" { load() }
+    }
 
-        switch action {
-        case "startKiosk":
-            kioskActive = true
-            setNeedsUpdateOfHomeIndicatorAutoHidden()
-            // Guided Access faqat nazoratdagi (supervised/MDM) qurilmalarda ishlaydi; oddiy qurilmada e'tiborga olinmaydi
-            UIAccessibility.requestGuidedAccessSession(enabled: true) { _ in }
-        case "stopKiosk":
-            kioskActive = false
-            setNeedsUpdateOfHomeIndicatorAutoHidden()
-            UIAccessibility.requestGuidedAccessSession(enabled: false) { _ in }
-        case "setDark":
-            let dark = (body["value"] as? Bool) ?? false
-            view.window?.overrideUserInterfaceStyle = dark ? .dark : .light   // status bar va launch rang mavzuga mos
-        case "pullToRefresh":
-            setPullToRefresh((body["value"] as? Bool) ?? false)
-        case "retry":
-            load()
-        default:
-            break
+    #if DEBUG
+    /// Simulyator testi: EF_SELFTEST=<fayl yo'li> berilsa, ko'prik metodlarini chaqirib natijani faylga yozadi.
+    private var selfTestDone = false
+    private func runSelfTestIfRequested() {
+        guard !selfTestDone, let out = ProcessInfo.processInfo.environment["EF_SELFTEST"], !out.isEmpty else { return }
+        selfTestDone = true
+        let script = """
+        return await (async function () {
+          const call = (m, a) => new Promise((res, rej) => {
+            const id = Math.floor(Math.random() * 1e9);
+            const prev = window.__efNative.resolve;
+            window.__efNative.resolve = function (i, j) { if (i === id) { window.__efNative.resolve = prev; const r = JSON.parse(j); r.ok ? res(r.data) : rej(r.error); } else prev(i, j); };
+            window.__efNativeHost.invoke(id, m, JSON.stringify(a || {}));
+          });
+          const r = {};
+          try {
+            r.info = await call('info');
+            r.permissions = await call('permissions');
+            r.key = (await call('deviceKey')).key.length;
+            r.attest = await call('attest', { nonce: 'abc' });
+            r.dry = await call('protection.dryRun', { level: 'ios-l0' });
+            r.l1dry = await call('protection.dryRun', { level: 'ios-l1' });
+            r.start = await call('protection.start', { level: 'ios-l0', endsInSec: 60, offlineReleaseSec: 900, preJoin: false });
+            r.state = await call('protection.state');
+            r.stop = await call('protection.stop', { reason: 'test' });
+            r.bad = await call('nope').catch(e => 'err:' + e);
+            r.ext = await call('openExternal', { url: 'ftp://x' });
+          } catch (e) { r.error = String(e); }
+          return JSON.stringify(r);
+        })()
+        """
+        webView.callAsyncJavaScript(script, arguments: [:], in: nil, in: .page) { result in
+            var text = ""
+            switch result { case .success(let v): text = (v as? String) ?? "null"; case .failure(let e): text = "FAIL \(e)" }
+            try? text.write(toFile: out, atomically: true, encoding: .utf8)
         }
     }
+    #endif
 }
