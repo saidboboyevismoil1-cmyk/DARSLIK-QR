@@ -1425,13 +1425,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/privacy-policy', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'privacy-policy.html'));
-});
-
-app.get('/privacy', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'privacy-policy.html'));
-});
+// Maxfiylik siyosati va ma'lumot o'chirish sahifasi: egasi/muddat qiymatlari config'dan qo'yiladi (shablon: server/templates)
+const renderTemplate = (name) => {
+  const tpl = fs.readFileSync(path.join(__dirname, 'server', 'templates', name), 'utf8');
+  const o = config.owner || {};
+  const st = lock.svc.settings.effective();
+  const vals = { OWNER_COMPANY: o.company || '—', OWNER_EMAIL: o.email || '—', OWNER_STIR: o.stir || '—', RETENTION_DAYS: st['retention.afterSemesterDays'], MAX_DAYS: st['retention.maxDays'], UPDATED: '2026-10-03' };
+  return tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => String(k in vals ? vals[k] : m).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])));
+};
+['/privacy-policy', '/privacy', '/privacy-policy.html'].forEach((p) => app.get(p, (req, res) => res.type('html').send(renderTemplate('privacy-policy.html'))));
+['/delete-data', '/delete-data.html'].forEach((p) => app.get(p, (req, res) => res.type('html').send(renderTemplate('delete-data.html'))));
 
 app.get('/terms', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'terms.html'));
