@@ -202,7 +202,10 @@ function boot() {
     goHome();
   }
   window.__efBooted = true;
-  (window.requestIdleCallback || ((f) => setTimeout(f, 400)))(() => net.ensure());
+  (window.requestIdleCallback || ((f) => setTimeout(f, 400)))(() => {
+    net.ensure();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
 }
 
 if (window.io) boot();

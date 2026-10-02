@@ -199,6 +199,43 @@ await page.click('#s-profile [data-act=back]');
 await waitScreen('s-home');
 await shot('bosh-qorongi');
 
+
+// ---------- 11. Dars tugashi oflayn paytda (rejoin → "tugagan") ----------
+const c2 = await api('POST', '/api/sessions', { name: 'Fizika', subject: 'Fizika', duration: 30 }, T);
+const code2 = c2.session.id;
+await page.fill('#code-input', code2);
+await waitScreen('s-lesson');
+await ctx.setOffline(true);
+await page.waitForSelector('#o-conn.open', { timeout: 8000 });
+await api('POST', `/api/sessions/${code2}/end`, null, T);
+await ctx.setOffline(false);
+await waitScreen('s-ended', 20000);
+ok(true, 'oflayn paytda dars tugasa, qaytgach "Dars yakunlandi" ochiladi');
+await page.click('[data-act=rate-close]').catch(() => {});
+await page.click('#s-ended [data-act=home]');
+await waitScreen('s-home');
+
+// ---------- 12. Service worker: oflayn ochilish ----------
+await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+await page.reload(); await sleep(1200);       // SW sahifani boshqarishi uchun
+const swCtl = await page.evaluate(() => !!navigator.serviceWorker.controller);
+ok(swCtl, 'service worker sahifani boshqaryapti');
+const cached = await page.evaluate(async () => {
+  const names = ['/student.html', '/css/student.css?v=4.0', '/js/student/app.js?v=4.0', '/js/student/net.js', '/socket.io/socket.io.js'];
+  const res = await Promise.all(names.map((n) => caches.match(n, { ignoreSearch: n === '/student.html' })));
+  return res.every(Boolean);
+});
+ok(cached, 'shell fayllari service worker keshida');
+const lazy = await page.evaluate(async () => !!(await caches.match('/js/pdf.min.js')));
+ok(lazy, 'pdf.js faqat ishlatilgandan keyin keshlandi (lazy)');
+if (target === 'android') {   // Playwright WebKit SW + offline reload'ni qo'llamaydi
+  await ctx.setOffline(true);
+  await page.reload();
+  await waitScreen('s-home');
+  ok(true, "internet yo'q holatda ilova keshdan ochildi");
+  await ctx.setOffline(false);
+}
+
 ok(errors.length === 0, 'konsolda xato yo\'q' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
 console.log(failed ? `\n${failed} ta tekshiruv muvaffaqiyatsiz` : '\nBarcha tekshiruvlar o\'tdi');
