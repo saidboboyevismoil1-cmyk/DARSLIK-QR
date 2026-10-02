@@ -4,6 +4,11 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT/android"
 WHAT="${1:-both}"
+# JDK: JAVA_HOME bo'lmasa Android Studio ichidagi JBR ishlatiladi
+if [ -z "${JAVA_HOME:-}" ] && ! /usr/libexec/java_home >/dev/null 2>&1; then
+  JBR="/Applications/Android Studio.app/Contents/jbr/Contents/Home"; [ -d "$JBR" ] && export JAVA_HOME="$JBR"
+fi
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 [ -f keystore.properties ] || echo "OGOHLANTIRISH: keystore.properties yo'q — debug kalit bilan imzolanadi (do'konga yuklab bo'lmaydi). scripts/create-upload-keystore.sh"
 TASKS=()
 case "$WHAT" in store) TASKS=(bundleStoreRelease assembleStoreRelease);; direct) TASKS=(assembleDirectRelease);; both) TASKS=(bundleStoreRelease assembleStoreRelease assembleDirectRelease);; *) echo "store|direct|both"; exit 2;; esac
@@ -24,5 +29,5 @@ for f in "$OUT"/*.apk; do
     "$ZA" -c -P 16 4 "$f" && echo "OK  16 KB moslashuv: $(basename "$f")" || { echo "XATO: 16 KB moslashuv"; FAIL=1; }
   fi
 done
-if git -C "$ROOT" ls-files | grep -E 'keystore.properties|\.jks$|\.keystore$' ; then echo "XATO: kalit fayllari gitga qo'shilgan"; FAIL=1; fi
+if git -C "$ROOT" ls-files | grep -E '(^|/)keystore\.properties$|\.jks$|\.keystore$' ; then echo "XATO: kalit fayllari gitga qo'shilgan"; FAIL=1; fi
 ls -la "$OUT"; exit $FAIL
