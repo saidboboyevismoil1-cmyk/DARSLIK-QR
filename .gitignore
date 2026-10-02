@@ -13,3 +13,4 @@ tests/screenshots/
 android/keystore.properties
 *.jks
 ios/build/
+config/.env

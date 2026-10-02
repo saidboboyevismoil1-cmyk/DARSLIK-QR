@@ -121,7 +121,7 @@ await waitScreen('s-lesson');
 
 // ---------- 4. Material ----------
 const fd = new FormData(); fd.append('file', new Blob([makePdf()], { type: 'application/pdf' }), 'slaydlar.pdf');
-const up = await (await fetch(BASE + '/api/upload-material', { method: 'POST', body: fd })).json();
+const up = await (await fetch(BASE + '/api/upload-material', { method: 'POST', headers: { Authorization: 'Bearer ' + T }, body: fd })).json();
 ok(up.success, 'PDF yuklandi');
 await api('POST', `/api/sessions/${code}/materials`, { title: 'Kvadrat tenglama slaydlari', text: 'Slaydlarni diqqat bilan o\'qing', fileUrl: up.file.url, fileName: up.file.name, fileSize: up.file.size, fileType: 'pdf' }, T);
 await waitScreen('s-viewer');

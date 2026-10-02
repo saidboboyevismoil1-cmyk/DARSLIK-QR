@@ -8,14 +8,22 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const { config, validate: validateConfig } = require('./server/config');
+const lockModule = require('./server/lock');
 
 const app = express();
 app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'edufocus_secret_key_2024';
+const configErrors = validateConfig(config);
+if (configErrors.length) {
+  console.error('❌ Konfiguratsiya xatosi:\n - ' + configErrors.join('\n - '));
+  process.exit(1);
+}
+const PORT = config.port;
+const JWT_SECRET = config.jwtSecret;
+if (config.jwtSecretIsDefault) console.warn("⚠️  JWT_SECRET o'rnatilmagan — standart qiymat (faqat ishlab chiqish uchun). config/.env ni to'ldiring.");
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
@@ -79,7 +87,7 @@ app.use('/uploads', express.static(uploadsDir));
 // ============================================
 // DATA DIRECTORY & SESSIONS PERSISTENCE
 // ============================================
-const dataDir = path.join(__dirname, 'data');
+const dataDir = config.dataDir;
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
@@ -115,7 +123,7 @@ function saveSessionsToFile() {
 const defaultTeacherHash = bcrypt.hashSync('123456', 10);
 
 const db = {
-  teachers: [
+  teachers: !config.enableDemoTeacher ? [] : [
     {
       id: 'teacher-demo-01',
       name: 'Olim',
@@ -151,6 +159,7 @@ function getSessionTimeDetails(session) {
 
 // Register
 app.post('/api/register', async (req, res) => {
+  if (!config.registrationOpen) return res.status(403).json({ error: "Ro'yxatdan o'tish yopiq. Administratorga murojaat qiling" });
   try {
     const { name, surname, email, phone, school, subject, password } = req.body;
 
@@ -173,14 +182,16 @@ app.post('/api/register', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
+    teacher.role = 'teacher';
     db.teachers.push(teacher);
+    lock.persistTeacher(teacher);
 
     const token = jwt.sign({ id: teacher.id, email: teacher.email }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       success: true,
       token,
-      teacher: { id: teacher.id, name: teacher.name, surname: teacher.surname, email: teacher.email, school: teacher.school, subject: teacher.subject }
+      teacher: { id: teacher.id, name: teacher.name, surname: teacher.surname, email: teacher.email, school: teacher.school, subject: teacher.subject, role: teacher.role || 'teacher', facultyId: teacher.facultyId || null }
     });
   } catch (err) {
     res.status(500).json({ error: 'Server xatosi' });
@@ -207,7 +218,7 @@ app.post('/api/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      teacher: { id: teacher.id, name: teacher.name, surname: teacher.surname, email: teacher.email, school: teacher.school, subject: teacher.subject }
+      teacher: { id: teacher.id, name: teacher.name, surname: teacher.surname, email: teacher.email, school: teacher.school, subject: teacher.subject, role: teacher.role || 'teacher', facultyId: teacher.facultyId || null }
     });
   } catch (err) {
     res.status(500).json({ error: 'Server xatosi' });
@@ -222,7 +233,11 @@ function authMiddleware(req, res, next) {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.teacherId = decoded.id;
+    const teacher = db.teachers.find(t => t.id === decoded.id);
+    if (!teacher) return res.status(401).json({ error: 'Foydalanuvchi topilmadi. Qayta kiring' });
+    req.teacherId = teacher.id;
+    req.teacher = teacher;
+    req.role = teacher.role || 'teacher';
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Token yaroqsiz' });
@@ -241,7 +256,9 @@ app.get('/api/profile', authMiddleware, (req, res) => {
     email: teacher.email,
     phone: teacher.phone,
     school: teacher.school,
-    subject: teacher.subject
+    subject: teacher.subject,
+    role: teacher.role || 'teacher',
+    facultyId: teacher.facultyId || null
   });
 });
 
@@ -293,6 +310,7 @@ app.post('/api/sessions', authMiddleware, async (req, res) => {
       averageRating: null
     };
 
+    lock.svc.decorateNewSession(session, req.body, req.teacher);
     db.sessions.push(session);
     saveSessionsToFile();
 
@@ -329,6 +347,10 @@ app.get('/api/sessions/:id', (req, res) => {
     subject: session.subject,
     status: session.status,
     locked: session.locked,
+    protection: session.protection || 'optional',
+    requiresApp: session.protection === 'required',
+    rosterRequired: !!session.rosterGroupId,
+    demo: !!session.demo,
     studentCount: session.students.length,
     activeMaterial: session.activeMaterial || null,
     materials: session.materials || (session.activeMaterial ? [session.activeMaterial] : []),
@@ -337,7 +359,7 @@ app.get('/api/sessions/:id', (req, res) => {
 });
 
 // Upload material file (PDF, Word, PPTX, Excel, Images, etc.)
-app.post('/api/upload-material', upload.single('file'), (req, res) => {
+app.post('/api/upload-material', authMiddleware, upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Fayl tanlanmadi' });
@@ -543,6 +565,7 @@ app.post('/api/sessions/:id/end', authMiddleware, (req, res) => {
 
   // Compute final statistics
   session.statistics = calculateSessionStats(session);
+  lock.svc.onSessionEnded(session);
   saveSessionsToFile();
 
   // Notify all students
@@ -579,6 +602,7 @@ app.post('/api/sessions/:id/unlock', authMiddleware, (req, res) => {
   io.to(`session-${session.id}`).emit('session-unlocked', {
     message: 'Ustoz ruxsat berdi! Telefoningizdan foydalanishingiz mumkin.'
   });
+  lock.svc.onGlobalUnlock(session, req.teacherId);
 
   res.json({ success: true });
 });
@@ -589,6 +613,7 @@ app.post('/api/sessions/:id/lock', authMiddleware, (req, res) => {
   if (!session) return res.status(404).json({ error: 'Sessiya topilmadi' });
 
   session.locked = true;
+  lock.svc.onGlobalLock(session);
   const timeDetails = getSessionTimeDetails(session);
 
   io.to(`session-${session.id}`).emit('session-locked', {
@@ -907,6 +932,7 @@ app.post('/api/testpacks/:id/broadcast', authMiddleware, (req, res) => {
     createdAt: new Date().toISOString()
   };
   session.quizSubmissions = [];
+  lock.svc.onQuizSent(session, session.activeQuiz);
 
   const sanitizedQuestions = session.activeQuiz.questions.map(q => ({
     id: q.id,
@@ -924,45 +950,77 @@ app.post('/api/testpacks/:id/broadcast', authMiddleware, (req, res) => {
   res.json({ success: true, sessionId: session.id, quiz: session.activeQuiz });
 });
 
-// Emergency unlock all connected devices
-app.get('/api/unlock-all', (req, res) => {
-  io.emit('session-unlocked', { message: 'Barcha ekranlar qulfdan chiqarildi' });
-  io.emit('session-ended', { message: 'Dars yakunlandi' });
-  res.json({ success: true, message: 'Barcha ulangan qurilmalarga qulfni ochish buyrug\'i yuborildi!' });
-});
-
+// (/api/unlock-all olib tashlandi: autentifikatsiyasiz edi. Ochish: POST /api/sessions/:id/unlock yoki /api/lock/sessions/:id/release)
 // ============================================
 // SOCKET.IO - REAL-TIME
 // ============================================
 
+// Ustoz soketlari JWT bilan autentifikatsiya qilinadi (talabalar tokensiz ulanadi)
+io.use((socket, next) => {
+  const token = socket.handshake.auth && socket.handshake.auth.token;
+  socket.teacher = null;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      socket.teacher = db.teachers.find(t => t.id === decoded.id) || null;
+    } catch (e) { /* yaroqsiz token — oddiy (talaba) soket sifatida davom etadi */ }
+  }
+  next();
+});
+const canManageSession = (socket, session) => lock.svc.canManage(socket.teacher, session);
+const isOwnStudent = (socket, sessionId, studentId) =>
+  !!socket.studentData && socket.studentData.sessionId === sessionId && socket.studentData.studentId === studentId;
+
 io.on('connection', (socket) => {
   console.log('🔌 Yangi ulanish:', socket.id);
+  lock.svc.registerSocket(socket);
 
   // Student joins session
-  socket.on('student-join', (data) => {
-    const { sessionId, studentName, device } = data;
-    const session = db.sessions.find(s => s.id === sessionId);
+  socket.on('student-join', async (data) => {
+    data = data || {};
+    const { sessionId, device } = data;
+    const session = typeof sessionId === 'string' ? db.sessions.find(s => s.id === sessionId) : null;
 
     if (!session || session.status !== 'active') {
-      socket.emit('join-error', { message: 'Sessiya topilmadi yoki tugagan' });
+      socket.emit('join-error', { message: 'Sessiya topilmadi yoki tugagan', code: 'not_found' });
       return;
     }
 
-    const student = {
-      id: uuidv4().substring(0, 8),
-      name: studentName,
-      device: device || 'Noma\'lum qurilma',
-      joinedAt: new Date().toISOString(),
-      isActive: true,
-      socketId: socket.id,
-      violationsCount: 0,
-      violations: []
-    };
+    // Himoya darajasi, ilova attestatsiyasi, guruh ro'yxati va "himoya majburiy" tekshiruvi
+    const gate = await lock.svc.gateJoin(socket, session, data);
+    if (!gate.ok) {
+      socket.emit('join-error', { message: gate.message, code: gate.code });
+      return;
+    }
+    if (session.status !== 'active') {
+      socket.emit('join-error', { message: 'Sessiya topilmadi yoki tugagan', code: 'not_found' });
+      return;
+    }
 
-    session.students.push(student);
+    // Ro'yxatdagi talaba qayta kirsa (masalan, ilova qayta o'rnatilgan) — mavjud yozuv qayta ishlatiladi
+    let student = lock.svc.findExisting(session, gate);
+    const reused = !!student;
+    if (reused) {
+      student.socketId = socket.id;
+      student.isActive = true;
+    } else {
+      student = {
+        id: uuidv4().substring(0, 8),
+        name: gate.name,
+        device: String(device || 'Noma\'lum qurilma').slice(0, 80),
+        joinedAt: new Date().toISOString(),
+        isActive: true,
+        socketId: socket.id,
+        violationsCount: 0,
+        violations: []
+      };
+      session.students.push(student);
+    }
+    lock.svc.onJoined(socket, session, student, gate, reused);
     saveSessionsToFile();
     socket.join(`session-${sessionId}`);
     socket.studentData = { sessionId, studentId: student.id };
+    if (session.demo) lock.demo.onStudentJoined(socket, session, student);
 
     // Notify teacher
     io.to(`teacher-${sessionId}`).emit('student-joined', {
@@ -978,7 +1036,8 @@ io.on('connection', (socket) => {
       studentId: student.id,
       sessionName: session.name,
       subject: session.subject,
-      locked: session.locked,
+      locked: lock.svc.effectiveLocked(session, student),
+      protection: lock.svc.clientPolicy(session, student),
       ...timeDetails,
       activeQuiz: session.activeQuiz ? {
         quizId: session.activeQuiz.id,
@@ -997,6 +1056,11 @@ io.on('connection', (socket) => {
     const { sessionId, studentId } = data;
     const session = db.sessions.find(s => s.id === sessionId);
     if (!session || session.status !== 'active') {
+      // Tugagan dars: talaba faqat baho yuborishi uchun shaxsi tasdiqlanadi
+      const known = session && session.students.find(s => s.id === studentId);
+      if (known && (!known.dkh || (typeof data.deviceKey === 'string' && lockModule.sha(data.deviceKey) === known.dkh))) {
+        socket.studentData = { sessionId, studentId, ended: true };
+      }
       socket.emit('rejoin-error', {
         message: 'Sessiya tugagan yoki topilmadi',
         reason: session ? 'ended' : 'not-found'
@@ -1009,12 +1073,18 @@ io.on('connection', (socket) => {
       socket.emit('rejoin-error', { message: 'Talaba topilmadi', reason: 'unknown-student' });
       return;
     }
+    const rejoinGate = lock.svc.gateRejoin(session, student, data);
+    if (!rejoinGate.ok) {
+      socket.emit('rejoin-error', { message: rejoinGate.message, reason: rejoinGate.code });
+      return;
+    }
     if (student) {
       student.socketId = socket.id;
       student.isActive = true;
       saveSessionsToFile();
       socket.join(`session-${sessionId}`);
       socket.studentData = { sessionId, studentId: student.id };
+      lock.svc.onRejoined(socket, session, student, data);
 
       io.to(`teacher-${sessionId}`).emit('student-status-changed', {
         studentId: student.id,
@@ -1027,7 +1097,8 @@ io.on('connection', (socket) => {
         studentId: student.id,
         sessionName: session.name,
         subject: session.subject,
-        locked: session.locked,
+        locked: lock.svc.effectiveLocked(session, student),
+        protection: lock.svc.clientPolicy(session, student),
         ...timeDetails,
         activeQuiz: session.activeQuiz ? {
           quizId: session.activeQuiz.id,
@@ -1047,6 +1118,7 @@ io.on('connection', (socket) => {
     const { sessionId, quiz } = data;
     const session = db.sessions.find(s => s.id === sessionId);
     if (!session) return;
+    if (!canManageSession(socket, session)) { socket.emit('auth-error', { message: "Ruxsat yo'q" }); return; }
 
     session.activeQuiz = {
       id: uuidv4().substring(0, 8),
@@ -1056,6 +1128,7 @@ io.on('connection', (socket) => {
       createdAt: new Date().toISOString()
     };
     session.quizSubmissions = [];
+    lock.svc.onQuizSent(session, session.activeQuiz);
 
     const sanitizedQuestions = session.activeQuiz.questions.map(q => ({
       id: q.id,
@@ -1080,6 +1153,7 @@ io.on('connection', (socket) => {
   // Student submits Quiz answers
   socket.on('student-submit-quiz', (data) => {
     const { sessionId, studentId, studentName, quizId, answers } = data;
+    if (!isOwnStudent(socket, sessionId, studentId) || socket.studentData.ended) return;
     const session = db.sessions.find(s => s.id === sessionId);
     if (!session || !session.activeQuiz || session.activeQuiz.id !== quizId) return;
 
@@ -1114,6 +1188,8 @@ io.on('connection', (socket) => {
     };
 
     session.quizSubmissions.push(submission);
+    const submitter = session.students.find(s => s.id === studentId);
+    if (submitter) lock.svc.onQuizSubmitted(session, submitter, quizId, correctCount, totalQuestions, percentage);
 
     const student = session.students.find(s => s.id === studentId);
     if (student) {
@@ -1145,6 +1221,7 @@ io.on('connection', (socket) => {
     const { sessionId, material } = data;
     const session = db.sessions.find(s => s.id === sessionId);
     if (!session) return;
+    if (!canManageSession(socket, session)) { socket.emit('auth-error', { message: "Ruxsat yo'q" }); return; }
 
     if (!session.materials) session.materials = [];
 
@@ -1174,6 +1251,7 @@ io.on('connection', (socket) => {
     const { sessionId, tool, action, url, appName } = data;
     const session = db.sessions.find(s => s.id === sessionId);
     if (!session) return;
+    if (!canManageSession(socket, session)) { socket.emit('auth-error', { message: "Ruxsat yo'q" }); return; }
 
     session.allowedTool = (action === 'open') ? { tool, url: url || null, appName: appName || tool } : null;
 
@@ -1189,7 +1267,10 @@ io.on('connection', (socket) => {
   // Teacher joins to monitor
   socket.on('teacher-monitor', (data) => {
     const { sessionId } = data;
+    const monitored = db.sessions.find(s => s.id === sessionId);
+    if (!monitored || !canManageSession(socket, monitored)) { socket.emit('auth-error', { message: "Ruxsat yo'q" }); return; }
     socket.join(`teacher-${sessionId}`);
+    lock.svc.emitOverview(monitored);
     console.log(`👨‍🏫 O'qituvchi monitoring: ${sessionId}`);
 
     const session = db.sessions.find(s => s.id === sessionId);
@@ -1210,6 +1291,7 @@ io.on('connection', (socket) => {
   // Student rates Teacher & Lesson (1 to 5 stars + optional comment)
   socket.on('student-session-rating', (data) => {
     const { sessionId, studentId, studentName, score, comment } = data;
+    if (!isOwnStudent(socket, sessionId, studentId)) return;
     const session = db.sessions.find(s => s.id === sessionId);
     if (!session) return;
 
@@ -1267,6 +1349,7 @@ io.on('connection', (socket) => {
   // Student left page (visibility change)
   socket.on('student-left-page', (data) => {
     const { sessionId, studentId } = data;
+    if (!isOwnStudent(socket, sessionId, studentId)) return;
     const session = db.sessions.find(s => s.id === sessionId);
     if (session) {
       // If teacher has explicitly opened/allowed an external tool, don't count as violation
@@ -1297,6 +1380,7 @@ io.on('connection', (socket) => {
   // Student returned to page
   socket.on('student-returned', (data) => {
     const { sessionId, studentId } = data;
+    if (!isOwnStudent(socket, sessionId, studentId)) return;
     const session = db.sessions.find(s => s.id === sessionId);
     if (session) {
       const student = session.students.find(s => s.id === studentId);
@@ -1374,6 +1458,17 @@ app.get('/download/ios', (req, res) => {
 // ============================================
 // START SERVER
 // ============================================
+
+// ============================================
+// DARS REJIMI MODULI (himoya, heartbeat, qoidalar, hisobotlar, admin)
+// ============================================
+const lock = lockModule.init({
+  app, io, legacy: db, config, authMiddleware,
+  helpers: { uuid: uuidv4, getSessionTimeDetails, saveSessions: saveSessionsToFile }
+});
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => { try { saveSessionsToFile(); lock.close(); } finally { process.exit(0); } });
+}
 
 server.listen(PORT, () => {
   console.log(`
