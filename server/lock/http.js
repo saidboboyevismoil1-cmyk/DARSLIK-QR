@@ -35,7 +35,7 @@ function createRouter({ svc, config, auth, legacy, helpers }) {
   // ================= Ochiq (talaba ilovasi) =================
   r.get('/lock/capabilities', publicLimit, (req, res) => {
     const st = svc.settings.effective();
-    res.json({ features: { iosL1: !!st['features.iosL1'], iosL2: !!st['features.iosL2'] }, attestationMode: config.attestation.mode, heartbeatIntervalSec: st['heartbeat.intervalSec'], offlineAfterSec: st['heartbeat.offlineAfterSec'], releaseOfflineMinutes: st['release.offlineMinutes'], serverTime: Date.now() });
+    res.json({ requiredLevels: st['protection.requiredLevels'], features: { iosL1: !!st['features.iosL1'], iosL2: !!st['features.iosL2'] }, attestationMode: config.attestation.mode, heartbeatIntervalSec: st['heartbeat.intervalSec'], offlineAfterSec: st['heartbeat.offlineAfterSec'], releaseOfflineMinutes: st['release.offlineMinutes'], serverTime: Date.now() });
   });
 
   r.get('/lock/attest/challenge', publicLimit, (req, res) => res.json({ nonce: attestation.issueChallenge(helpers.sql, String(req.query.sessionId || '')) }));

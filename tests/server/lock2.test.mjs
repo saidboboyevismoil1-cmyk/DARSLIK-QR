@@ -246,6 +246,30 @@ test("fakultet standarti: admin fakultet bo'yicha 'himoya majburiy'ni belgilaydi
   assert.equal((await newSession({})).protection, 'optional');                                     // boshqa fakultet — standart
 });
 
+test("qulf ochiq (erkin) vaqt jarima bermaydi; qayta qulflangach hisob davom etadi", async () => {
+  const set = (values) => api('PUT', '/api/admin/settings', { scope: 'global', values }, T);
+  await set({ 'score.unprotectedFocusZeroSec': 1, 'score.unprotectedAbsentSec': 3 });
+  try {
+    const s = await newSession({ protection: 'required' });
+    const teacher = connect(srv.base, { token: T }); await teacher.opened;
+    teacher.emit('lock-subscribe', { sessionId: s.id });
+    const a = await joinStudent(srv.base, api, s.id, 'Erkin', 'android-full');
+    await api('POST', `/api/lock/sessions/${s.id}/release`, {}, T);
+    await a.c.waitFor('session-unlocked');
+    const off = { active: false, reasons: ['not_pinned'], checks: { pinned: false } };
+    for (let i = 0; i < 4; i++) { a.c.emit('student-heartbeat', hbPayload(s, a.studentId, off)); await sleep(1200); }
+    await sleep(2300);
+    assert.equal(teacher.has('lock-event', (e) => e.type === 'rule_focus_zero' || e.type === 'rule_absent'), false, "qulf ochiq vaqtda qoida ishlamasligi kerak");
+    let rep = await api('GET', `/api/lock/sessions/${s.id}/report`, undefined, T);
+    assert.equal(rep.students[0].focus, 100); assert.equal(rep.students[0].attendance, 100);
+    // qayta qulflanadi, himoya hali o'chiq → endi hisoblanadi
+    await api('POST', `/api/lock/sessions/${s.id}/relock`, {}, T);
+    for (let i = 0; i < 4; i++) { a.c.emit('student-heartbeat', hbPayload(s, a.studentId, off)); await sleep(1200); }
+    await teacher.waitFor('lock-event', (e) => e.type === 'rule_focus_zero', 4000);
+    a.c.close(); teacher.close();
+  } finally { await set({ 'score.unprotectedFocusZeroSec': null, 'score.unprotectedAbsentSec': null }); }
+});
+
 test('tezlik cheklovi: ochiq endpoint ketma-ket ko\'p chaqirilsa 429', async () => {
   let limited = 0;
   for (let i = 0; i < 110; i++) if ((await fetch(srv.base + '/api/lock/capabilities')).status === 429) limited++;

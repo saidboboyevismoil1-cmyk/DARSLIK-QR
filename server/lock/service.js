@@ -112,7 +112,7 @@ function createService({ io, legacy, sql, config, helpers }) {
       sessionId: session.id, studentId: student.id, level: client.level, client, socketId: null,
       active: protection.active, reasons: protection.reasons, checks: protection.checks, fg: true,
       lastBeat: Date.now(), lastHb: 0, lastTick: Date.now(), status: protection.active ? 'protected' : 'unprotected', statusSince: Date.now(),
-      ms: { protected: 0, unprotected: 0, offline: 0, assumed: 0 }, bypassCount: 0, lastBypassAt: 0,
+      ms: { protected: 0, unprotected: 0, offline: 0, assumed: 0, free: 0 }, bypassCount: 0, lastBypassAt: 0,
       flags: { focusZero: false, absent: false }, seq: 0,
     };
     live.set(key(session.id, student.id), L);
@@ -123,7 +123,7 @@ function createService({ io, legacy, sql, config, helpers }) {
     const L = newLive(session, student, client, protection);
     const row = lockdata.stats(session.id).find((r) => r.student_id === student.id);
     if (row) {
-      L.ms = { protected: row.protected_ms, unprotected: row.unprotected_ms, offline: row.offline_ms, assumed: row.assumed_ms };
+      L.ms = { protected: row.protected_ms, unprotected: row.unprotected_ms, offline: row.offline_ms, assumed: row.assumed_ms, free: row.free_ms || 0 };
       L.bypassCount = row.bypass_count; L.flags = { focusZero: !!row.focus_zero, absent: !!row.absent };
     }
     return L;
@@ -147,6 +147,7 @@ function createService({ io, legacy, sql, config, helpers }) {
       if (!reused) { telemetry.inc('students_by_level', L.level); if (L.client.brand) telemetry.inc('students_by_brand', L.client.brand); }
       flushOne(session, student, L);
     }
+    refreshStatus(session, student, L, Date.now(), settingsFor(session));
     logEvent(session, student, reused ? 'heartbeat_restored' : 'joined', { level: L.level, attested: gate.attested, attReason: gate.attReason || undefined, exempt: gate.exempt || undefined });
     emitOverview(session);
   }
@@ -184,7 +185,8 @@ function createService({ io, legacy, sql, config, helpers }) {
     L.lastTick = now;
   }
 
-  function classify(L, now, st) {
+  function classify(L, now, st, free) {
+    if (free) return 'free';                            // qulf ochiq: talaba erkin — jarima ham, "himoya" ham hisoblanmaydi
     if (now - L.lastBeat >= st['heartbeat.offlineAfterSec'] * 1000) {
       const c = levels.offlineClass(L.level, st);
       return c;                                         // offline | assumed | unprotected
@@ -197,15 +199,17 @@ function createService({ io, legacy, sql, config, helpers }) {
   }
 
   function refreshStatus(session, student, L, now, st) {
-    const next = classify(L, now, st);
+    const next = classify(L, now, st, !effectiveLocked(session, student));
     if (next !== L.status) {
       const prev = L.status, since = L.statusSince;
       L.status = next; L.statusSince = now;
-      const away = (s) => s === 'offline' || s === 'assumed';
-      if (away(next) && !away(prev)) { L.awayFrom = L.lastBeat; logEvent(session, student, 'heartbeat_lost', { assumed: next === 'assumed' || undefined }); }
-      else if (!away(next) && away(prev)) logEvent(session, student, 'heartbeat_restored', { offlineMs: now - (L.awayFrom || since) });   // oxirgi heartbeat'dan beri
-      else if (next === 'unprotected' && prev === 'protected') logEvent(session, student, student.level && levels.isStrong(L.level) ? 'protection_lost' : 'left_page', { reasons: L.reasons });
-      else if (next === 'protected' && prev === 'unprotected') logEvent(session, student, 'protection_restored', { durationMs: now - since });
+      const away = (x) => x === 'offline' || x === 'assumed';
+      const base = prev === 'free' ? 'protected' : prev;       // erkin davrdan qaytganda "himoyali" holatdan boshlaymiz
+      if (next === 'free') { /* qulf ochildi: jarima to'xtaydi; ochish hodisasi alohida jurnalga yoziladi */ }
+      else if (away(next) && !away(base)) { L.awayFrom = L.lastBeat; logEvent(session, student, 'heartbeat_lost', { assumed: next === 'assumed' || undefined }); }
+      else if (!away(next) && away(base)) logEvent(session, student, 'heartbeat_restored', { offlineMs: now - (L.awayFrom || since) });   // oxirgi heartbeat'dan beri
+      else if (next === 'unprotected' && base === 'protected') logEvent(session, student, levels.isStrong(L.level) ? 'protection_lost' : 'left_page', { reasons: L.reasons });
+      else if (next === 'protected' && base === 'unprotected') logEvent(session, student, 'protection_restored', { durationMs: now - since });
     }
     const f = rules.evaluateFlags(L.ms, st);
     if (f.focusZero && !L.flags.focusZero) { L.flags.focusZero = true; logEvent(session, student, 'rule_focus_zero', { unprotectedSec: f.unprotectedSec }); notifyStudent(L, 'lock-rule', { rule: 'focus_zero', unprotectedSec: f.unprotectedSec }); }

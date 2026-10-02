@@ -11,13 +11,13 @@ const create = (db) => ({
     return rows.map((r) => ({ ...r, data: r.data ? JSON.parse(r.data) : null })).reverse();
   },
   upsertStats(s) {
-    db.run(`INSERT INTO student_stats (session_id, student_id, student_name, roster_student_id, level, joined_at, protected_ms, unprotected_ms, offline_ms, assumed_ms, bypass_count, focus_zero, absent, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    db.run(`INSERT INTO student_stats (session_id, student_id, student_name, roster_student_id, level, joined_at, protected_ms, unprotected_ms, offline_ms, assumed_ms, free_ms, bypass_count, focus_zero, absent, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (session_id, student_id) DO UPDATE SET level = excluded.level, protected_ms = excluded.protected_ms, unprotected_ms = excluded.unprotected_ms,
-              offline_ms = excluded.offline_ms, assumed_ms = excluded.assumed_ms, bypass_count = excluded.bypass_count, focus_zero = excluded.focus_zero,
+              offline_ms = excluded.offline_ms, assumed_ms = excluded.assumed_ms, free_ms = excluded.free_ms, bypass_count = excluded.bypass_count, focus_zero = excluded.focus_zero,
               absent = excluded.absent, updated_at = excluded.updated_at`,
       [s.sessionId, s.studentId, s.name || null, s.rosterStudentId || null, s.level || null, s.joinedAt, Math.round(s.ms.protected), Math.round(s.ms.unprotected),
-        Math.round(s.ms.offline), Math.round(s.ms.assumed), s.bypassCount || 0, s.focusZero ? 1 : 0, s.absent ? 1 : 0, Date.now()]);
+        Math.round(s.ms.offline), Math.round(s.ms.assumed), Math.round(s.ms.free || 0), s.bypassCount || 0, s.focusZero ? 1 : 0, s.absent ? 1 : 0, Date.now()]);
   },
   stats(sessionId) { return db.all('SELECT * FROM student_stats WHERE session_id = ?', [sessionId]); },
   addQuiz({ sessionId, quizId, title, questions, sentAt }) {
