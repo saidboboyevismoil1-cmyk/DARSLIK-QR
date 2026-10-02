@@ -119,7 +119,7 @@ actions['go-profile'] = () => push('s-profile');
 // ---------- Profil ----------
 onEnter('s-profile', () => {
   renderName(); applyTheme();
-  $('#exit-row').hidden = !native.present;
+  $('#exit-row').hidden = !native.android;   // iOS ilovani dasturiy yopishga ruxsat bermaydi
 });
 actions['reset-ask'] = () => {
   if (S.phase === 'joined' && S.locked) { toast('Dars davomida ma\'lumotlarni o\'chirib bo\'lmaydi'); return; }
@@ -134,6 +134,14 @@ actions['exit-app'] = () => {
   native.call('stopKioskMode');
   native.call('exitApp');
 };
+
+// iOS pull-to-refresh: faqat xavfsiz ekranlarda (dars/test/hujjat paytida o'chiq)
+const PULL_OK = new Set(['s-home', 's-profile', 's-ended']);
+bus.on('screen', (id) => {
+  const on = PULL_OK.has(id);
+  document.documentElement.classList.toggle('pull', on);
+  native.call('setPullToRefresh', on);
+});
 
 // ---------- Umumiy amallar va navigatsiya ----------
 actions.back = () => { if (!pop() && !topOverlay()) bus.emit('noback'); };

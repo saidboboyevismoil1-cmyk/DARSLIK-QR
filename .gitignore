@@ -12,3 +12,4 @@ tests/screenshots/
 *.log
 android/keystore.properties
 *.jks
+ios/build/

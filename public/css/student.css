@@ -32,7 +32,7 @@
   --field: rgba(255, 255, 255, .75);
   --line: rgba(15, 23, 42, .08);
   --shadow: 0 10px 30px -12px rgba(49, 46, 129, .25);
-  --sheet: rgba(255, 255, 255, .94);
+  --sheet: rgba(255, 255, 255, .985);
   --scrim: rgba(15, 18, 45, .5);
   color-scheme: light;
 }
@@ -51,7 +51,7 @@
   --field: rgba(255, 255, 255, .08);
   --line: rgba(255, 255, 255, .1);
   --shadow: 0 14px 34px -14px rgba(0, 0, 0, .7);
-  --sheet: rgba(26, 30, 62, .96);
+  --sheet: rgba(26, 30, 62, .985);
   --scrim: rgba(0, 0, 0, .6);
   color-scheme: dark;
 }
@@ -71,7 +71,7 @@
     --field: rgba(255, 255, 255, .08);
     --line: rgba(255, 255, 255, .1);
     --shadow: 0 14px 34px -14px rgba(0, 0, 0, .7);
-    --sheet: rgba(26, 30, 62, .96);
+    --sheet: rgba(26, 30, 62, .985);
     --scrim: rgba(0, 0, 0, .6);
     color-scheme: dark;
   }
@@ -114,6 +114,7 @@ svg.i.lg { width: 30px; height: 30px; }
   transition: opacity .28s ease, transform .28s ease, visibility 0s linear .28s;
 }
 .screen.active { opacity: 1; visibility: visible; transform: none; transition: opacity .28s ease, transform .28s ease; }
+html.pull .screen { overscroll-behavior-y: auto; }
 .wrap { max-width: 520px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; gap: 16px; }
 .grow { flex: 1; }
 .center { text-align: center; align-items: center; }

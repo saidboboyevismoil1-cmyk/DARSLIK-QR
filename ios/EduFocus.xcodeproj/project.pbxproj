@@ -1,0 +1,263 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1C31A879DE5443EFAE68FEB7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F199E4CAE6C478790BDAA0B /* AppDelegate.swift */; };
+		BC784D28C8FB4FBA951ED3C9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE93657E1C14E9FAB6B2A0B /* SceneDelegate.swift */; };
+		018A2397E34C44C3A5208CDB /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3AD15EBDF1844F8B4534985 /* ViewController.swift */; };
+		421ACFBDA7B242B9BD5829DD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 630D3DF0501F4FC2BD679525 /* Assets.xcassets */; };
+		BDCABBD015B04CDC9F25ED7C /* app-config.json in Resources */ = {isa = PBXBuildFile; fileRef = 56844AD5D5444C9481954A45 /* app-config.json */; };
+		D13E0A3881BD4AC3AB66EEE9 /* offline.html in Resources */ = {isa = PBXBuildFile; fileRef = A4C848A775484C64865923DB /* offline.html */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		111111111111111111111106 /* EduFocus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EduFocus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F199E4CAE6C478790BDAA0B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate.swift"; name = "AppDelegate.swift"; sourceTree = "<group>"; };
+		5DE93657E1C14E9FAB6B2A0B /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SceneDelegate.swift"; name = "SceneDelegate.swift"; sourceTree = "<group>"; };
+		C3AD15EBDF1844F8B4534985 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController.swift"; name = "ViewController.swift"; sourceTree = "<group>"; };
+		D2B7DB2FB2334D30A6D8CEA9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info.plist"; name = "Info.plist"; sourceTree = "<group>"; };
+		630D3DF0501F4FC2BD679525 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets.xcassets"; name = "Assets.xcassets"; sourceTree = "<group>"; };
+		56844AD5D5444C9481954A45 /* app-config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "../../config/app-config.json"; name = "app-config.json"; sourceTree = "<group>"; };
+		A4C848A775484C64865923DB /* offline.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "../../android/app/src/main/assets/offline.html"; name = "offline.html"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		111111111111111111111108 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		111111111111111111111103 = {
+			isa = PBXGroup;
+			children = (
+				111111111111111111111104 /* EduFocus */,
+				111111111111111111111105 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		111111111111111111111104 /* EduFocus */ = {
+			isa = PBXGroup;
+			children = (
+				0F199E4CAE6C478790BDAA0B /* AppDelegate.swift */,
+				5DE93657E1C14E9FAB6B2A0B /* SceneDelegate.swift */,
+				C3AD15EBDF1844F8B4534985 /* ViewController.swift */,
+				D2B7DB2FB2334D30A6D8CEA9 /* Info.plist */,
+				630D3DF0501F4FC2BD679525 /* Assets.xcassets */,
+				56844AD5D5444C9481954A45 /* app-config.json */,
+				A4C848A775484C64865923DB /* offline.html */,
+			);
+			path = EduFocus;
+			sourceTree = "<group>";
+		};
+		111111111111111111111105 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				111111111111111111111106 /* EduFocus.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		111111111111111111111102 /* EduFocus */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 11111111111111111111110B /* Build configuration list for PBXNativeTarget "EduFocus" */;
+			buildPhases = (
+				111111111111111111111107 /* Sources */,
+				111111111111111111111108 /* Frameworks */,
+				111111111111111111111109 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EduFocus;
+			productName = EduFocus;
+			productReference = 111111111111111111111106 /* EduFocus.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		111111111111111111111101 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					111111111111111111111102 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 11111111111111111111110A /* Build configuration list for PBXProject "EduFocus" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 111111111111111111111103;
+			productRefGroup = 111111111111111111111105 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				111111111111111111111102 /* EduFocus */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		111111111111111111111109 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				421ACFBDA7B242B9BD5829DD /* Assets.xcassets in Resources */,
+				BDCABBD015B04CDC9F25ED7C /* app-config.json in Resources */,
+				D13E0A3881BD4AC3AB66EEE9 /* offline.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		111111111111111111111107 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C31A879DE5443EFAE68FEB7 /* AppDelegate.swift in Sources */,
+				BC784D28C8FB4FBA951ED3C9 /* SceneDelegate.swift in Sources */,
+				018A2397E34C44C3A5208CDB /* ViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		11111111111111111111110C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		11111111111111111111110D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = "wholemodule";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		11111111111111111111110E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 40;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = EduFocus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 4.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.edufocus.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		11111111111111111111110F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 40;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = EduFocus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 4.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.edufocus.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		11111111111111111111110A /* Build configuration list for PBXProject "EduFocus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11111111111111111111110C /* Debug */,
+				11111111111111111111110D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		11111111111111111111110B /* Build configuration list for PBXNativeTarget "EduFocus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11111111111111111111110E /* Debug */,
+				11111111111111111111110F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = 111111111111111111111101 /* Project object */;
+}
